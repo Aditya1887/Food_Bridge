@@ -1,0 +1,132 @@
+/* ═══════════════════════════════════════════════════════
+   FloatingGradient — Soft Blurred Color Blobs & Gradient
+   (Inspired by 21st.dev / moumensoliman floating-gradient)
+   ═══════════════════════════════════════════════════════ */
+
+.floating-gradient-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Outer subtle glow rim */
+.fg-glow-rim {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  border: 1.5px solid rgba(52, 219, 118, 0.25);
+  box-shadow: inset 0 0 20px rgba(52, 219, 118, 0.08);
+}
+
+/* Canvas containing all blurred gradient blobs */
+.fg-blobs-canvas {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(55px);
+  -webkit-filter: blur(55px);
+  opacity: 0.85;
+  transform: translateZ(0);
+}
+
+.dark-mode .fg-blobs-canvas {
+  opacity: 0.95;
+  filter: blur(65px);
+  -webkit-filter: blur(65px);
+}
+
+/* Individual Gradient Blobs */
+.fg-blob {
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.dark-mode .fg-blob {
+  mix-blend-mode: screen;
+}
+
+/* Blob 1 — Top Left */
+.blob-one {
+  width: 420px;
+  height: 420px;
+  top: -120px;
+  left: -80px;
+}
+
+/* Blob 2 — Bottom Right */
+.blob-two {
+  width: 480px;
+  height: 480px;
+  bottom: -150px;
+  right: -100px;
+}
+
+/* Blob 3 — Center Right */
+.blob-three {
+  width: 360px;
+  height: 360px;
+  top: 20%;
+  right: 15%;
+}
+
+/* Blob 4 — Warm Golden Glow Pulse */
+.blob-four {
+  width: 320px;
+  height: 320px;
+  bottom: 10%;
+  left: 20%;
+}
+
+/* Blob 5 — Center Ambient */
+.blob-five {
+  width: 550px;
+  height: 550px;
+  top: calc(50% - 275px);
+  left: calc(50% - 275px);
+  opacity: 0.6;
+}
+
+/* Interactive Cursor Follower */
+.blob-interactive {
+  width: 380px;
+  height: 380px;
+  top: calc(50% - 190px);
+  left: calc(50% - 190px);
+  mix-blend-mode: screen;
+  transition: opacity 0.3s ease;
+}
+
+/* Subtle micro-grid overlay texture for dimensional depth */
+.fg-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.6;
+}
+
+.dark-mode .fg-grid-overlay {
+  background-image: radial-gradient(rgba(74, 222, 128, 0.08) 1px, transparent 1px);
+  opacity: 0.8;
+}
+
+/* Foreground Centered Content */
+.fg-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+}

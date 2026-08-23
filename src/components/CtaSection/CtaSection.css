@@ -1,0 +1,145 @@
+/* ═══════════════════════════════════════════════════════
+   Final CTA Section Styles
+   ═══════════════════════════════════════════════════════ */
+
+.cta-section {
+  position: relative;
+  width: 100%;
+  padding: 40px 115px 100px 115px;
+  background-color: var(--bg-primary);
+  transition: background-color var(--transition-speed);
+  z-index: 1;
+}
+
+.cta-card {
+  position: relative;
+  max-width: 1600px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #0d321d 0%, #071f11 60%, #04140b 100%);
+  border-radius: 32px;
+  padding: 0;
+  text-align: center;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(7, 31, 17, 0.35);
+  border: 1.5px solid rgba(52, 219, 118, 0.2);
+}
+
+.dark-mode .cta-card {
+  background: linear-gradient(135deg, #0f3620 0%, #082112 60%, #031108 100%);
+  border-color: rgba(52, 219, 118, 0.3);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.cta-floating-gradient {
+  padding: 80px 48px;
+  width: 100%;
+  height: 100%;
+}
+
+.cta-content {
+  position: relative;
+  z-index: 2;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.cta-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  color: #34db76;
+  margin-bottom: 16px;
+}
+
+.cta-title {
+  font-size: 44px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.15;
+  letter-spacing: -1.2px;
+  margin-bottom: 18px;
+}
+
+.cta-subtitle {
+  font-size: 18px;
+  font-weight: 500;
+  color: #a3bdae;
+  margin-bottom: 40px;
+  line-height: 1.5;
+}
+
+.cta-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.cta-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 32px;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #061e10;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 10px 28px rgba(34, 197, 94, 0.35);
+  text-decoration: none;
+  transition: all var(--transition-speed);
+}
+
+.cta-btn-primary svg {
+  width: 20px;
+  height: 20px;
+}
+
+.cta-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all var(--transition-speed);
+}
+
+.cta-btn-secondary svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 1280px) {
+  .cta-section {
+    padding: 30px 60px 80px 60px;
+  }
+  .cta-card {
+    padding: 60px 28px;
+  }
+  .cta-title {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 640px) {
+  .cta-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  .cta-btn-primary, .cta-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+}

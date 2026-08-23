@@ -1,0 +1,354 @@
+/* ═══════════════════════════════════════════════════════
+   Our Journey Section — Exact Match Styles
+   ═══════════════════════════════════════════════════════ */
+
+.journey-section {
+  position: relative;
+  width: 100%;
+  background-color: transparent;
+  padding: 90px 115px 120px 115px;
+  overflow: hidden;
+  transition: background-color var(--transition-speed);
+  z-index: 1;
+}
+
+.journey-inner {
+  position: relative;
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 50px;
+}
+
+/* ─── Left Copy Block ─── */
+.journey-left {
+  flex-shrink: 0;
+  width: 230px;
+  padding-top: 6px;
+}
+
+.journey-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.journey-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--hero-title);
+  letter-spacing: -0.8px;
+  line-height: 1.1;
+  transition: color var(--transition-speed);
+}
+
+.journey-leaf-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  animation: leaf-sway 3.5s ease-in-out infinite;
+}
+
+@keyframes leaf-sway {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  30% { transform: rotate(-10deg) translateY(-2px); }
+  70% { transform: rotate(6deg) translateY(1px); }
+}
+
+.journey-subtitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--hero-subtitle);
+  line-height: 1.5;
+  margin-bottom: 28px;
+  transition: color var(--transition-speed);
+}
+
+.journey-explore-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #15803d, #0d5326);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(21, 128, 61, 0.28);
+  text-decoration: none;
+  transition: all var(--transition-speed);
+}
+
+.dark-mode .journey-explore-btn {
+  background: linear-gradient(135deg, #22c55e, #15803d);
+  color: #061e10;
+  box-shadow: 0 8px 22px rgba(34, 197, 94, 0.3);
+}
+
+.btn-arrow-svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ─── 4 Steps Timeline Container ─── */
+.journey-steps-container {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex: 1;
+  padding-top: 10px;
+}
+
+/* Connecting Wave Path */
+.connecting-wave-svg {
+  position: absolute;
+  top: 55px;
+  left: 60px;
+  right: 60px;
+  width: calc(100% - 120px);
+  height: 90px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Intermediate Node Badges */
+.node-badge {
+  position: absolute;
+  top: 78px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(34, 197, 94, 0.4);
+  z-index: 4;
+}
+
+.node-badge svg {
+  width: 12px;
+  height: 12px;
+}
+
+.node-1 { left: 24%; }
+.node-2 { left: 49%; }
+.node-3 { left: 74%; }
+
+/* Individual Step Column */
+.journey-step-column {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 210px;
+}
+
+/* ─── 3D Podium & Sphere ─── */
+.podium-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+/* 3D Sphere/Orb Container */
+.sphere-orb {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f0fdf4 0%, #dcfce7 60%, #bbf7d0 100%);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    inset -5px -5px 12px rgba(22, 101, 52, 0.1),
+    inset 6px 6px 12px rgba(255, 255, 255, 0.9),
+    0 12px 28px rgba(34, 197, 94, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  transition: background var(--transition-speed), border-color var(--transition-speed);
+}
+
+.dark-mode .sphere-orb {
+  background: radial-gradient(circle at 35% 35%, #143d22 0%, #0d2d18 60%, #071f10 100%);
+  border-color: rgba(52, 219, 118, 0.25);
+  box-shadow:
+    inset -5px -5px 12px rgba(0, 0, 0, 0.5),
+    inset 6px 6px 12px rgba(255, 255, 255, 0.08),
+    0 12px 28px rgba(0, 0, 0, 0.4);
+}
+
+.sphere-orb svg {
+  width: 50px;
+  height: 50px;
+}
+
+.dark-mode .sphere-orb svg {
+  stroke: #34db76;
+}
+
+/* Step 4 Yellow Sphere Override */
+.step-yellow .sphere-orb {
+  background: radial-gradient(circle at 35% 35%, #fffbeb 0%, #fef3c7 60%, #fde68a 100%);
+  box-shadow:
+    inset -5px -5px 12px rgba(180, 83, 9, 0.12),
+    inset 6px 6px 12px rgba(255, 255, 255, 0.9),
+    0 12px 28px rgba(245, 158, 11, 0.2);
+}
+
+.dark-mode .step-yellow .sphere-orb {
+  background: radial-gradient(circle at 35% 35%, #451a03 0%, #311302 60%, #1e0a01 100%);
+  border-color: rgba(251, 191, 36, 0.35);
+  box-shadow:
+    inset -5px -5px 12px rgba(0, 0, 0, 0.6),
+    inset 6px 6px 12px rgba(251, 191, 36, 0.15),
+    0 12px 28px rgba(245, 158, 11, 0.25);
+}
+
+.dark-mode .step-yellow .sphere-orb svg {
+  stroke: #facc15;
+}
+
+.dark-mode .step-yellow .sphere-orb svg circle[fill="#78350f"] {
+  fill: #facc15;
+}
+
+.dark-mode .step-yellow .sphere-orb svg circle[fill="#fef08a"] {
+  fill: #facc15;
+  fill-opacity: 0.2;
+}
+
+.dark-mode .step-yellow .step-num {
+  color: #facc15;
+}
+
+/* 3D Pedestal Disc Base under sphere */
+.podium-pedestal {
+  width: 124px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(to bottom, #ffffff 0%, #e2f0d9 70%, #cce5c0 100%);
+  border: 1.5px solid #d0e6c5;
+  box-shadow: 0 8px 20px rgba(22, 101, 52, 0.1);
+  margin-top: -12px;
+  z-index: 1;
+  transition: background var(--transition-speed), border-color var(--transition-speed);
+}
+
+.dark-mode .podium-pedestal {
+  background: linear-gradient(to bottom, #194026 0%, #102d1a 70%, #0b2012 100%);
+  border-color: #1e5430;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.step-yellow .podium-pedestal {
+  background: linear-gradient(to bottom, #ffffff 0%, #fef3c7 70%, #fde68a 100%);
+  border-color: #fcd34d;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15);
+}
+
+.dark-mode .step-yellow .podium-pedestal {
+  background: linear-gradient(to bottom, #451a03 0%, #2e1002 70%, #1f0b01 100%);
+  border-color: #78350f;
+}
+
+/* ─── Step Info Text (Left Aligned) ─── */
+.step-text-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding-left: 12px;
+}
+
+.step-num {
+  font-size: 15px;
+  font-weight: 800;
+  color: #15803d;
+  margin-bottom: 4px;
+  letter-spacing: 0.3px;
+  transition: color var(--transition-speed);
+}
+
+.dark-mode .step-num {
+  color: #34db76;
+}
+
+.step-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--hero-title);
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+  transition: color var(--transition-speed);
+}
+
+.step-desc {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--hero-subtitle);
+  line-height: 1.5;
+  white-space: pre-line;
+  transition: color var(--transition-speed);
+}
+
+/* ─── Dotted Heart Sparkle Trail ─── */
+.sparkle-heart-trail {
+  position: absolute;
+  top: 10px;
+  right: 60px;
+  width: 220px;
+  height: 220px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.heart-trail-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 1280px) {
+  .journey-section {
+    padding: 70px 60px 100px 60px;
+  }
+  .journey-inner {
+    gap: 32px;
+  }
+  .journey-left {
+    width: 190px;
+  }
+  .journey-step-column {
+    width: 170px;
+  }
+  .sphere-orb {
+    width: 90px;
+    height: 90px;
+  }
+  .sphere-orb svg {
+    width: 40px;
+    height: 40px;
+  }
+  .podium-pedestal {
+    width: 104px;
+    height: 18px;
+  }
+  .connecting-wave-svg {
+    top: 45px;
+  }
+  .node-badge {
+    top: 68px;
+  }
+}

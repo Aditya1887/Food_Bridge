@@ -1,0 +1,10 @@
+.split-text-wrapper {
+  overflow: visible;
+  line-height: inherit;
+}
+
+.split-text-item {
+  position: relative;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}

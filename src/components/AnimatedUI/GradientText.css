@@ -1,0 +1,34 @@
+.gradient-text-container {
+  position: relative;
+  display: inline-block;
+  vertical-align: baseline;
+}
+
+.gradient-text-content {
+  background-size: 300% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: gradient-shift 6s ease infinite;
+  display: inline-block;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-text-container.with-border {
+  padding: 4px 12px;
+  border-radius: 9999px;
+  border: 1px solid rgba(38, 186, 100, 0.25);
+  background: rgba(38, 186, 100, 0.06);
+}

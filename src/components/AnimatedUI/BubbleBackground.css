@@ -1,0 +1,147 @@
+/* ═══════════════════════════════════════════════════════
+   BubbleBackground — Liquid Gooey Interactive Backdrop
+   (Inspired by animate-ui Bubble Background)
+   ═══════════════════════════════════════════════════════ */
+
+.bubble-bg-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.bubble-bg-svg-defs {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.bubble-bg-blobs-layer {
+  position: absolute;
+  inset: 0;
+  filter: url(#bubble-goo) blur(35px);
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.bubble-blob {
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: hard-light;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Blob 1 — Top Left */
+.blob-1 {
+  width: 75%;
+  height: 75%;
+  top: 10%;
+  left: 10%;
+  background: radial-gradient(
+    circle at center,
+    rgba(var(--first-color), 0.85) 0%,
+    rgba(var(--first-color), 0) 55%
+  );
+}
+
+/* Blob 2 — Orbiting */
+.blob-2 {
+  width: 70%;
+  height: 70%;
+  top: 10%;
+  left: 10%;
+  background: radial-gradient(
+    circle at center,
+    rgba(var(--second-color), 0.8) 0%,
+    rgba(var(--second-color), 0) 55%
+  );
+}
+
+/* Blob 3 — Deep Accent */
+.blob-3 {
+  width: 75%;
+  height: 75%;
+  top: calc(50% + 100px);
+  left: calc(50% - 250px);
+  background: radial-gradient(
+    circle at center,
+    rgba(var(--third-color), 0.8) 0%,
+    rgba(var(--third-color), 0) 55%
+  );
+}
+
+/* Blob 4 — Floating Mint */
+.blob-4 {
+  width: 80%;
+  height: 80%;
+  top: 15%;
+  left: 15%;
+  opacity: 0.7;
+  background: radial-gradient(
+    circle at center,
+    rgba(var(--fourth-color), 0.75) 0%,
+    rgba(var(--fourth-color), 0) 55%
+  );
+}
+
+/* Blob 5 — Giant Base Orbit */
+.blob-5 {
+  width: 140%;
+  height: 140%;
+  top: -20%;
+  left: -20%;
+  background: radial-gradient(
+    circle at center,
+    rgba(var(--fifth-color), 0.5) 0%,
+    rgba(var(--fifth-color), 0) 50%
+  );
+}
+
+/* Interactive Cursor Follower */
+.blob-interactive {
+  width: 85%;
+  height: 85%;
+  top: calc(50% - 42.5%);
+  left: calc(50% - 42.5%);
+  background: radial-gradient(
+    circle at center,
+    rgba(var(--sixth-color), 0.8) 0%,
+    rgba(var(--sixth-color), 0) 50%
+  );
+  opacity: 0.75;
+}
+
+/* Revolving Wrappers */
+.bubble-revolving-wrapper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.rev-1 {
+  transform-origin: calc(50% - 200px) 50%;
+}
+
+.rev-2 {
+  transform-origin: calc(50% + 200px) 50%;
+}
+
+.rev-3 {
+  transform-origin: calc(50% - 300px) calc(50% + 150px);
+}
+
+.bubble-bg-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}

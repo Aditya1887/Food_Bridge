@@ -1,0 +1,184 @@
+/* ═══════════════════════════════════════════════════════
+   FoodBridge — Global Design Tokens & Base Resets
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* ─── Color Palette — Light Mode ─── */
+  --bg-primary: #f6f7f2;
+  --nav-text: #133e27;
+  --hero-title: #0e321e;
+  --hero-subtitle: #475d4e;
+  --accent-green: #26ba64;
+  --accent-glow: rgba(38, 186, 100, 0.4);
+  --brand-green: #126b2b;
+  --brand-green-light: #34db76;
+
+  /* Buttons */
+  --btn-primary-bg: #0d321d;
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #f5f4eb;
+  --btn-secondary-text: #0e321e;
+  --btn-border: rgba(14, 50, 30, 0.12);
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.65);
+  --glass-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+
+  /* Impact Bar */
+  --impact-bar-bg: rgb(8, 41, 22);
+  --impact-text: #ffffff;
+  --impact-label: #8db599;
+
+  /* Transitions */
+  --transition-speed: 0.3s ease;
+}
+
+/* ─── Lightswind Moving Gradient Keyframes (Light Mode) ─── */
+@keyframes moving-gradient-light {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* ─── Moving Gradient Keyframes (Dark Mode) ─── */
+@keyframes moving-gradient-dark {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* ─── Light Mode Global Animated Gradient (Lightswind) ─── */
+html:not(.dark-mode),
+body:not(.dark-mode),
+.app:not(.dark-mode) {
+  background: linear-gradient(
+    -45deg,
+    #f6f8f2 0%,
+    #e9f5ed 16%,
+    #fdfcf5 32%,
+    #e5f7ec 48%,
+    #fef9e8 64%,
+    #eaf6ee 80%,
+    #f6f8f2 100%
+  ) !important;
+  background-size: 350% 350% !important;
+  background-attachment: fixed !important;
+  animation: moving-gradient-light 16s ease infinite !important;
+}
+
+/* ─── Dark Mode Tokens & Moving Gradient ─── */
+html.dark-mode,
+body.dark-mode,
+.dark-mode,
+.app.dark-mode {
+  --bg-primary: #04140a;
+  --nav-text: #f1f5f9;
+  --hero-title: #ffffff;
+  --hero-subtitle: #cbd5e1;
+  --card-title: #ffffff;
+  --card-desc: #94a3b8;
+  --accent-green: #4ade80;
+  --accent-glow: rgba(74, 222, 128, 0.4);
+  --brand-green: #22c55e;
+  --brand-green-light: #86efac;
+
+  --btn-primary-bg: #22c55e;
+  --btn-primary-text: #04140a;
+  --btn-secondary-bg: rgba(255, 255, 255, 0.1);
+  --btn-secondary-text: #ffffff;
+  --btn-border: rgba(255, 255, 255, 0.2);
+
+  --glass-bg: rgba(4, 20, 11, 0.72);
+  --glass-border: rgba(74, 222, 128, 0.18);
+  --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+
+  --impact-bar-bg: rgba(2, 12, 6, 0.85);
+
+  /* Animata Moving Gradient with rich, vibrant emerald, forest, and gold tones */
+  background: linear-gradient(
+    -45deg,
+    #020b05 0%,
+    #052414 15%,
+    #021208 30%,
+    #0d3f23 48%,
+    #15803d 62%,
+    #062d18 78%,
+    #03140a 90%,
+    #020b05 100%
+  ) !important;
+  background-size: 400% 400% !important;
+  background-attachment: fixed !important;
+  animation: moving-gradient-dark 12s ease infinite !important;
+  color: #f1f5f9;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Base Resets
+   ═══════════════════════════════════════════════════════ */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  width: 100%;
+  min-height: 100%;
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  color: var(--hero-title);
+  overflow-x: hidden;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(18, 107, 43, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(18, 107, 43, 0.5);
+}

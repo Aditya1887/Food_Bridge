@@ -1,0 +1,10 @@
+.blur-text-wrapper {
+  overflow: visible;
+  line-height: inherit;
+}
+
+.blur-text-element {
+  position: relative;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}

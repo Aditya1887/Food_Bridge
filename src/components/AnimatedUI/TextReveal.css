@@ -1,0 +1,20 @@
+.text-reveal-container {
+  position: relative;
+  width: 100%;
+}
+
+.text-reveal-paragraph {
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+
+.text-reveal-word-wrapper {
+  display: inline-block;
+}
+
+.text-reveal-word {
+  display: inline-block;
+  will-change: opacity, transform;
+}

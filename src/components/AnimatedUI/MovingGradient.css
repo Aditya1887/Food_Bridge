@@ -1,0 +1,66 @@
+/* ═══════════════════════════════════════════════════════
+   MovingGradient Component Styles
+   Adapted from Animata (https://animata.design/docs/background/moving-gradient)
+   ═══════════════════════════════════════════════════════ */
+
+@keyframes bg-position {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.moving-gradient-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.moving-gradient-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: linear-gradient(
+    135deg,
+    #020f07 0%,
+    #062314 20%,
+    #03140a 38%,
+    #0c3b21 55%,
+    #134e2a 70%,
+    #052414 85%,
+    #020f07 100%
+  );
+  background-size: 300% 300%;
+  opacity: 0.95;
+  z-index: 0;
+}
+
+.animate-bg-position {
+  animation: bg-position 12s ease infinite;
+}
+
+.moving-gradient-blur-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 1;
+  opacity: 0.7;
+}
+
+.moving-gradient-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+}

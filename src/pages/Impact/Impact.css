@@ -1,0 +1,961 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&display=swap');
+
+/* ═══════════════════════════════════════════════════════
+   Impact Page Styles — Reference Matched
+   ═══════════════════════════════════════════════════════ */
+
+/* ─── Page Root ─── */
+.imp-page,
+.impact-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: transparent;
+  font-family: var(--font-family, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
+  color: #0f2a1a;
+  transition: background 0.3s ease, color 0.3s ease;
+  padding-bottom: 80px;
+}
+
+.imp-page.dark-mode,
+.impact-page.dark-mode {
+  background: transparent;
+  color: #f1f5f9;
+}
+
+/* ─── Floating Leaves ─── */
+.imp-leaf {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─── Top Right Dot Matrix Pattern ─── */
+.imp-dot-matrix {
+  position: absolute;
+  top: 40px;
+  right: 40px;
+  width: 220px;
+  height: 220px;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(#4caf50 1.2px, transparent 1.2px);
+  background-size: 16px 16px;
+  opacity: 0.15;
+}
+
+.dark-mode .imp-dot-matrix {
+  opacity: 0.1;
+}
+
+/* ─── Container ─── */
+.imp-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 72px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ─── Navbar ─── */
+.imp-navbar {
+  position: relative;
+  z-index: 100;
+  padding: 20px 72px;
+  background: transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.dark-mode .imp-navbar {
+  border-bottom-color: rgba(74, 222, 128, 0.08);
+  background: rgba(10, 26, 16, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+.imp-nav-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+/* Brand */
+.imp-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.imp-logo-svg {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+}
+
+.imp-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.imp-brand-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1b6b33;
+  letter-spacing: -0.4px;
+  line-height: 1.1;
+}
+
+.dark-mode .imp-brand-name {
+  color: #4ade80;
+}
+
+.imp-brand-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+.dark-mode .imp-brand-tag {
+  color: #6b9c7d;
+}
+
+/* Nav links */
+.imp-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.45);
+  padding: 5px 10px;
+  border-radius: 50px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark-mode .imp-nav-links {
+  background: rgba(7, 21, 12, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.imp-nav-link {
+  position: relative;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  user-select: none;
+}
+
+.imp-nav-label-text {
+  position: relative;
+  z-index: 2;
+}
+
+.imp-nav-hover-pill {
+  position: absolute;
+  inset: 0;
+  border-radius: 50px;
+  background: rgba(27, 107, 51, 0.12);
+  border: 1px solid rgba(27, 107, 51, 0.18);
+  z-index: 1;
+}
+
+.dark-mode .imp-nav-hover-pill {
+  background: rgba(52, 219, 118, 0.16);
+  border-color: rgba(52, 219, 118, 0.28);
+}
+
+.dark-mode .imp-nav-link {
+  color: #94a3b8;
+}
+
+.imp-nav-link:hover {
+  color: #1b6b33;
+}
+
+.dark-mode .imp-nav-link:hover {
+  color: #4ade80;
+}
+
+.imp-nav-active {
+  color: #1b6b33 !important;
+  font-weight: 700;
+}
+
+.dark-mode .imp-nav-active {
+  color: #4ade80 !important;
+}
+
+.imp-nav-active-dot {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  background-color: #1b6b33;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #1b6b33;
+  z-index: 2;
+}
+
+.dark-mode .imp-nav-active-dot {
+  background-color: #4ade80;
+  box-shadow: 0 0 8px #4ade80;
+}
+
+.dark-mode .imp-nav-underline {
+  background: #4ade80;
+}
+
+/* Nav action buttons */
+.imp-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.imp-btn-theme {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  transition: background 0.2s;
+}
+
+.imp-btn-theme svg {
+  width: 16px;
+  height: 16px;
+}
+
+.dark-mode .imp-btn-theme {
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.imp-btn-join {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 50px;
+  background: #1b6b33;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(27, 107, 51, 0.3);
+  transition: all 0.2s;
+}
+
+.imp-btn-join svg {
+  width: 15px;
+  height: 15px;
+}
+
+.imp-btn-join:hover {
+  background: #155229;
+  transform: translateY(-1px);
+}
+
+.dark-mode .imp-btn-join {
+  background: #166534;
+  box-shadow: 0 4px 14px rgba(74, 222, 128, 0.2);
+}
+
+.dark-mode .imp-btn-join:hover {
+  background: #15803d;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION 1: HERO & STAT CARDS
+   ═══════════════════════════════════════════════════════ */
+.imp-hero-section {
+  padding: 48px 0 36px;
+  position: relative;
+}
+
+.imp-dashed-curve-bg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.imp-hero-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 40px;
+  align-items: flex-start;
+  position: relative;
+  z-index: 2;
+}
+
+/* Tag badge */
+.imp-tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #1b6b33;
+  background: rgba(27, 107, 51, 0.08);
+  border: 1px solid rgba(27, 107, 51, 0.18);
+  padding: 5px 14px;
+  border-radius: 50px;
+  margin-bottom: 20px;
+}
+
+.dark-mode .imp-tag-badge {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.08);
+  border-color: rgba(74, 222, 128, 0.2);
+}
+
+/* Hero Title */
+.imp-hero-title {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -1.4px;
+  margin-bottom: 18px;
+}
+
+.imp-title-dark {
+  display: block;
+  color: #0f2a1a;
+}
+
+.dark-mode .imp-title-dark {
+  color: #f1f5f9;
+}
+
+.imp-title-green {
+  display: block;
+  color: #1b6b33;
+}
+
+.dark-mode .imp-title-green {
+  color: #4ade80;
+}
+
+.imp-hero-desc {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #475569;
+  line-height: 1.65;
+  margin-bottom: 28px;
+}
+
+.dark-mode .imp-hero-desc {
+  color: #94a3b8;
+}
+
+/* CTA Button */
+.imp-btn-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 24px 8px 10px;
+  border-radius: 50px;
+  background: #ffffff;
+  border: 1.5px solid #dcf0dc;
+  color: #0f2a1a;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.dark-mode .imp-btn-cta {
+  background: #0d2817;
+  border-color: rgba(74, 222, 128, 0.25);
+  color: #f1f5f9;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.imp-cta-play-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #bbf7d0;
+  color: #166534;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imp-cta-play-circle svg {
+  width: 14px;
+  height: 14px;
+  margin-left: 2px;
+}
+
+.dark-mode .imp-cta-play-circle {
+  background: #15803d;
+  color: #ffffff;
+}
+
+/* ─── 4 Impact Stat Cards (Row) ─── */
+.imp-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.imp-stat-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px 14px 22px;
+  border: 1.5px solid #eef2eb;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: default;
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+}
+
+.dark-mode .imp-stat-card {
+  background: #0d2817;
+  border-color: rgba(74, 222, 128, 0.14);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
+}
+
+.imp-stat-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #edf7ee;
+  border: 1.2px solid #d4ebd5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.imp-stat-icon-wrap svg {
+  width: 28px;
+  height: 28px;
+}
+
+.dark-mode .imp-stat-icon-wrap {
+  background: #143d22;
+  border-color: rgba(74, 222, 128, 0.22);
+}
+
+.imp-stat-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0f2a1a;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.dark-mode .imp-stat-value {
+  color: #f1f5f9;
+}
+
+.imp-stat-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f2a1a;
+  margin-bottom: 8px;
+}
+
+.dark-mode .imp-stat-title {
+  color: #e2e8f0;
+}
+
+.imp-stat-desc {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.45;
+  max-width: 140px;
+  margin: 0;
+}
+
+.dark-mode .imp-stat-desc {
+  color: #94a3b8;
+}
+
+/* ─── Sage Green Power Banner ─── */
+.imp-power-banner {
+  margin-top: 24px;
+  background: #e9efe7;
+  border-radius: 60px;
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgba(46, 125, 50, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+
+.dark-mode .imp-power-banner {
+  background: #0f301b;
+  border-color: rgba(74, 222, 128, 0.18);
+}
+
+.imp-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.imp-banner-leaf-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px dashed #4caf50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1b6b33;
+}
+
+.dark-mode .imp-banner-leaf-badge {
+  background: #143d22;
+  border-color: #4ade80;
+  color: #4ade80;
+}
+
+.imp-banner-leaf-badge svg {
+  width: 20px;
+  height: 20px;
+}
+
+.imp-banner-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.imp-banner-heading {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0f2a1a;
+  line-height: 1.2;
+}
+
+.dark-mode .imp-banner-heading {
+  color: #f1f5f9;
+}
+
+.imp-banner-sub {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.dark-mode .imp-banner-sub {
+  color: #94a3b8;
+}
+
+.imp-banner-thankyou {
+  font-family: 'Caveat', 'Segoe Script', cursive, sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: #1b6b33;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.imp-thankyou-heart {
+  font-size: 22px;
+  color: #1b6b33;
+}
+
+.dark-mode .imp-banner-thankyou,
+.dark-mode .imp-thankyou-heart {
+  color: #4ade80;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION 2: HOW WE CREATE IMPACT
+   ═══════════════════════════════════════════════════════ */
+.imp-create-section {
+  padding: 48px 0 20px;
+  position: relative;
+}
+
+.imp-create-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.imp-create-title {
+  font-size: 34px;
+  font-weight: 800;
+  color: #0f2a1a;
+  letter-spacing: -0.8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.dark-mode .imp-create-title {
+  color: #f1f5f9;
+}
+
+.imp-smiles-text {
+  color: #1b6b33;
+}
+
+.dark-mode .imp-smiles-text {
+  color: #4ade80;
+}
+
+.imp-smile-heart-doodle {
+  display: inline-flex;
+  align-items: center;
+}
+
+.imp-doodle-svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* ─── Grid: Process Rail (Left) + Volunteer Photo (Right) ─── */
+.imp-create-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  gap: 36px;
+  align-items: center;
+}
+
+/* 4 Steps Process Rail */
+.imp-process-rail {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.imp-process-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.imp-step-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.imp-step-circle-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #f0faf2;
+  border: 1.5px solid #c8e6c9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+}
+
+.dark-mode .imp-step-circle-icon {
+  background: #143d22;
+  border-color: rgba(74, 222, 128, 0.25);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+
+.imp-step-circle-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.imp-step-arrow-dot {
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #1b6b33;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.imp-step-arrow-dot svg {
+  width: 10px;
+  height: 10px;
+  margin-left: 1px;
+}
+
+.dark-mode .imp-step-arrow-dot {
+  background: #4ade80;
+  color: #0a1a10;
+}
+
+.imp-step-text-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.imp-step-num {
+  font-size: 11px;
+  font-weight: 800;
+  color: #1b6b33;
+  margin-bottom: 2px;
+}
+
+.dark-mode .imp-step-num {
+  color: #4ade80;
+}
+
+.imp-step-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0f2a1a;
+  margin-bottom: 6px;
+}
+
+.dark-mode .imp-step-title {
+  color: #f1f5f9;
+}
+
+.imp-step-desc {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 0;
+  max-width: 120px;
+}
+
+.dark-mode .imp-step-desc {
+  color: #94a3b8;
+}
+
+/* ─── Right: Fluid Organic Photo Frame + Floating Testimonial ─── */
+.imp-photo-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Outer decorative echoing green wave lines */
+.imp-photo-outer-echo-curve {
+  position: absolute;
+  inset: -24px;
+  width: calc(100% + 48px);
+  height: calc(100% + 48px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.imp-organic-photo-frame {
+  position: relative;
+  width: 100%;
+  height: 390px;
+  border-radius: 44px 130px 40px 145px;
+  overflow: hidden;
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.12);
+  border: 4px solid #ffffff;
+  z-index: 2;
+}
+
+.dark-mode .imp-organic-photo-frame {
+  border-color: #143d22;
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.55);
+}
+
+.imp-volunteer-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.imp-photo-green-accent-curve {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2.5px solid rgba(76, 175, 80, 0.4);
+  pointer-events: none;
+}
+
+/* Floating Testimonial Quote Badge */
+.imp-quote-badge {
+  position: absolute;
+  left: -32px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 18px 20px;
+  width: 175px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.1);
+  border: 1.5px solid #eef2eb;
+  z-index: 15;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dark-mode .imp-quote-badge {
+  background: #0d2817;
+  border-color: rgba(74, 222, 128, 0.22);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+}
+
+.imp-quote-icon {
+  font-size: 26px;
+  color: #4ade80;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.dark-mode .imp-quote-icon {
+  color: #4ade80;
+}
+
+.imp-quote-text {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f2a1a;
+  line-height: 1.35;
+  margin: 0 0 10px 0;
+}
+
+.dark-mode .imp-quote-text {
+  color: #f1f5f9;
+}
+
+.imp-quote-heart {
+  width: 20px;
+  height: 20px;
+  color: #1b6b33;
+}
+
+.dark-mode .imp-quote-heart {
+  color: #4ade80;
+}
+
+.imp-quote-heart svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE DESIGN
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 1200px) {
+  .imp-container,
+  .imp-navbar {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+  .imp-hero-grid {
+    grid-template-columns: 320px 1fr;
+    gap: 28px;
+  }
+  .imp-hero-title {
+    font-size: 38px;
+  }
+}
+
+@media (max-width: 980px) {
+  .imp-hero-grid {
+    grid-template-columns: 1fr;
+  }
+  .imp-hero-left {
+    max-width: 100%;
+    text-align: center;
+  }
+  .imp-btn-cta {
+    margin: 0 auto;
+  }
+  .imp-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .imp-create-grid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  .imp-process-rail {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  .imp-quote-badge {
+    left: 20px;
+  }
+  .imp-nav-links {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .imp-container,
+  .imp-navbar {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .imp-hero-title {
+    font-size: 30px;
+  }
+  .imp-stats-row {
+    grid-template-columns: 1fr;
+  }
+  .imp-power-banner {
+    flex-direction: column;
+    gap: 12px;
+    border-radius: 24px;
+    text-align: center;
+  }
+  .imp-process-rail {
+    grid-template-columns: 1fr;
+  }
+  .imp-step-arrow-dot {
+    display: none;
+  }
+  .imp-organic-photo-frame {
+    height: 280px;
+  }
+}

@@ -1,0 +1,33 @@
+.animated-counter {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.counter-digit-container {
+  display: inline-block;
+  height: 1.1em;
+  overflow: hidden;
+  position: relative;
+  vertical-align: middle;
+}
+
+.counter-digit-reel {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+}
+
+.counter-single-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.1em;
+  line-height: 1.1em;
+}
+
+.counter-symbol {
+  display: inline-block;
+  vertical-align: middle;
+}

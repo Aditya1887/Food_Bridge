@@ -1,0 +1,152 @@
+/* ═══════════════════════════════════════════════════════
+   Why FoodBridge Section Styles
+   ═══════════════════════════════════════════════════════ */
+
+.why-section {
+  position: relative;
+  width: 100%;
+  padding: 80px 115px 120px 115px;
+  background-color: transparent;
+  transition: background-color var(--transition-speed);
+  z-index: 1;
+}
+
+.why-container {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.why-header {
+  text-align: center;
+  margin-bottom: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.why-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--accent-green);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.why-title {
+  font-size: 38px;
+  font-weight: 800;
+  color: var(--hero-title);
+  letter-spacing: -1px;
+  margin-bottom: 12px;
+  transition: color var(--transition-speed);
+}
+
+.why-subtitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--hero-subtitle);
+  max-width: 560px;
+  transition: color var(--transition-speed);
+}
+
+/* ─── 4 Feature Cards Grid ─── */
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+}
+
+.why-card {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 24px;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  transition: background var(--transition-speed), border-color var(--transition-speed);
+}
+
+.why-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.why-card-num {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--hero-subtitle);
+  letter-spacing: 1px;
+  opacity: 0.6;
+}
+
+.why-icon-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.why-icon-badge svg {
+  width: 24px;
+  height: 24px;
+}
+
+.why-card-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--hero-title);
+  margin-bottom: 10px;
+  letter-spacing: -0.4px;
+  transition: color var(--transition-speed);
+}
+
+.why-card-desc {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--hero-subtitle);
+  line-height: 1.55;
+  margin-bottom: 24px;
+  transition: color var(--transition-speed);
+}
+
+.why-card-line {
+  width: 40px;
+  height: 3px;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.why-card:hover .why-card-line {
+  width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 1280px) {
+  .why-section {
+    padding: 70px 60px 100px 60px;
+  }
+  .why-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .why-grid {
+    grid-template-columns: 1fr;
+  }
+}

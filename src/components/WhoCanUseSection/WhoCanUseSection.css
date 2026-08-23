@@ -1,0 +1,399 @@
+/* ═══════════════════════════════════════════════════════
+   Who Can Use FoodBridge — Single Row Bento Styles
+   ═══════════════════════════════════════════════════════ */
+
+.who-section {
+  position: relative;
+  width: 100%;
+  padding: 100px 48px;
+  background-color: transparent;
+  z-index: 2;
+}
+
+.who-container {
+  max-width: 1520px;
+  margin: 0 auto;
+}
+
+/* ─── Header ─── */
+.who-header {
+  text-align: center;
+  margin-bottom: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.who-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.who-title {
+  font-size: 38px;
+  font-weight: 800;
+  color: var(--hero-title);
+  letter-spacing: -1px;
+  margin-bottom: 12px;
+  line-height: 1.15;
+}
+
+.dark-mode .who-title {
+  color: #ffffff;
+}
+
+.who-subtitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--hero-subtitle);
+  max-width: 580px;
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+.dark-mode .who-subtitle {
+  color: #94a3b8;
+}
+
+/* ─── Controls Row (Tabs + Arrow Buttons) ─── */
+.who-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tab-switcher {
+  position: relative;
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 5px;
+  border-radius: 50px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  gap: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.dark-mode .tab-switcher {
+  background: rgba(10, 30, 18, 0.7);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.tab-btn {
+  position: relative;
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #64748b;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 2;
+  transition: color 0.25s ease;
+  user-select: none;
+}
+
+.dark-mode .tab-btn {
+  color: #94a3b8;
+}
+
+.tab-btn.active {
+  color: #ffffff;
+}
+
+.dark-mode .tab-btn.active {
+  color: #ffffff;
+}
+
+.tab-pill-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  box-shadow: 0 4px 18px rgba(22, 163, 74, 0.35);
+  z-index: -1;
+}
+
+.dark-mode .tab-pill-bg {
+  background: linear-gradient(135deg, #16a34a, #059669);
+  box-shadow: 0 4px 20px rgba(22, 163, 74, 0.45);
+}
+
+.tab-label-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.tab-count {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.25);
+  color: inherit;
+}
+
+/* Row Scroll Buttons (Floating on Left & Right of Track) */
+.who-nav-scroll-btn {
+  position: absolute;
+  top: calc(50% - 8px);
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--hero-title);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark-mode .who-nav-scroll-btn {
+  background: rgba(8, 28, 16, 0.92);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.who-nav-scroll-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+}
+
+.dark-mode .who-nav-scroll-btn:hover {
+  background: rgba(14, 46, 26, 1);
+  border-color: rgba(74, 222, 128, 0.4);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+
+.who-nav-scroll-btn.btn-left {
+  left: 0;
+}
+
+.who-nav-scroll-btn.btn-right {
+  right: 0;
+}
+
+.who-nav-scroll-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ─── Single Horizontal Row Container ─── */
+.who-single-row-container {
+  position: relative;
+  width: 100%;
+  padding: 0 16px;
+}
+
+.who-single-row-track {
+  display: flex;
+  gap: 22px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 14px 18px 28px 18px;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+/* Custom Scrollbar for Row */
+.who-single-row-track::-webkit-scrollbar {
+  height: 6px;
+}
+
+.who-single-row-track::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 10px;
+}
+
+.dark-mode .who-single-row-track::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.who-single-row-track::-webkit-scrollbar-thumb {
+  background: rgba(22, 163, 74, 0.35);
+  border-radius: 10px;
+}
+
+.dark-mode .who-single-row-track::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.35);
+}
+
+.who-row-card-wrap {
+  flex: 0 0 285px;
+  min-width: 285px;
+  scroll-snap-align: start;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Card */
+.who-row-card {
+  position: relative;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 240px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, transform 0.25s ease;
+}
+
+.dark-mode .who-row-card {
+  background: rgba(7, 24, 14, 0.68);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.who-row-card:hover {
+  border-color: rgba(22, 163, 74, 0.45);
+  box-shadow: 0 16px 36px rgba(22, 163, 74, 0.12);
+}
+
+.dark-mode .who-row-card:hover {
+  border-color: rgba(74, 222, 128, 0.35);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+}
+
+/* Card Top */
+.row-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.row-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid;
+}
+
+.row-icon-box svg {
+  width: 22px;
+  height: 22px;
+}
+
+.row-stat-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  letter-spacing: 0.2px;
+}
+
+/* Card Body */
+.row-card-body {
+  flex: 1;
+}
+
+.row-card-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--hero-title);
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+}
+
+.dark-mode .row-card-title {
+  color: #ffffff;
+}
+
+.row-card-desc {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #64748b;
+  margin-bottom: 18px;
+}
+
+.dark-mode .row-card-desc {
+  color: #94a3b8;
+}
+
+/* Card Footer */
+.row-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark-mode .row-card-footer {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+.row-action-link {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.row-arrow-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid;
+  transition: transform 0.2s ease;
+}
+
+.who-row-card:hover .row-arrow-btn {
+  transform: translateX(3px);
+}
+
+.row-arrow-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .who-section {
+    padding: 70px 20px;
+  }
+
+  .who-title {
+    font-size: 28px;
+  }
+
+  .who-row-card-wrap {
+    flex: 0 0 260px;
+    min-width: 260px;
+  }
+}
