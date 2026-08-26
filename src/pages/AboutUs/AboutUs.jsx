@@ -297,7 +297,7 @@ export default function AboutUs({ onNavigate }) {
             {[
               { label: 'Home', route: 'home' },
               { label: 'Donate', route: 'home' },
-              { label: 'Find Food', route: 'home' },
+              { label: 'Find Food', route: 'food-listings' },
               { label: 'Impact', route: 'impact' },
               { label: 'How It Works', route: 'how-it-works' },
               { label: 'About', route: 'about-us' },

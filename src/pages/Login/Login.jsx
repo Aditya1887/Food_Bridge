@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 import {
   AnimatedCollectHands,
   AnimatedPinMap,
   AnimatedCommunityPeople,
 } from '../../components/AnimatedIcons/AnimatedIcons';
 import { SplitText, BlurText, GradientText, ShinyText, CountUp } from '../../components/AnimatedUI';
+import { BUILT_IN_AVATARS, svgToDataUri } from '../../services/avatarService';
 import './Login.css';
 
 /* ── Ambient floating leaves ── */
@@ -57,9 +60,11 @@ function FloatingLeaf({ x, y, rot, size, delay }) {
 
 export default function Login({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
+  const { login, signup, role: authRole } = useAuth();
 
   const [activeTab, setActiveTab] = useState('signup'); // 'login' | 'signup'
   const [role, setRole] = useState('donor'); // 'donor' | 'receiver'
+  const [selectedAvatar, setSelectedAvatar] = useState('avatar_leaf');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(true);
@@ -67,12 +72,23 @@ export default function Login({ onNavigate }) {
     name: '',
     email: '',
     phone: '',
-    identifier: '', // email or phone for login
+    identifier: '', // email for login
     password: '',
     confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success'); // 'success' | 'error'
+
+  const showToast = (message, type = 'success', duration = 5000) => {
+    setToastMessage(message);
+    setToastType(type);
+    if (duration > 0) {
+      setTimeout(() => {
+        setToastMessage('');
+      }, duration);
+    }
+  };
 
   const handleNav = (route) => {
     const routeHashes = {
@@ -82,6 +98,9 @@ export default function Login({ onNavigate }) {
       'impact': '#impact',
       'contact': '#contact',
       'login': '#login',
+      'donor-dashboard': '#donor-dashboard',
+      'receiver-dashboard': '#receiver-dashboard',
+      'dashboard': '#dashboard',
     };
     if (onNavigate) {
       onNavigate(route);
@@ -95,25 +114,145 @@ export default function Login({ onNavigate }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (activeTab === 'signup' && !agreeTerms) {
-      alert('Please agree to the Terms of Service and Privacy Policy.');
+    if (loading) return;
+
+    if (activeTab === 'login') {
+      const email = formData.identifier.trim();
+      const password = formData.password;
+
+      if (!email) {
+        showToast('Please enter your email address.', 'error', 4000);
+        return;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showToast('Please enter a valid email address.', 'error', 4000);
+        return;
+      }
+
+      if (!password) {
+        showToast('Please enter your password.', 'error', 4000);
+        return;
+      }
+
+      setLoading(true);
+      setToastMessage('');
+
+      try {
+        const data = await login({ email, password });
+
+        if (data?.session) {
+          // Read role from returned user data (not stale closure)
+          const resolvedRole = data.user?.user_metadata?.role || 'donor';
+          showToast('Welcome back! You have successfully logged in.', 'success', 3000);
+          setTimeout(() => {
+            if (resolvedRole === 'receiver') {
+              handleNav('receiver-dashboard');
+            } else {
+              handleNav('donor-dashboard');
+            }
+          }, 1000);
+        }
+      } catch (err) {
+        const errMsg = (err.message || '').toLowerCase();
+        if (errMsg.includes('email not confirmed') || errMsg.includes('not confirmed')) {
+          showToast('Please verify your email address before logging in. Check your inbox for the confirmation link.', 'error', 7000);
+        } else if (errMsg.includes('invalid login credentials') || errMsg.includes('invalid credentials')) {
+          showToast('Invalid email or password. Please try again.', 'error', 5000);
+        } else {
+          showToast(err.message || 'An unexpected error occurred during login.', 'error', 5000);
+        }
+      } finally {
+        setLoading(false);
+      }
       return;
     }
+
+    // ── Sign Up Validation ──
+    const name = formData.name.trim();
+    const email = formData.email.trim();
+    const password = formData.password;
+    const confirmPassword = formData.confirmPassword;
+
+    if (!name) {
+      showToast('Please enter your full name.', 'error', 4000);
+      return;
+    }
+
+    if (!email) {
+      showToast('Please enter your email address.', 'error', 4000);
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showToast('Please enter a valid email address.', 'error', 4000);
+      return;
+    }
+
+    if (!password) {
+      showToast('Please create a password.', 'error', 4000);
+      return;
+    }
+
+    if (password.length < 6) {
+      showToast('Password must be at least 6 characters long.', 'error', 4000);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showToast('Passwords do not match. Please check again.', 'error', 4000);
+      return;
+    }
+
+    if (!agreeTerms) {
+      showToast('Please agree to the Terms of Service and Privacy Policy.', 'error', 4000);
+      return;
+    }
+
+    // ── Real Supabase Sign Up ──
     setLoading(true);
-    setTimeout(() => {
+    setToastMessage('');
+
+    try {
+      const data = await signup({
+        email,
+        password,
+        fullName: name,
+        phone: formData.phone || '',
+        role: (role || 'donor').toLowerCase().trim(),
+        avatarUrl: selectedAvatar || 'avatar_leaf',
+      });
+
+      if (data?.user) {
+        if (data.session) {
+          showToast('Account created successfully! Welcome to FoodBridge.', 'success', 6000);
+          const resolvedRole = data.user?.user_metadata?.role || role || 'donor';
+          setTimeout(() => {
+            if (resolvedRole === 'receiver') {
+              handleNav('receiver-dashboard');
+            } else {
+              handleNav('donor-dashboard');
+            }
+          }, 1500);
+        } else {
+          showToast('Account created! Please check your email to verify your account before logging in.', 'success', 8000);
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          password: '',
+          confirmPassword: '',
+        }));
+      }
+    } catch (err) {
+      showToast(err.message || 'An unexpected error occurred during signup.', 'error', 6000);
+    } finally {
       setLoading(false);
-      setToastMessage(
-        activeTab === 'login'
-          ? 'Welcome back! You have successfully logged in.'
-          : `Account created successfully as ${role === 'donor' ? 'Donor' : 'Receiver'}! Welcome to FoodBridge.`
-      );
-      setTimeout(() => {
-        setToastMessage('');
-        handleNav('home');
-      }, 2000);
-    }, 900);
+    }
   };
 
   return (
@@ -615,6 +754,31 @@ export default function Login({ onNavigate }) {
                         I agree to the <button type="button" className="lgn-text-link" onClick={() => handleNav('contact')}>Terms of Service</button> and <button type="button" className="lgn-text-link" onClick={() => handleNav('contact')}>Privacy Policy</button>
                       </span>
                     </label>
+
+                    {/* Avatar Selection */}
+                    <div className="lgn-avatar-section">
+                      <span className="lgn-role-label">Choose your avatar</span>
+                      <div className="lgn-avatar-grid">
+                        {BUILT_IN_AVATARS.map((avatar) => (
+                          <button
+                            key={avatar.id}
+                            type="button"
+                            className={`lgn-avatar-option ${selectedAvatar === avatar.id ? 'lgn-avatar-active' : ''}`}
+                            onClick={() => setSelectedAvatar(avatar.id)}
+                            title={avatar.label}
+                          >
+                            <img src={svgToDataUri(avatar.svg)} alt={avatar.label} />
+                            {selectedAvatar === avatar.id && (
+                              <span className="lgn-avatar-check">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -670,7 +834,22 @@ export default function Login({ onNavigate }) {
                       <button
                         type="button"
                         className="lgn-btn-forgot"
-                        onClick={() => alert('Password reset instructions have been sent to your email.')}
+                        onClick={async () => {
+                          const email = formData.identifier.trim();
+                          if (!email) {
+                            showToast('Please enter your email address first.', 'error', 4000);
+                            return;
+                          }
+                          try {
+                            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                              redirectTo: window.location.origin,
+                            });
+                            if (error) throw error;
+                            showToast('Password reset link sent to your email. Please check your inbox.', 'success', 7000);
+                          } catch (err) {
+                            showToast(err.message || 'Failed to send reset email.', 'error', 5000);
+                          }
+                        }}
                       >
                         Forgot Password?
                       </button>
@@ -706,7 +885,17 @@ export default function Login({ onNavigate }) {
                   className="lgn-btn-social"
                   whileHover={{ y: -2, boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}
                   whileTap={{ scale: 0.96 }}
-                  onClick={() => alert('Google authentication connected')}
+                  onClick={async () => {
+                    try {
+                      const { error } = await supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: { redirectTo: window.location.origin + '/#dashboard' },
+                      });
+                      if (error) throw error;
+                    } catch (err) {
+                      showToast(err.message || 'Google login failed. Make sure Google OAuth is enabled.', 'error', 5000);
+                    }
+                  }}
                 >
                   <svg viewBox="0 0 24 24" className="lgn-social-icon">
                     <path
@@ -735,7 +924,7 @@ export default function Login({ onNavigate }) {
                   className="lgn-btn-social"
                   whileHover={{ y: -2, boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}
                   whileTap={{ scale: 0.96 }}
-                  onClick={() => alert('Facebook authentication connected')}
+                  onClick={() => showToast('Facebook login coming soon! Use Google or email for now.', 'error', 4000)}
                 >
                   <svg viewBox="0 0 24 24" fill="#1877F2" className="lgn-social-icon">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -749,7 +938,7 @@ export default function Login({ onNavigate }) {
                   className="lgn-btn-social"
                   whileHover={{ y: -2, boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}
                   whileTap={{ scale: 0.96 }}
-                  onClick={() => alert('Apple authentication connected')}
+                  onClick={() => showToast('Apple login coming soon! Use Google or email for now.', 'error', 4000)}
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor" className="lgn-social-icon">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.85c.66-.8 1.11-1.92.99-3.04-1 .04-2.16.67-2.82 1.44-.58.67-1.1 1.77-.96 2.87 1.12.09 2.13-.47 2.79-1.27z" />
@@ -790,14 +979,31 @@ export default function Login({ onNavigate }) {
                 {toastMessage && (
                   <motion.div
                     className="lgn-toast"
+                    style={
+                      toastType === 'error'
+                        ? {
+                            background: isDark ? '#3b1212' : '#fef2f2',
+                            borderColor: isDark ? '#7f1d1d' : '#fecaca',
+                            color: isDark ? '#fca5a5' : '#991b1b',
+                          }
+                        : undefined
+                    }
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                      <polyline points="22 4 12 14.01 9 11.01" />
-                    </svg>
+                    {toastType === 'error' ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
+                      </svg>
+                    )}
                     <span>{toastMessage}</span>
                   </motion.div>
                 )}

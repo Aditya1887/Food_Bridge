@@ -1,0 +1,1435 @@
+/* ═══════════════════════════════════════════════════
+   FoodBridge — Donor Dashboard Styles
+   Recreated accurately from reference UI + Supabase integration
+   ═══════════════════════════════════════════════════ */
+
+.donor-dashboard {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f7faf7;
+  color: #1f2937;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ═══════════ SIDEBAR ═══════════ */
+.dd-sidebar {
+  width: 260px;
+  min-width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e7ede7;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 18px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+.dd-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.dd-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  outline: none;
+}
+
+.dd-logo-icon {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+.dd-logo-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.dd-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.dd-brand-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: #14532d;
+  letter-spacing: -0.3px;
+  line-height: 1.1;
+}
+
+.dd-brand-tagline {
+  font-size: 10.5px;
+  color: #6b7280;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.dd-close-mobile-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+/* Navigation */
+.dd-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.dd-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  color: #4b5563;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.dd-nav-item:hover {
+  background-color: #f1f8f2;
+  color: #15803d;
+}
+
+.dd-nav-item.active {
+  background-color: #eaf5ec;
+  color: #15803d;
+  font-weight: 700;
+}
+
+.dd-nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.dd-badge-count {
+  margin-left: auto;
+  background-color: #16a34a;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+/* Sidebar Footer Motivation Box */
+.dd-sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.dd-promo-box {
+  background: linear-gradient(145deg, #edf7ee 0%, #e2f3e4 100%);
+  border: 1px solid #d3ebd6;
+  border-radius: 16px;
+  padding: 16px 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dd-promo-text {
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 600;
+  color: #166534;
+  position: relative;
+  z-index: 2;
+  max-width: 80%;
+}
+
+.dd-promo-leaves {
+  position: absolute;
+  right: -8px;
+  bottom: -10px;
+  width: 60px;
+  height: 60px;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.dd-leaf-illus {
+  width: 100%;
+  height: 100%;
+}
+
+.dd-btn-donate {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: #166534;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 11px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.2);
+  transition: all 0.2s ease;
+}
+
+.dd-btn-donate:hover {
+  background-color: #14532d;
+}
+
+.dd-btn-plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* ═══════════ MAIN CONTAINER ═══════════ */
+.dd-main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 24px 32px 40px;
+  position: relative;
+}
+
+/* Top Header */
+.dd-top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.dd-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dd-hamburger-btn {
+  display: none;
+  background: #ffffff;
+  border: 1px solid #e5ebe5;
+  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #374151;
+}
+
+.dd-welcome-title {
+  font-size: 23px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.4px;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.dd-highlight-name {
+  color: #16a34a;
+}
+
+.dd-wave {
+  display: inline-block;
+  transform-origin: 70% 70%;
+  animation: ddWaveAnim 2s infinite ease-in-out;
+}
+
+@keyframes ddWaveAnim {
+  0%, 100% { transform: rotate(0deg); }
+  20%, 60% { transform: rotate(14deg); }
+  40%, 80% { transform: rotate(-10deg); }
+}
+
+.dd-welcome-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 3px 0 0;
+}
+
+.dd-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dd-theme-btn,
+.dd-bell-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  border: 1px solid #e5ebe5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4b5563;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.dd-theme-btn:hover,
+.dd-bell-btn:hover {
+  background-color: #f1f8f2;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+
+.dd-theme-btn svg,
+.dd-bell-btn svg {
+  width: 19px;
+  height: 19px;
+}
+
+.dd-bell-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background-color: #16a34a;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}
+
+/* User Profile Badge */
+.dd-user-profile-wrap {
+  position: relative;
+}
+
+.dd-user-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #ffffff;
+  border: 1px solid #e5ebe5;
+  border-radius: 30px;
+  padding: 4px 14px 4px 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dd-user-profile-btn:hover {
+  border-color: #bbf7d0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.dd-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #86efac;
+}
+
+.dd-user-meta {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.dd-user-fullname {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.15;
+}
+
+.dd-user-role-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.dd-user-chevron {
+  width: 14px;
+  height: 14px;
+  color: #6b7280;
+  margin-left: 2px;
+  transition: transform 0.2s ease;
+}
+
+.dd-user-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.dd-user-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 220px;
+  background-color: #ffffff;
+  border: 1px solid #e5ebe5;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  padding: 8px;
+  z-index: 150;
+}
+
+.dd-dropdown-user-info {
+  padding: 8px 10px;
+}
+
+.dd-dropdown-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.dd-dropdown-email {
+  font-size: 11px;
+  color: #6b7280;
+  margin: 2px 0 0;
+}
+
+.dd-dropdown-divider {
+  height: 1px;
+  background-color: #f1f5f1;
+  margin: 6px 0;
+}
+
+.dd-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.dd-dropdown-item:hover {
+  background-color: #f3f8f4;
+  color: #15803d;
+}
+
+.dd-dropdown-item svg {
+  width: 15px;
+  height: 15px;
+}
+
+.dd-logout-item {
+  color: #dc2626;
+}
+
+.dd-logout-item:hover {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+/* Floating Toast */
+.dd-floating-toast {
+  position: sticky;
+  top: 10px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  z-index: 90;
+}
+
+.dd-toast-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ═══════════ DASHBOARD CONTENT GRID ═══════════ */
+.dd-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+
+.dd-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dd-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Shared Card Styles */
+.dd-card {
+  background-color: #ffffff;
+  border: 1px solid #e7ede7;
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.dd-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.dd-card-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dd-link-all {
+  background: transparent;
+  border: none;
+  color: #15803d;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.dd-link-all:hover {
+  color: #166534;
+  text-decoration: underline;
+}
+
+/* ═══════════ MOTIVATIONAL HERO BANNER ═══════════ */
+.dd-banner-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f3faf4 60%, #eaf6ec 100%);
+  border: 1px solid #dceddd;
+  border-radius: 20px;
+  padding: 26px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(22, 163, 74, 0.06);
+}
+
+.dd-banner-text-side {
+  max-width: 55%;
+  z-index: 3;
+}
+
+.dd-banner-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: #111827;
+  line-height: 1.28;
+  margin: 0 0 10px;
+  letter-spacing: -0.5px;
+}
+
+.dd-diff-word {
+  color: #16a34a;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dd-leaf-icon-inline {
+  font-size: 18px;
+}
+
+.dd-banner-sub {
+  font-size: 13.5px;
+  color: #4b5563;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.dd-banner-visual-side {
+  position: relative;
+  width: 200px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dd-connect-curve {
+  position: absolute;
+  top: 0;
+  left: -20px;
+  width: 240px;
+  height: 140px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dd-node {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  border: 1.5px solid #a7f3d0;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+}
+
+.dd-node svg {
+  width: 16px;
+  height: 16px;
+}
+
+.dd-node-globe {
+  top: 8px;
+  left: 20px;
+}
+
+.dd-node-people {
+  bottom: 12px;
+  left: -15px;
+}
+
+.dd-node-heart {
+  top: 16px;
+  right: 2px;
+}
+
+.dd-bowl-img-wrap {
+  width: 145px;
+  height: 145px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  margin-left: 20px;
+}
+
+.dd-banner-salad {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.14));
+  transform: scale(1.05);
+}
+
+/* ═══════════ RECENT DONATIONS ═══════════ */
+.dd-donations-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.dd-donation-row {
+  display: grid;
+  grid-template-columns: 54px 1.4fr 120px 100px 24px;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 6px;
+  border-bottom: 1px solid #f3f7f3;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.dd-donation-row:last-child {
+  border-bottom: none;
+}
+
+.dd-dish-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.dd-donation-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.dd-dish-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.dd-dish-qty {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 3px 0 0;
+}
+
+/* Status Badges */
+.dd-status-badge {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dd-status-completed {
+  background-color: #eaf7ed;
+  color: #16a34a;
+}
+
+.dd-status-scheduled {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.dd-status-pending {
+  background-color: #e0f2fe;
+  color: #0284c7;
+}
+
+.dd-donation-datetime {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+}
+
+.dd-date {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.dd-time {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+.dd-row-chevron {
+  width: 16px;
+  height: 16px;
+  color: #9ca3af;
+  margin-left: auto;
+}
+
+/* Empty State for Recent Donations */
+.dd-empty-donations {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  text-align: center;
+  background: #fbfdfb;
+  border: 1px dashed #d1e7d4;
+  border-radius: 16px;
+}
+
+.dd-empty-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #edf7ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.dd-empty-icon-circle svg {
+  width: 22px;
+  height: 22px;
+}
+
+.dd-empty-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px;
+}
+
+.dd-empty-subtitle {
+  font-size: 12.5px;
+  color: #6b7280;
+  max-width: 320px;
+  line-height: 1.45;
+  margin: 0 0 16px;
+}
+
+.dd-btn-empty-donate {
+  background-color: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.2);
+  transition: background 0.2s ease;
+}
+
+.dd-btn-empty-donate:hover {
+  background-color: #15803d;
+}
+
+/* ═══════════ UPCOMING PICKUPS ═══════════ */
+.dd-pickup-item {
+  display: grid;
+  grid-template-columns: 46px 1.4fr 1.2fr 110px 24px;
+  align-items: center;
+  gap: 14px;
+  background-color: #fbfdfb;
+  border: 1px solid #e7ede7;
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dd-pickup-item:hover {
+  background-color: #f4faf4;
+  border-color: #c7e6cb;
+}
+
+/* Empty State for Upcoming Pickups */
+.dd-empty-pickup-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background-color: #fbfdfb;
+  border: 1px dashed #d1e7d4;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.dd-pickup-empty-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.dd-btn-schedule-sm {
+  background-color: #edf7ee;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dd-btn-schedule-sm:hover {
+  background-color: #16a34a;
+  color: #ffffff;
+}
+
+.dd-calendar-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: #edf7ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dd-calendar-box svg {
+  width: 22px;
+  height: 22px;
+}
+
+.dd-pickup-date {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.dd-pickup-window {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 2px 0 0;
+}
+
+.dd-ngo-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.dd-ngo-ref {
+  font-size: 11.5px;
+  color: #9ca3af;
+  margin: 2px 0 0;
+}
+
+/* ═══════════ RIGHT COLUMN: YOUR IMPACT ═══════════ */
+.dd-impact-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.dd-impact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dd-stat-tile {
+  background-color: #fbfdfb;
+  border: 1px solid #e9f0e9;
+  border-radius: 16px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: all 0.2s ease;
+}
+
+.dd-stat-tile:hover {
+  border-color: #bbf7d0;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.05);
+}
+
+.dd-stat-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #edf7ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.dd-stat-icon-wrap svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dd-stat-number {
+  font-size: 22px;
+  font-weight: 900;
+  color: #111827;
+  line-height: 1.1;
+  letter-spacing: -0.3px;
+}
+
+.dd-unit {
+  font-size: 13px;
+  font-weight: 700;
+  color: #16a34a;
+  margin-left: 2px;
+}
+
+.dd-stat-label {
+  font-size: 11.5px;
+  color: #6b7280;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.dd-btn-view-impact {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #ffffff;
+  border: 1.5px solid #16a34a;
+  color: #16a34a;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dd-btn-view-impact:hover {
+  background-color: #edf7ee;
+}
+
+/* ═══════════ RIGHT COLUMN: QUICK ACTIONS ═══════════ */
+.dd-actions-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.dd-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dd-action-tile {
+  background-color: #fbfdfb;
+  border: 1px solid #e9f0e9;
+  border-radius: 16px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dd-action-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background-color: #edf7ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.dd-action-icon-box svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dd-action-heading {
+  font-size: 13px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.dd-action-desc {
+  font-size: 10.5px;
+  color: #6b7280;
+  margin: 4px 0 0;
+  line-height: 1.35;
+}
+
+/* ═══════════ INTERACTIVE MODAL ═══════════ */
+.dd-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+.dd-modal-box {
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.dd-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.dd-modal-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: #edf7ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.dd-modal-badge svg {
+  width: 22px;
+  height: 22px;
+}
+
+.dd-modal-body h3 {
+  font-size: 19px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 6px;
+}
+
+.dd-modal-body p {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.45;
+  margin: 0 0 18px;
+}
+
+.dd-modal-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dd-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.dd-modal-field label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.dd-modal-field input,
+.dd-modal-field select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 13.5px;
+  outline: none;
+  background: #ffffff;
+  color: #111827;
+  transition: border-color 0.2s ease;
+}
+
+.dd-modal-field input:focus,
+.dd-modal-field select:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+}
+
+.dd-modal-submit-btn {
+  width: 100%;
+  background-color: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.2s ease;
+}
+
+.dd-modal-submit-btn:hover {
+  background-color: #15803d;
+}
+
+.dd-modal-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.dd-ngo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.dd-ngo-item {
+  background-color: #f9fbf9;
+  border: 1px solid #e5ebe5;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dd-ngo-item strong {
+  font-size: 13.5px;
+  color: #111827;
+}
+
+.dd-ngo-item span {
+  font-size: 11.5px;
+  color: #6b7280;
+}
+
+/* ═══════════ DARK MODE ADAPTATIONS ═══════════ */
+.dark-mode.donor-dashboard {
+  background-color: #0b140e;
+  color: #e5e7eb;
+}
+
+.dark-mode .dd-sidebar {
+  background-color: #111e16;
+  border-color: #1c3024;
+}
+
+.dark-mode .dd-brand-name {
+  color: #4ade80;
+}
+
+.dark-mode .dd-nav-item {
+  color: #9ca3af;
+}
+
+.dark-mode .dd-nav-item:hover {
+  background-color: #182a1f;
+  color: #4ade80;
+}
+
+.dark-mode .dd-nav-item.active {
+  background-color: #163321;
+  color: #4ade80;
+}
+
+.dark-mode .dd-promo-box {
+  background: linear-gradient(145deg, #162b1e 0%, #112217 100%);
+  border-color: #234731;
+}
+
+.dark-mode .dd-promo-text {
+  color: #86efac;
+}
+
+.dark-mode .dd-welcome-title,
+.dark-mode .dd-card-title,
+.dark-mode .dd-banner-title,
+.dark-mode .dd-dish-name,
+.dark-mode .dd-pickup-date,
+.dark-mode .dd-ngo-name,
+.dark-mode .dd-stat-number,
+.dark-mode .dd-action-heading,
+.dark-mode .dd-dropdown-name,
+.dark-mode .dd-modal-body h3,
+.dark-mode .dd-ngo-item strong {
+  color: #f3f4f6;
+}
+
+.dark-mode .dd-card,
+.dark-mode .dd-banner-card,
+.dark-mode .dd-theme-btn,
+.dark-mode .dd-bell-btn,
+.dark-mode .dd-user-profile-btn,
+.dark-mode .dd-user-dropdown,
+.dark-mode .dd-modal-box {
+  background-color: #132219;
+  border-color: #1f3627;
+}
+
+.dark-mode .dd-banner-card {
+  background: linear-gradient(135deg, #132219 0%, #16291e 100%);
+}
+
+.dark-mode .dd-stat-tile,
+.dark-mode .dd-action-tile,
+.dark-mode .dd-pickup-item,
+.dark-mode .dd-ngo-item {
+  background-color: #0f1c14;
+  border-color: #1c3324;
+}
+
+.dark-mode .dd-stat-icon-wrap,
+.dark-mode .dd-action-icon-box,
+.dark-mode .dd-calendar-box,
+.dark-mode .dd-modal-badge {
+  background-color: #1a3323;
+}
+
+.dark-mode .dd-node {
+  background-color: #132219;
+  border-color: #275238;
+}
+
+.dark-mode .dd-dropdown-item {
+  color: #d1d5db;
+}
+
+.dark-mode .dd-dropdown-item:hover {
+  background-color: #182e20;
+  color: #4ade80;
+}
+
+.dark-mode .dd-modal-field input,
+.dark-mode .dd-modal-field select {
+  background-color: #0f1c14;
+  border-color: #2a4734;
+  color: #f3f4f6;
+}
+
+.dark-mode .dd-empty-donations,
+.dark-mode .dd-empty-pickup-item {
+  background-color: #0f1c14;
+  border-color: #1f3d2a;
+}
+
+.dark-mode .dd-empty-icon-circle {
+  background-color: #1a3323;
+}
+
+.dark-mode .dd-empty-title {
+  color: #f3f4f6;
+}
+
+.dark-mode .dd-empty-subtitle {
+  color: #9ca3af;
+}
+
+.dark-mode .dd-btn-schedule-sm {
+  background-color: #182e20;
+  border-color: #275238;
+  color: #4ade80;
+}
+
+.dark-mode .dd-btn-schedule-sm:hover {
+  background-color: #16a34a;
+  color: #ffffff;
+}
+
+/* ═══════════ RESPONSIVE BREAKPOINTS ═══════════ */
+@media (max-width: 1200px) {
+  .dd-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .dd-sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    height: 100vh;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dd-sidebar-open {
+    left: 0;
+  }
+
+  .dd-close-mobile-btn {
+    display: block;
+  }
+
+  .dd-hamburger-btn {
+    display: flex;
+  }
+
+  .dd-main-container {
+    padding: 16px;
+  }
+
+  .dd-banner-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+    padding: 22px 18px;
+  }
+
+  .dd-banner-text-side {
+    max-width: 100%;
+  }
+
+  .dd-banner-visual-side {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .dd-donation-row {
+    grid-template-columns: 46px 1fr auto;
+    gap: 10px;
+  }
+
+  .dd-donation-datetime,
+  .dd-donation-action {
+    display: none;
+  }
+
+  .dd-pickup-item {
+    grid-template-columns: 40px 1fr auto;
+    gap: 10px;
+  }
+
+  .dd-pickup-ngo-col,
+  .dd-pickup-action {
+    display: none;
+  }
+
+  .dd-actions-grid,
+  .dd-impact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dd-user-meta {
+    display: none;
+  }
+}

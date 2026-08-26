@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ThemeProvider } from './components/ThemeContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar/Navbar';
 import HeroSection from './components/HeroSection/HeroSection';
 import JourneySection from './components/JourneySection/JourneySection';
@@ -12,6 +13,9 @@ import AboutUs from './pages/AboutUs/AboutUs';
 import Impact from './pages/Impact/Impact';
 import Contact from './pages/Contact/Contact';
 import Login from './pages/Login/Login';
+import DonorDashboard from './pages/DonorDashboard/DonorDashboard';
+import ReceiverDashboard from './pages/ReceiverDashboard/ReceiverDashboard';
+import FoodListings from './pages/FoodListings/FoodListings';
 import { PageTransition } from './components/AnimatedUI';
 
 const PAGE_HASHES = {
@@ -20,6 +24,11 @@ const PAGE_HASHES = {
   'impact': '#impact',
   'contact': '#contact',
   'login': '#login',
+  'food-listings': '#food-listings',
+  'find-food': '#food-listings',
+  'donor-dashboard': '#donor-dashboard',
+  'receiver-dashboard': '#receiver-dashboard',
+  'dashboard': '#dashboard',
   'home': '',
 };
 
@@ -30,11 +39,16 @@ function getPageFromHash() {
   if (hash === '#impact') return 'impact';
   if (hash === '#contact' || hash === '#contact-us') return 'contact';
   if (hash === '#login' || hash === '#signup' || hash === '#join') return 'login';
+  if (hash === '#food-listings' || hash === '#find-food' || hash === '#listings') return 'food-listings';
+  if (hash === '#donor-dashboard') return 'donor-dashboard';
+  if (hash === '#receiver-dashboard') return 'receiver-dashboard';
+  if (hash === '#dashboard') return 'dashboard';
   return 'home';
 }
 
-export default function App() {
+function MainAppContent() {
   const [currentPage, setCurrentPage] = useState(getPageFromHash);
+  const { user, role, loading } = useAuth();
 
   const handleNavigate = (page) => {
     setCurrentPage(page);
@@ -62,8 +76,42 @@ export default function App() {
         return <Impact onNavigate={handleNavigate} />;
       case 'contact':
         return <Contact onNavigate={handleNavigate} />;
+      case 'food-listings':
+      case 'find-food':
+        return <FoodListings onNavigate={handleNavigate} />;
       case 'login':
         return <Login onNavigate={handleNavigate} />;
+
+      case 'donor-dashboard':
+        if (loading) {
+          return <DashboardLoadingFallback />;
+        }
+        if (!user) {
+          return <Login onNavigate={handleNavigate} />;
+        }
+        return <DonorDashboard onNavigate={handleNavigate} />;
+
+      case 'receiver-dashboard':
+        if (loading) {
+          return <DashboardLoadingFallback />;
+        }
+        if (!user) {
+          return <Login onNavigate={handleNavigate} />;
+        }
+        return <ReceiverDashboard onNavigate={handleNavigate} />;
+
+      case 'dashboard':
+        if (loading) {
+          return <DashboardLoadingFallback />;
+        }
+        if (!user) {
+          return <Login onNavigate={handleNavigate} />;
+        }
+        if (role === 'receiver') {
+          return <ReceiverDashboard onNavigate={handleNavigate} />;
+        }
+        return <DonorDashboard onNavigate={handleNavigate} />;
+
       default:
         return (
           <>
@@ -80,10 +128,45 @@ export default function App() {
   };
 
   return (
+    <PageTransition pageKey={currentPage} mode="fade">
+      {renderPage()}
+    </PageTransition>
+  );
+}
+
+function DashboardLoadingFallback() {
+  return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#f7faf7',
+      color: '#15803d',
+      fontFamily: 'sans-serif',
+      gap: '16px'
+    }}>
+      <div style={{
+        width: '40px',
+        height: '40px',
+        border: '3px solid #bbf7d0',
+        borderTopColor: '#16a34a',
+        borderRadius: '50%',
+        animation: 'spin 0.8s linear infinite'
+      }} />
+      <span style={{ fontSize: '14px', fontWeight: '600' }}>Loading FoodBridge Dashboard...</span>
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
     <ThemeProvider>
-      <PageTransition pageKey={currentPage} mode="fade">
-        {renderPage()}
-      </PageTransition>
+      <AuthProvider>
+        <MainAppContent />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -84,11 +84,11 @@ export default function CtaSection({ onNavigate }) {
               </motion.a>
 
               <motion.a
-                href="#how-it-works"
+                href="#food-listings"
                 className="cta-btn-secondary"
                 whileHover={{ y: -3, scale: 1.03, boxShadow: '0 16px 36px rgba(0,0,0,0.12)' }}
                 whileTap={{ scale: 0.97 }}
-                onClick={(e) => handleClick('how-it-works', e)}
+                onClick={(e) => handleClick('food-listings', e)}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 21S4 14.5 4 9.5a8 8 0 1 1 16 0C20 14.5 12 21 12 21z" />

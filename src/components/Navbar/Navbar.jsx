@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import { getAvatarUrl, getUserInitials } from '../../services/avatarService';
 import { ShinyText } from '../AnimatedUI';
 import './Navbar.css';
 
@@ -15,9 +17,14 @@ const navLinks = [
 
 export default function Navbar({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
+  const { user, role, profile } = useAuth();
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const avatarUrl = getAvatarUrl(profile, user);
+  const initials = getUserInitials(profile, user);
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || '';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,9 +44,17 @@ export default function Navbar({ onNavigate }) {
     setActiveIndex(i);
     if (!onNavigate) return;
     if (link.label === 'How It Works') onNavigate('how-it-works');
-    else if (link.label === 'About') onNavigate('about-us');
+    else if (link.label === 'About' || link.label === 'About Us') onNavigate('about-us');
     else if (link.label === 'Impact') onNavigate('impact');
     else if (link.label === 'Contact') onNavigate('contact');
+    else if (link.label === 'Find Food' || link.label === 'Food Listings') onNavigate('food-listings');
+    else if (link.label === 'Donate') {
+      if (user) {
+        onNavigate(role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard');
+      } else {
+        onNavigate('login');
+      }
+    }
     else if (link.label === 'Home') onNavigate('home');
   };
 
@@ -179,25 +194,76 @@ export default function Navbar({ onNavigate }) {
             </AnimatePresence>
           </motion.button>
 
-          {/* Login Button */}
-          <motion.a
-            href="#login"
-            className="btn-login"
-            onClick={(e) => {
-              e.preventDefault();
-              if (onNavigate) onNavigate('login');
-              window.location.hash = '#login';
-              window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-            }}
-            whileHover={{ y: -2, boxShadow: '0 12px 25px rgba(13,50,29,0.25)' }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <svg className="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            Login / Sign Up
-          </motion.a>
+          {/* Login or Dashboard Button */}
+          {user ? (
+            <motion.a
+              href="#dashboard"
+              className="btn-login"
+              onClick={(e) => {
+                e.preventDefault();
+                const targetPage = role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
+                if (onNavigate) onNavigate(targetPage);
+                window.location.hash = `#${targetPage}`;
+                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+              }}
+              whileHover={{ y: -2, boxShadow: '0 12px 25px rgba(13,50,29,0.25)' }}
+              whileTap={{ scale: 0.97 }}
+            >
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={displayName}
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1.5px solid rgba(255,255,255,0.3)',
+                    marginRight: 4,
+                  }}
+                />
+              ) : (
+                <span
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.2)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: '#fff',
+                    marginRight: 4,
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  {initials}
+                </span>
+              )}
+              {displayName ? displayName.split(' ')[0] : 'Dashboard'}
+            </motion.a>
+          ) : (
+            <motion.a
+              href="#login"
+              className="btn-login"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onNavigate) onNavigate('login');
+                window.location.hash = '#login';
+                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+              }}
+              whileHover={{ y: -2, boxShadow: '0 12px 25px rgba(13,50,29,0.25)' }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <svg className="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Login / Sign Up
+            </motion.a>
+          )}
         </div>
       </div>
     </motion.header>

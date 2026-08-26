@@ -140,12 +140,12 @@ export default function HeroContent({ onNavigate }) {
           </motion.a>
 
           <motion.a
-            href="#how-it-works"
+            href="#food-listings"
             className="cta-btn btn-find"
             variants={buttonVariants}
             whileHover={{ y: -3, boxShadow: '0 14px 30px rgba(0,0,0,0.1)' }}
             whileTap={{ scale: 0.97 }}
-            onClick={(e) => handleClick('how-it-works', e)}
+            onClick={(e) => handleClick('food-listings', e)}
           >
             <span className="btn-icon-wrapper">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

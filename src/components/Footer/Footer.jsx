@@ -33,6 +33,11 @@ export default function Footer({ onNavigate }) {
     else if (link.label === 'Impact') onNavigate('impact');
     else if (link.label === 'Contact') onNavigate('contact');
     else if (link.label === 'Home') onNavigate('home');
+    else if (link.label === 'Donors') onNavigate('login');
+    else if (link.label === 'Receivers') onNavigate('food-listings');
+    else if (link.label === 'Privacy' || link.label === 'Terms') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   return (
