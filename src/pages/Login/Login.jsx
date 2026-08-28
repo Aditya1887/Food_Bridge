@@ -79,6 +79,7 @@ export default function Login({ onNavigate }) {
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success'); // 'success' | 'error'
+  const [rateLimitWarning, setRateLimitWarning] = useState(false);
 
   const showToast = (message, type = 'success', duration = 5000) => {
     setToastMessage(message);
@@ -145,11 +146,12 @@ export default function Login({ onNavigate }) {
         const data = await login({ email, password });
 
         if (data?.session) {
-          // Read role from returned user data (not stale closure)
           const resolvedRole = data.user?.user_metadata?.role || 'donor';
           showToast('Welcome back! You have successfully logged in.', 'success', 3000);
           setTimeout(() => {
-            if (resolvedRole === 'receiver') {
+            if (resolvedRole === 'admin') {
+              handleNav('admin-dashboard');
+            } else if (resolvedRole === 'receiver') {
               handleNav('receiver-dashboard');
             } else {
               handleNav('donor-dashboard');
@@ -249,7 +251,24 @@ export default function Login({ onNavigate }) {
         }));
       }
     } catch (err) {
-      showToast(err.message || 'An unexpected error occurred during signup.', 'error', 6000);
+      const errMsg = (err.message || '').toLowerCase();
+      if (
+        errMsg.includes('rate limit') ||
+        errMsg.includes('over_email_send_rate_limit') ||
+        errMsg.includes('email_rate_limit') ||
+        err.status === 429
+      ) {
+        showToast(
+          'Email rate limit exceeded: Supabase free tier limits confirmation emails to 3-4 per hour. Please turn OFF "Confirm email" in Supabase Dashboard for unlimited instant signups.',
+          'error',
+          10000
+        );
+        setRateLimitWarning(true);
+      } else if (errMsg.includes('user already registered') || errMsg.includes('already registered')) {
+        showToast('An account with this email already exists. Please switch to the Login tab.', 'error', 6000);
+      } else {
+        showToast(err.message || 'An unexpected error occurred during signup.', 'error', 6000);
+      }
     } finally {
       setLoading(false);
     }
@@ -568,6 +587,71 @@ export default function Login({ onNavigate }) {
                   {activeTab === 'signup' && <motion.div layoutId="lgnTabUnderline" className="lgn-tab-underline" />}
                 </button>
               </div>
+
+              {/* Rate Limit Notice Banner */}
+              {rateLimitWarning && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    background: isDark ? 'rgba(234, 88, 12, 0.15)' : '#fff7ed',
+                    border: '1.5px solid #fdba74',
+                    borderRadius: '12px',
+                    padding: '12px 14px',
+                    marginBottom: '16px',
+                    fontSize: '12.5px',
+                    lineHeight: '1.45',
+                    color: isDark ? '#fdba74' : '#9a3412',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <strong style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      ⚠️ Supabase Email Rate Limit (Free Tier)
+                    </strong>
+                    <button
+                      type="button"
+                      onClick={() => setRateLimitWarning(false)}
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '14px' }}
+                      aria-label="Dismiss notice"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p style={{ margin: '0 0 6px' }}>
+                    Supabase allows a max of <strong>3-4 confirmation emails per hour</strong> on free tier.
+                  </p>
+                  <div style={{ background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.7)', padding: '8px 10px', borderRadius: '8px', marginBottom: '8px' }}>
+                    <strong>💡 Instant Fix in 10 seconds:</strong>
+                    <ol style={{ margin: '4px 0 0 16px', padding: 0 }}>
+                      <li>Open your <strong>Supabase Dashboard</strong></li>
+                      <li>Go to <strong>Authentication</strong> → <strong>Providers</strong> → <strong>Email</strong></li>
+                      <li>Toggle <strong>OFF</strong> <em>"Confirm email"</em> and click <strong>Save</strong></li>
+                    </ol>
+                    <span style={{ fontSize: '11.5px', display: 'block', marginTop: '4px', opacity: 0.9 }}>
+                      (This enables instant signups with zero email rate limits!)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('login');
+                      setRateLimitWarning(false);
+                    }}
+                    style={{
+                      background: '#ea580c',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '5px 12px',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Sign In With Existing Account →
+                  </button>
+                </motion.div>
+              )}
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="lgn-form">

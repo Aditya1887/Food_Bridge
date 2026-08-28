@@ -4,6 +4,9 @@ import { useTheme } from '../../components/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { foodService } from '../../services/foodService';
+import { uploadFoodImage } from '../../services/foodService';
+import { pickupService } from '../../services/pickupService';
+import { notificationService } from '../../services/notificationService';
 import { getAvatarUrl, getUserInitials } from '../../services/avatarService';
 import AvatarPicker from '../../components/AvatarPicker/AvatarPicker';
 import './DonorDashboard.css';
@@ -31,6 +34,8 @@ export default function DonorDashboard({ onNavigate }) {
   const [toastType, setToastType] = useState('success');
 
   // Form states
+  const [otpInputs, setOtpInputs] = useState({});
+  const [imageFile, setImageFile] = useState(null);
   const [donationForm, setDonationForm] = useState({
     title: '',
     description: '',
@@ -43,7 +48,7 @@ export default function DonorDashboard({ onNavigate }) {
   });
 
   const [pickupForm, setPickupForm] = useState({
-    date: '2024-05-22',
+    date: new Date().toISOString().split('T')[0],
     timeSlot: 'Morning (09:00 AM - 12:00 PM)',
     ngoName: 'NGO Asha Foundation',
   });
@@ -84,16 +89,12 @@ export default function DonorDashboard({ onNavigate }) {
       }));
       setDonations(formattedDonations);
 
-      // 2. Fetch user's pickups (isolated so failure doesn't block other data)
+      // 2. Fetch user's pickups via pickupService
       try {
-        const { data: userPickups } = await supabase
-          .from('pickups')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+        const userPickups = await pickupService.getDonorPickups(user.id);
         setPickups(userPickups || []);
       } catch (pickupErr) {
-        console.warn('Pickups table query notice:', pickupErr.message);
+        console.warn('Pickups fetch notice:', pickupErr.message);
         setPickups([]);
       }
 
@@ -153,6 +154,33 @@ export default function DonorDashboard({ onNavigate }) {
   const totalKgCount = donations.reduce((acc, curr) => acc + (Number(curr.food_weight_kg) || 0), 0).toFixed(1);
   const totalCO2Count = (parseFloat(totalKgCount) * 2.98).toFixed(1);
 
+  // Active pickup computed variable
+  const activePickup = pickups.find((p) => p.status !== 'completed' && p.status !== 'cancelled') || pickups[0] || null;
+
+  // ── Handle OTP Verification by Donor ──
+  const handleVerifyOTP = async (pickupId) => {
+    const entered = (otpInputs[pickupId] || '').trim();
+    if (!entered || entered.length !== 4) {
+      showToast('Please enter the 4-digit OTP provided by receiver.', 'error');
+      return;
+    }
+
+    try {
+      const res = await pickupService.verifyOTP(pickupId, entered);
+      if (!res.success) {
+        showToast(res.message || 'Invalid OTP code. Please try again.', 'error');
+        return;
+      }
+
+      await pickupService.updatePickupStatus(pickupId, 'completed');
+      showToast('🎉 OTP verified! Food pickup marked as completed.', 'success', 6000);
+      setOtpInputs((prev) => ({ ...prev, [pickupId]: '' }));
+      await loadUserData();
+    } catch (err) {
+      showToast(err.message || 'Failed to verify OTP.', 'error');
+    }
+  };
+
   const handleNavClick = (navId) => {
     setActiveNav(navId);
     setMobileMenuOpen(false);
@@ -196,7 +224,18 @@ export default function DonorDashboard({ onNavigate }) {
       milk: '/assets/dish_milk_packets.jpg',
     };
 
-    const chosenImage = dishImages[donationForm.dishType] || '/assets/dish_biryani.jpg';
+    let chosenImage = dishImages[donationForm.dishType] || '/assets/dish_biryani.jpg';
+
+    // Upload real image if user selected one
+    if (imageFile && user?.id) {
+      try {
+        const uploadedUrl = await uploadFoodImage(user.id, imageFile);
+        if (uploadedUrl) chosenImage = uploadedUrl;
+      } catch (uploadErr) {
+        console.warn('Image upload notice:', uploadErr.message);
+      }
+    }
+
     const servingsNum = parseInt(donationForm.servings) || 10;
     const weightNum = parseFloat(donationForm.weight) || 2.5;
 
@@ -234,6 +273,7 @@ export default function DonorDashboard({ onNavigate }) {
         location: '',
         dishType: 'biryani',
       });
+      setImageFile(null);
       await loadUserData();
     } catch (err) {
       showToast(err.message || 'Error creating food donation.', 'error');
@@ -279,14 +319,72 @@ export default function DonorDashboard({ onNavigate }) {
   const handleUpdateIncomingRequest = async (requestId, foodId, status) => {
     try {
       await foodService.updateRequestStatus(requestId, foodId, status);
-      showToast(`Request ${status === 'accepted' ? 'accepted! Receiver will coordinate pickup.' : 'updated.'}`, 'success');
+
+      // Find the request to get receiver info
+      const req = incomingRequests.find(r => r.id === requestId);
+
+      if (status === 'accepted' && req) {
+        // Create a pickup record with OTP
+        try {
+          const food = req.food || {};
+          const pickup = await pickupService.createPickupRecord({
+            requestId,
+            foodId,
+            donorId: user.id,
+            receiverId: req.receiver_id,
+            pickupLocation: food.pickup_location || '',
+          });
+
+          // Notify receiver about acceptance and OTP
+          await notificationService.notifyRequestAccepted(
+            req.receiver_id,
+            profile?.full_name || 'Donor',
+            food.food_name || 'Food Item',
+            requestId
+          );
+
+          if (pickup?.otp_code) {
+            await notificationService.notifyPickupAssigned(
+              req.receiver_id,
+              food.food_name || 'Food Item',
+              pickup.otp_code,
+              pickup.id
+            );
+          }
+
+          showToast(`Request accepted! Pickup OTP: ${pickup?.otp_code || '----'}. Share this with the receiver.`, 'success', 7000);
+        } catch (pickupErr) {
+          console.warn('Pickup creation notice:', pickupErr.message);
+          showToast('Request accepted! Receiver will coordinate pickup.', 'success');
+        }
+      } else if (status === 'rejected' && req) {
+        await notificationService.notifyRequestRejected(
+          req.receiver_id,
+          req.food?.food_name || 'Food Item',
+          requestId
+        );
+        showToast('Request declined.', 'success');
+      } else {
+        showToast(`Request ${status}.`, 'success');
+      }
+
       await loadUserData();
     } catch (err) {
       showToast(err.message || 'Failed to update request.', 'error');
     }
   };
 
-  const activePickup = pickups[0] || null;
+  // Full-page loading skeleton
+  if (loadingData && donations.length === 0) {
+    return (
+      <div className={`donor-dashboard ${isDark ? 'dark-mode' : ''}`}>
+        <div className="fb-loading-overlay">
+          <div className="fb-spinner fb-spinner-lg" />
+          <span className="fb-loading-text">Loading your dashboard...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`donor-dashboard ${isDark ? 'dark-mode' : ''}`}>
@@ -807,38 +905,88 @@ export default function DonorDashboard({ onNavigate }) {
               </div>
 
               {activePickup ? (
-                <div className="dd-pickup-item">
-                  <div className="dd-calendar-box">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
-                      <path d="m9 16 2 2 4-4" strokeWidth="2" />
-                    </svg>
+                <div className="dd-pickup-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="dd-calendar-box">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                        <path d="m9 16 2 2 4-4" strokeWidth="2" />
+                      </svg>
+                    </div>
+
+                    <div className="dd-pickup-datetime-col" style={{ flex: 1 }}>
+                      <h4 className="dd-pickup-date">
+                        {activePickup.scheduled_time ? new Date(activePickup.scheduled_time).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Today'}
+                      </h4>
+                      <p className="dd-pickup-window">
+                        {activePickup.food?.food_name || 'Food Donation'}
+                      </p>
+                    </div>
+
+                    <div className="dd-pickup-ngo-col" style={{ flex: 1 }}>
+                      <h4 className="dd-ngo-name">{activePickup.receiver?.full_name || activePickup.receiver?.organization_name || 'Assigned Receiver'}</h4>
+                      <p className="dd-ngo-ref">{activePickup.pickup_location || 'Pickup Point'}</p>
+                    </div>
+
+                    <div className="dd-pickup-status-col">
+                      <span className={`dd-status-badge dd-status-${activePickup.status === 'completed' ? 'completed' : 'scheduled'}`}>
+                        {(activePickup.status || 'Assigned').toUpperCase()}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="dd-pickup-datetime-col">
-                    <h4 className="dd-pickup-date">{activePickup.pickup_date}</h4>
-                    <p className="dd-pickup-window">{activePickup.time_slot}</p>
-                  </div>
-
-                  <div className="dd-pickup-ngo-col">
-                    <h4 className="dd-ngo-name">{activePickup.ngo_name}</h4>
-                    <p className="dd-ngo-ref">{activePickup.reference_code || '#FB12345'}</p>
-                  </div>
-
-                  <div className="dd-pickup-status-col">
-                    <span className="dd-status-badge dd-status-scheduled">
-                      {activePickup.status || 'Scheduled'}
-                    </span>
-                  </div>
-
-                  <div className="dd-pickup-action">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="dd-row-chevron">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </div>
+                  {activePickup.status !== 'completed' && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 12px',
+                      background: 'rgba(22, 163, 74, 0.05)',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(22, 163, 74, 0.15)'
+                    }}>
+                      <span style={{ fontSize: '12px', fontWeight: '700', color: '#166534' }}>
+                        🔐 Enter Receiver OTP:
+                      </span>
+                      <input
+                        type="text"
+                        maxLength="4"
+                        placeholder="4 digits"
+                        value={otpInputs[activePickup.id] || ''}
+                        onChange={(e) => setOtpInputs({ ...otpInputs, [activePickup.id]: e.target.value })}
+                        style={{
+                          width: '90px',
+                          padding: '4px 8px',
+                          fontSize: '13px',
+                          letterSpacing: '2px',
+                          fontWeight: '700',
+                          textAlign: 'center',
+                          borderRadius: '6px',
+                          border: '1px solid #86efac',
+                          background: '#fff'
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleVerifyOTP(activePickup.id)}
+                        style={{
+                          padding: '5px 12px',
+                          background: '#16a34a',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Verify & Complete
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="dd-empty-pickup-item">
@@ -1146,6 +1294,21 @@ export default function DonorDashboard({ onNavigate }) {
                       </select>
                     </div>
 
+                    <div className="dd-modal-field">
+                      <label>Upload Food Photo (optional)</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                        style={{ fontSize: '13px', padding: '8px 0' }}
+                      />
+                      {imageFile && (
+                        <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 600 }}>
+                          ✓ {imageFile.name} selected — will be uploaded to cloud
+                        </span>
+                      )}
+                    </div>
+
                     <button type="submit" className="dd-modal-submit-btn" disabled={submitting}>
                       {submitting ? 'Publishing Food Listing...' : 'Publish Food Donation'}
                     </button>
@@ -1167,43 +1330,80 @@ export default function DonorDashboard({ onNavigate }) {
 
                   {incomingRequests.length > 0 ? (
                     <div className="dd-ngo-list">
-                      {incomingRequests.map((req) => (
-                        <div key={req.id} className="dd-ngo-item" style={{ gap: '8px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                              <strong>{req.receiver?.full_name || 'Receiver'}</strong>
-                              {req.receiver?.organization_name && <span> ({req.receiver.organization_name})</span>}
-                            </div>
-                            <span className={`dd-status-badge dd-status-${req.status === 'accepted' ? 'completed' : req.status === 'pending' ? 'scheduled' : 'pending'}`}>
-                              {req.status.toUpperCase()}
-                            </span>
-                          </div>
-                          <span style={{ color: '#4b5563', fontSize: '12px' }}>
-                            Item: <strong>{req.food?.food_name}</strong> • Requested: <strong>{req.requested_servings} servings</strong>
-                          </span>
-                          {req.notes && <span style={{ color: '#6b7280', fontSize: '11.5px', fontStyle: 'italic' }}>"{req.notes}"</span>}
-                          {req.receiver?.phone && <span style={{ color: '#16a34a', fontSize: '11.5px' }}>📞 Phone: {req.receiver.phone}</span>}
+                      {incomingRequests.map((req) => {
+                        const matchedPickup = pickups.find(
+                          (p) => p.request_id === req.id || p.food_id === req.food_id
+                        );
 
-                          {req.status === 'pending' && (
-                            <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                              <button
-                                type="button"
-                                style={{ flex: 1, padding: '6px 10px', background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
-                                onClick={() => handleUpdateIncomingRequest(req.id, req.food_id, 'accepted')}
-                              >
-                                Accept Request
-                              </button>
-                              <button
-                                type="button"
-                                style={{ flex: 1, padding: '6px 10px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
-                                onClick={() => handleUpdateIncomingRequest(req.id, req.food_id, 'rejected')}
-                              >
-                                Decline
-                              </button>
+                        return (
+                          <div key={req.id} className="dd-ngo-item" style={{ gap: '8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <div>
+                                <strong>{req.receiver?.full_name || 'Receiver'}</strong>
+                                {req.receiver?.organization_name && <span> ({req.receiver.organization_name})</span>}
+                              </div>
+                              <span className={`dd-status-badge dd-status-${req.status === 'accepted' ? 'completed' : req.status === 'pending' ? 'scheduled' : 'pending'}`}>
+                                {req.status.toUpperCase()}
+                              </span>
                             </div>
-                          )}
-                        </div>
-                      ))}
+                            <span style={{ color: '#4b5563', fontSize: '12px' }}>
+                              Item: <strong>{req.food?.food_name}</strong> • Requested: <strong>{req.requested_servings} servings</strong>
+                            </span>
+                            {req.notes && <span style={{ color: '#6b7280', fontSize: '11.5px', fontStyle: 'italic' }}>"{req.notes}"</span>}
+                            {req.receiver?.phone && <span style={{ color: '#16a34a', fontSize: '11.5px' }}>📞 Phone: {req.receiver.phone}</span>}
+
+                            {req.status === 'pending' && (
+                              <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                                <button
+                                  type="button"
+                                  style={{ flex: 1, padding: '6px 10px', background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                  onClick={() => handleUpdateIncomingRequest(req.id, req.food_id, 'accepted')}
+                                >
+                                  Accept Request
+                                </button>
+                                <button
+                                  type="button"
+                                  style={{ flex: 1, padding: '6px 10px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                  onClick={() => handleUpdateIncomingRequest(req.id, req.food_id, 'rejected')}
+                                >
+                                  Decline
+                                </button>
+                              </div>
+                            )}
+
+                            {req.status === 'accepted' && matchedPickup && matchedPickup.status !== 'completed' && (
+                              <div style={{
+                                marginTop: '6px',
+                                padding: '8px 10px',
+                                background: 'rgba(22, 163, 74, 0.06)',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(22, 163, 74, 0.2)'
+                              }}>
+                                <div style={{ fontSize: '11.5px', fontWeight: '700', color: '#166534', marginBottom: '4px' }}>
+                                  🔐 Verify Pickup OTP (Enter code from receiver):
+                                </div>
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                  <input
+                                    type="text"
+                                    maxLength="4"
+                                    placeholder="OTP"
+                                    value={otpInputs[matchedPickup.id] || ''}
+                                    onChange={(e) => setOtpInputs({ ...otpInputs, [matchedPickup.id]: e.target.value })}
+                                    style={{ width: '80px', padding: '4px 6px', fontSize: '13px', letterSpacing: '2px', fontWeight: '700', textAlign: 'center', borderRadius: '4px', border: '1px solid #86efac' }}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleVerifyOTP(matchedPickup.id)}
+                                    style={{ padding: '4px 10px', background: '#16a34a', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}
+                                  >
+                                    Verify & Complete
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center', padding: '24px 0', color: '#6b7280' }}>

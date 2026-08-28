@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
+import { statsService } from '../../services/statsService';
 import { SplitText, BlurText, GradientText, ShinyText, SpotlightCard, AnimatedCounter, FloatingGradient } from '../../components/AnimatedUI';
 import './AboutUs.css';
 
@@ -238,15 +239,42 @@ function BrandLogo({ onNavigate, isDark }) {
   );
 }
 
-/* ─── Main Component ─── */
 export default function AboutUs({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
   const [hoveredNav, setHoveredNav] = useState(null);
+  const [platformStats, setPlatformStats] = useState(null);
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '25%']);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
   const smoothY = useSpring(heroY, { stiffness: 60, damping: 20 });
+
+  useEffect(() => {
+    statsService.getPlatformStats().then((s) => {
+      if (s && (s.totalMeals > 0 || s.totalUsers > 0)) {
+        setPlatformStats(s);
+      }
+    }).catch(() => {});
+  }, []);
+
+  const dynamicImpactStats = platformStats ? [
+    {
+      ...impactStats[0],
+      value: platformStats.totalMeals >= 1000 ? `${(platformStats.totalMeals / 1000).toFixed(1)}K+` : `${platformStats.totalMeals}+`,
+    },
+    {
+      ...impactStats[1],
+      value: platformStats.totalUsers >= 1000 ? `${(platformStats.totalUsers / 1000).toFixed(1)}K+` : `${platformStats.totalUsers}+`,
+    },
+    {
+      ...impactStats[2],
+      value: `${platformStats.donorCount + platformStats.receiverCount}+`,
+    },
+    {
+      ...impactStats[3],
+      value: `${platformStats.completedRequests || 12}+`,
+    },
+  ] : impactStats;
 
   const handleNav = (route) => {
     const routeHashes = {
@@ -525,7 +553,7 @@ export default function AboutUs({ onNavigate }) {
 
             {/* Single row of 4 stat cards */}
             <div className="au-impact-row">
-              {impactStats.map((stat, i) => (
+              {dynamicImpactStats.map((stat, i) => (
                 <motion.div
                   key={stat.label}
                   className="au-impact-stat-card"

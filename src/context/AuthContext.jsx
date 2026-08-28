@@ -172,19 +172,21 @@ export function AuthProvider({ children }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+        .update({ avatar_url: avatarUrl })
         .eq('id', user.id)
         .select()
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      if (data) {
+      if (!error && data) {
         setProfile(data);
+        return data;
       }
+
+      // Update local profile state regardless
+      setProfile((prev) => prev ? { ...prev, avatar_url: avatarUrl } : prev);
       return data;
     } catch (err) {
       console.warn('updateAvatar notice:', err.message);
-      // Still update local state
       setProfile((prev) => prev ? { ...prev, avatar_url: avatarUrl } : prev);
       return null;
     }

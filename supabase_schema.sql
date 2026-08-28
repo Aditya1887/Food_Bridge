@@ -25,6 +25,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     organization_name TEXT,
     address TEXT,
     city TEXT,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    is_verified BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now())
 );
@@ -32,6 +35,16 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- Index for faster queries on role and email
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
+
+-- Ensure all columns exist if table was created previously without them
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT timezone('utc', now());
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS organization_name TEXT;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
 
 -- Enable RLS on profiles
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -57,11 +70,17 @@ CREATE POLICY "profiles_insert_policy"
     ON public.profiles FOR INSERT
     WITH CHECK (auth.uid() = id OR auth.uid() IS NULL);
 
--- 3. Users can update their own profile
+-- 3. Users can update their own profile; admins can update any
 CREATE POLICY "profiles_update_policy"
     ON public.profiles FOR UPDATE
-    USING (auth.uid() = id)
-    WITH CHECK (auth.uid() = id);
+    USING (
+        auth.uid() = id
+        OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+    )
+    WITH CHECK (
+        auth.uid() = id
+        OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+    );
 
 -- 4. Users can delete their own profile
 CREATE POLICY "profiles_delete_policy"
@@ -84,10 +103,15 @@ CREATE TABLE IF NOT EXISTS public.food_items (
     servings INTEGER DEFAULT 10,
     food_weight_kg NUMERIC(6, 2) DEFAULT 2.5,
     pickup_location TEXT NOT NULL,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
     pickup_date DATE NOT NULL DEFAULT CURRENT_DATE,
     pickup_time TEXT NOT NULL,
     expiry_date DATE,
     expiry_time TEXT,
+    allergens TEXT,
+    storage_condition TEXT DEFAULT 'Room Temperature',
+    food_type TEXT DEFAULT 'Vegetarian',
     status TEXT NOT NULL DEFAULT 'available' CHECK (status IN ('available', 'requested', 'reserved', 'collected', 'expired', 'cancelled')),
     image_url TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
@@ -112,7 +136,7 @@ DROP POLICY IF EXISTS "Allow donors to update their food items" ON public.food_i
 DROP POLICY IF EXISTS "Allow donors to delete their food items" ON public.food_items;
 
 -- Food Items Policies:
--- 1. Anyone authenticated can browse all food items
+-- 1. Anyone authenticated or public can browse all food items
 CREATE POLICY "food_items_select_policy"
     ON public.food_items FOR SELECT
     USING (true);
@@ -120,18 +144,20 @@ CREATE POLICY "food_items_select_policy"
 -- 2. Donors can create food items
 CREATE POLICY "food_items_insert_policy"
     ON public.food_items FOR INSERT
-    WITH CHECK (auth.uid() = donor_id);
+    WITH CHECK (auth.uid() = donor_id OR auth.role() = 'authenticated');
 
--- 3. Donors can update their own food items
+-- 3. Donors can update their own food items; authenticated users can update status on claim/cancel
 CREATE POLICY "food_items_update_policy"
     ON public.food_items FOR UPDATE
     USING (
         auth.uid() = donor_id
         OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+        OR auth.role() = 'authenticated'
     )
     WITH CHECK (
         auth.uid() = donor_id
         OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+        OR auth.role() = 'authenticated'
     );
 
 -- 4. Donors can delete their own food items
@@ -187,10 +213,10 @@ CREATE POLICY "food_requests_select_policy"
         OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
     );
 
--- 2. Receivers can create food requests
+-- 2. Receivers or authenticated users can create food requests
 CREATE POLICY "food_requests_insert_policy"
     ON public.food_requests FOR INSERT
-    WITH CHECK (auth.uid() = receiver_id);
+    WITH CHECK (auth.uid() = receiver_id OR auth.role() = 'authenticated');
 
 -- 3. Donors can accept/reject, receivers can cancel
 CREATE POLICY "food_requests_update_policy"
@@ -216,7 +242,143 @@ CREATE POLICY "food_requests_delete_policy"
 
 
 -- =============================================================================
--- 4. BACKWARD-COMPATIBLE TABLES: donations & pickups
+-- 4. TABLE: public.pickup_records
+-- Tracks the full pickup workflow with OTP verification
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS public.pickup_records (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_id UUID NOT NULL REFERENCES public.food_requests(id) ON DELETE CASCADE,
+    food_id UUID NOT NULL REFERENCES public.food_items(id) ON DELETE CASCADE,
+    donor_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    receiver_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    otp_code TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'assigned' CHECK (status IN ('assigned', 'arrived', 'verified', 'completed', 'cancelled')),
+    pickup_location TEXT,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    scheduled_time TIMESTAMPTZ,
+    arrived_at TIMESTAMPTZ,
+    verified_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_pickup_records_request_id ON public.pickup_records(request_id);
+CREATE INDEX IF NOT EXISTS idx_pickup_records_donor_id ON public.pickup_records(donor_id);
+CREATE INDEX IF NOT EXISTS idx_pickup_records_receiver_id ON public.pickup_records(receiver_id);
+CREATE INDEX IF NOT EXISTS idx_pickup_records_status ON public.pickup_records(status);
+
+ALTER TABLE public.pickup_records ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "pickup_records_select_policy" ON public.pickup_records;
+DROP POLICY IF EXISTS "pickup_records_insert_policy" ON public.pickup_records;
+DROP POLICY IF EXISTS "pickup_records_update_policy" ON public.pickup_records;
+
+CREATE POLICY "pickup_records_select_policy"
+    ON public.pickup_records FOR SELECT
+    USING (
+        auth.uid() = donor_id
+        OR auth.uid() = receiver_id
+        OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+    );
+
+CREATE POLICY "pickup_records_insert_policy"
+    ON public.pickup_records FOR INSERT
+    WITH CHECK (
+        auth.uid() = donor_id
+        OR auth.uid() = receiver_id
+    );
+
+CREATE POLICY "pickup_records_update_policy"
+    ON public.pickup_records FOR UPDATE
+    USING (
+        auth.uid() = donor_id
+        OR auth.uid() = receiver_id
+        OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+    )
+    WITH CHECK (
+        auth.uid() = donor_id
+        OR auth.uid() = receiver_id
+        OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+    );
+
+
+-- =============================================================================
+-- 5. TABLE: public.notifications
+-- Persistent notifications for users
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS public.notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    message TEXT,
+    type TEXT DEFAULT 'info' CHECK (type IN ('info', 'success', 'warning', 'request', 'pickup', 'system')),
+    related_id UUID,
+    is_read BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON public.notifications(is_read);
+
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "notifications_select_policy" ON public.notifications;
+DROP POLICY IF EXISTS "notifications_insert_policy" ON public.notifications;
+DROP POLICY IF EXISTS "notifications_update_policy" ON public.notifications;
+DROP POLICY IF EXISTS "notifications_delete_policy" ON public.notifications;
+
+CREATE POLICY "notifications_select_policy"
+    ON public.notifications FOR SELECT
+    USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
+CREATE POLICY "notifications_insert_policy"
+    ON public.notifications FOR INSERT
+    WITH CHECK (true);
+
+CREATE POLICY "notifications_update_policy"
+    ON public.notifications FOR UPDATE
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "notifications_delete_policy"
+    ON public.notifications FOR DELETE
+    USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
+
+-- =============================================================================
+-- 6. TABLE: public.contact_messages
+-- Contact form submissions
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS public.contact_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    subject TEXT,
+    message TEXT NOT NULL,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    is_read BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now())
+);
+
+ALTER TABLE public.contact_messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "contact_messages_select_policy" ON public.contact_messages;
+DROP POLICY IF EXISTS "contact_messages_insert_policy" ON public.contact_messages;
+
+CREATE POLICY "contact_messages_select_policy"
+    ON public.contact_messages FOR SELECT
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
+CREATE POLICY "contact_messages_insert_policy"
+    ON public.contact_messages FOR INSERT
+    WITH CHECK (true);
+
+
+-- =============================================================================
+-- 7. BACKWARD-COMPATIBLE TABLES: donations & pickups
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS public.donations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -274,8 +436,7 @@ CREATE POLICY "pickups_insert_policy"
 
 
 -- =============================================================================
--- 5. GRANT PERMISSIONS ON ALL TABLES TO PostgREST ROLES
--- Fixes "permission denied for table profiles"
+-- 8. GRANT PERMISSIONS ON ALL TABLES TO PostgREST ROLES
 -- =============================================================================
 GRANT ALL ON ALL TABLES IN SCHEMA public TO postgres, anon, authenticated, service_role;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO postgres, anon, authenticated, service_role;
@@ -287,8 +448,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO postgres, ano
 
 
 -- =============================================================================
--- 6. AUTOMATED TRIGGER FOR NEW USER SIGNUP
--- Automatically creates a row in public.profiles when an auth.user is created
+-- 9. AUTOMATED TRIGGER FOR NEW USER SIGNUP
 -- =============================================================================
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
@@ -375,5 +535,11 @@ CREATE TRIGGER update_food_items_timestamp
 DROP TRIGGER IF EXISTS update_food_requests_timestamp ON public.food_requests;
 CREATE TRIGGER update_food_requests_timestamp
     BEFORE UPDATE ON public.food_requests
+    FOR EACH ROW
+    EXECUTE FUNCTION public.update_timestamp();
+
+DROP TRIGGER IF EXISTS update_pickup_records_timestamp ON public.pickup_records;
+CREATE TRIGGER update_pickup_records_timestamp
+    BEFORE UPDATE ON public.pickup_records
     FOR EACH ROW
     EXECUTE FUNCTION public.update_timestamp();

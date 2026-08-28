@@ -80,16 +80,15 @@ export default function AvatarPicker({
     try {
       let finalAvatarUrl = selectedAvatar;
 
-      // If user selected a custom file, upload it first
+      // If user selected a custom file, upload/convert it
       if (uploadFile) {
         setUploading(true);
         try {
-          const publicUrl = await uploadAvatarFile(userId, uploadFile);
-          finalAvatarUrl = publicUrl;
+          const publicOrDataUrl = await uploadAvatarFile(userId, uploadFile);
+          finalAvatarUrl = publicOrDataUrl;
         } catch (uploadErr) {
           console.warn('Avatar upload notice:', uploadErr.message);
-          // If storage upload fails (e.g. no bucket), fall back gracefully
-          setError('Upload failed — try selecting a built-in avatar instead.');
+          setError(uploadErr.message || 'Could not process image file. Try selecting a built-in avatar.');
           setSaving(false);
           setUploading(false);
           return;

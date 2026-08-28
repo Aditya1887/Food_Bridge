@@ -201,7 +201,7 @@ export default function Navbar({ onNavigate }) {
               className="btn-login"
               onClick={(e) => {
                 e.preventDefault();
-                const targetPage = role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
+                const targetPage = role === 'admin' ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
                 if (onNavigate) onNavigate(targetPage);
                 window.location.hash = `#${targetPage}`;
                 window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });

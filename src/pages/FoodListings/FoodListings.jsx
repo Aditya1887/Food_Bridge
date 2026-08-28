@@ -5,18 +5,20 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { foodService } from '../../services/foodService';
 import { profileService } from '../../services/profileService';
+import { notificationService } from '../../services/notificationService';
 import { getAvatarUrl, getUserInitials } from '../../services/avatarService';
+import MapView from '../../components/MapView/MapView';
 import Footer from '../../components/Footer/Footer';
 import './FoodListings.css';
 
 // ─── CITY LOCATIONS ───
 const CITIES = [
-  { id: 'mumbai', name: 'Mumbai, Maharashtra' },
-  { id: 'delhi', name: 'Delhi NCR, India' },
-  { id: 'bengaluru', name: 'Bengaluru, Karnataka' },
-  { id: 'pune', name: 'Pune, Maharashtra' },
-  { id: 'hyderabad', name: 'Hyderabad, Telangana' },
-  { id: 'kolkata', name: 'Kolkata, West Bengal' },
+  { id: 'mumbai', name: 'Mumbai, Maharashtra', lat: 19.0760, lng: 72.8777 },
+  { id: 'delhi', name: 'Delhi NCR, India', lat: 28.6139, lng: 77.2090 },
+  { id: 'bengaluru', name: 'Bengaluru, Karnataka', lat: 12.9716, lng: 77.5946 },
+  { id: 'pune', name: 'Pune, Maharashtra', lat: 18.5204, lng: 73.8567 },
+  { id: 'hyderabad', name: 'Hyderabad, Telangana', lat: 17.3850, lng: 78.4867 },
+  { id: 'kolkata', name: 'Kolkata, West Bengal', lat: 22.5726, lng: 88.3639 },
 ];
 
 export default function FoodListings({ onNavigate }) {
@@ -374,13 +376,29 @@ export default function FoodListings({ onNavigate }) {
     setClaimToken(token);
 
     try {
-      await foodService.createFoodRequest({
+      const targetDonorId = item.donor_id || item.donorId || user.id;
+      const createdReq = await foodService.createFoodRequest({
         foodId: item.id,
         receiverId: user.id,
-        donorId: item.donor_id || item.donorId || user.id,
+        donorId: targetDonorId,
         requestedServings: claimServings,
         notes: `Requested via FoodBridge Find Food portal. Pickup Token: ${token}`,
       });
+
+      // Notify donor
+      if (targetDonorId && targetDonorId !== user.id) {
+        try {
+          await notificationService.notifyNewRequest(
+            targetDonorId,
+            profile?.full_name || 'A receiver',
+            item.title || item.food_name || 'Food Donation',
+            createdReq?.id || item.id
+          );
+        } catch (notifErr) {
+          console.warn('Claim notification notice:', notifErr.message);
+        }
+      }
+
       setTimeout(() => {
         setIsClaiming(false);
         setClaimSuccess(true);
@@ -1003,52 +1021,48 @@ export default function FoodListings({ onNavigate }) {
           <div className="fl-content-area">
             {loadingBackend ? (
               /* Loading Skeleton */
-              <div className="fl-loading-state">
-                <div className="fl-spinner" />
-                <p>Loading verified food donations from backend...</p>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '16px' }}>
+                <div className="fb-spinner fb-spinner-lg" />
+                <span className="fb-loading-text">Loading verified food donations...</span>
               </div>
             ) : viewMode === 'map' ? (
-              /* Interactive Map View */
+              /* Google Maps View */
               <div className="fl-map-view-card">
                 <div className="fl-map-header">
                   <div>
-                    <h3 className="fl-map-title">Interactive Mumbai Donation Map</h3>
-                    <p className="fl-map-sub">Showing verified food distribution hubs & donors</p>
+                    <h3 className="fl-map-title">Food Donation Map — {selectedCity.name}</h3>
+                    <p className="fl-map-sub">Showing {filteredDonations.length} verified food donations nearby</p>
                   </div>
                   <button className="fl-map-close-btn" onClick={() => setViewMode('grid')}>
                     Switch to Grid View
                   </button>
                 </div>
 
-                <div className="fl-map-canvas-mock">
-                  <div className="fl-map-grid-lines" />
-                  {filteredDonations.length === 0 ? (
-                    <div className="fl-map-empty">No food items to pin on map</div>
-                  ) : (
-                    filteredDonations.slice(0, 16).map((item) => (
-                      <motion.div
-                        key={item.id}
-                        className="fl-map-pin"
-                        style={{ left: `${item.coordinates.x}%`, top: `${item.coordinates.y}%` }}
-                        whileHover={{ scale: 1.25, zIndex: 100 }}
-                        onClick={() => setActiveModalItem(item)}
-                      >
-                        <div className="fl-pin-head">
-                          <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-                          </svg>
-                        </div>
-                        <div className="fl-pin-tooltip">
-                          <strong>{item.title}</strong>
-                          <span>{item.donor} • {item.distance} km</span>
-                        </div>
-                      </motion.div>
-                    ))
-                  )}
-                  <div className="fl-map-legend">
-                    <span className="legend-item"><span className="legend-dot green" /> Available Food Hubs</span>
-                    <span className="legend-item"><span className="legend-dot blue" /> Verified NGOs</span>
-                  </div>
+                <MapView
+                  center={{ lat: selectedCity.lat, lng: selectedCity.lng }}
+                  items={filteredDonations.map((item, idx) => {
+                    const lat = item.latitude || (selectedCity.lat + ((idx % 5) - 2) * 0.015);
+                    const lng = item.longitude || (selectedCity.lng + (((idx * 3) % 5) - 2) * 0.015);
+                    return {
+                      ...item,
+                      food_name: item.title,
+                      latitude: lat,
+                      longitude: lng,
+                      pickup_location: item.location,
+                      category: item.category,
+                      servings: item.servingsCount,
+                      donor_id: item.donorId,
+                    };
+                  })}
+                  rescueRadius={maxDistance}
+                  height="500px"
+                  showRadius={true}
+                  onItemClick={(item) => setActiveModalItem(item)}
+                />
+
+                <div className="fl-map-legend" style={{ padding: '12px 16px', display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                  <span className="legend-item"><span className="legend-dot green" /> Food Donations</span>
+                  <span className="legend-item"><span className="legend-dot blue" /> Your Location</span>
                 </div>
               </div>
             ) : (

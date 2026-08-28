@@ -3,12 +3,12 @@ import { GradientText } from '../AnimatedUI';
 import './Footer.css';
 
 const navLinks = [
-  { label: 'About', href: '#' },
-  { label: 'How It Works', href: '#' },
-  { label: 'Donors', href: '#' },
-  { label: 'Receivers', href: '#' },
-  { label: 'Impact', href: '#' },
-  { label: 'Contact', href: '#' },
+  { label: 'About', href: '#about-us' },
+  { label: 'How It Works', href: '#how-it-works' },
+  { label: 'Donate', href: '#login' },
+  { label: 'Find Food', href: '#food-listings' },
+  { label: 'Impact', href: '#impact' },
+  { label: 'Contact', href: '#contact' },
   { label: 'Privacy', href: '#' },
   { label: 'Terms', href: '#' },
 ];
@@ -33,8 +33,8 @@ export default function Footer({ onNavigate }) {
     else if (link.label === 'Impact') onNavigate('impact');
     else if (link.label === 'Contact') onNavigate('contact');
     else if (link.label === 'Home') onNavigate('home');
-    else if (link.label === 'Donors') onNavigate('login');
-    else if (link.label === 'Receivers') onNavigate('food-listings');
+    else if (link.label === 'Donate') onNavigate('login');
+    else if (link.label === 'Find Food') onNavigate('food-listings');
     else if (link.label === 'Privacy' || link.label === 'Terms') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

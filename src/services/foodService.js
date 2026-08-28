@@ -1,6 +1,87 @@
 import { supabase } from '../lib/supabase';
 
 /**
+ * Convert a food photo file to an optimized base64 data URI (max 600px)
+ * Guarantees food image support even if storage policies block bucket upload
+ */
+export async function fileToOptimizedDataUri(file, maxDimension = 600) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDimension) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          }
+        } else {
+          if (height > maxDimension) {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = () => resolve(e.target.result);
+      img.src = e.target.result;
+    };
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Upload a food image to Supabase Storage
+ * Returns the public URL of the uploaded image or optimized data URI
+ */
+export async function uploadFoodImage(donorId, file) {
+  if (!donorId || !file) return null;
+  try {
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const filePath = `${donorId}/${Date.now()}_food.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('food-images')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+      });
+
+    if (!uploadError) {
+      const { data: urlData } = supabase.storage
+        .from('food-images')
+        .getPublicUrl(filePath);
+
+      if (urlData?.publicUrl) {
+        return urlData.publicUrl;
+      }
+    } else {
+      console.warn('Food image bucket upload notice:', uploadError.message);
+    }
+  } catch (err) {
+    console.warn('uploadFoodImage notice:', err.message);
+  }
+
+  // Guaranteed fallback: return optimized data URI so custom food photo is never lost
+  try {
+    return await fileToOptimizedDataUri(file);
+  } catch (convErr) {
+    console.warn('Image conversion fallback notice:', convErr.message);
+    return null;
+  }
+}
+
+/**
  * Service to manage Food Listings and Requests with Supabase
  */
 export const foodService = {
@@ -159,11 +240,15 @@ export const foodService = {
 
       if (error) throw error;
 
-      // Update food_items status to 'requested' so it disappears from available food immediately
-      await supabase
-        .from('food_items')
-        .update({ status: 'requested' })
-        .eq('id', foodId);
+      // Update food_items status to 'requested' so it reflects in real-time
+      try {
+        await supabase
+          .from('food_items')
+          .update({ status: 'requested' })
+          .eq('id', foodId);
+      } catch (foodErr) {
+        console.warn('Could not update food item status directly:', foodErr.message);
+      }
 
       return data;
     } catch (err) {
@@ -271,12 +356,30 @@ export const foodService = {
       if (error) throw error;
 
       if (foodId) {
-        if (newStatus === 'accepted') {
-          await supabase.from('food_items').update({ status: 'reserved' }).eq('id', foodId);
-        } else if (newStatus === 'completed') {
-          await supabase.from('food_items').update({ status: 'collected' }).eq('id', foodId);
-        } else if (newStatus === 'rejected' || newStatus === 'cancelled') {
-          await supabase.from('food_items').update({ status: 'available' }).eq('id', foodId);
+        try {
+          if (newStatus === 'accepted') {
+            await supabase.from('food_items').update({ status: 'reserved' }).eq('id', foodId);
+          } else if (newStatus === 'completed') {
+            await supabase.from('food_items').update({ status: 'collected' }).eq('id', foodId);
+          } else if (newStatus === 'rejected' || newStatus === 'cancelled') {
+            // Check if other active requests exist for this food item
+            const { data: otherRequests } = await supabase
+              .from('food_requests')
+              .select('id, status')
+              .eq('food_id', foodId)
+              .neq('id', requestId)
+              .in('status', ['pending', 'accepted']);
+
+            if (!otherRequests || otherRequests.length === 0) {
+              await supabase.from('food_items').update({ status: 'available' }).eq('id', foodId);
+            } else if (otherRequests.some((r) => r.status === 'accepted')) {
+              await supabase.from('food_items').update({ status: 'reserved' }).eq('id', foodId);
+            } else {
+              await supabase.from('food_items').update({ status: 'requested' }).eq('id', foodId);
+            }
+          }
+        } catch (foodUpdateErr) {
+          console.warn('Secondary food_items status update notice:', foodUpdateErr.message);
         }
       }
 

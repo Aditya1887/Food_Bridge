@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
+import { statsService } from '../../services/statsService';
 import { SplitText, BlurText, GradientText, ShinyText, AnimatedCounter } from '../../components/AnimatedUI';
 import './HowItWorks.css';
 
@@ -180,8 +181,22 @@ function DashedArc({ from, to, radius }) {
 export default function HowItWorks({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
   const [hoveredNav, setHoveredNav] = useState(null);
+  const [platformStats, setPlatformStats] = useState(null);
   // RADIUS: % of the 0-100 SVG viewBox — must match the CSS --orbit-r proportion
   const RADIUS = 38;
+
+  useEffect(() => {
+    statsService.getPlatformStats().then(s => {
+      if (s && (s.totalMeals > 0 || s.totalUsers > 0)) setPlatformStats(s);
+    }).catch(() => {});
+  }, []);
+
+  // Dynamic stats: use real data if available, else fallback to hardcoded
+  const dynamicStats = platformStats ? [
+    { ...STATS[0], value: `${platformStats.totalMeals > 1000 ? (platformStats.totalMeals / 1000).toFixed(1) + 'K+' : platformStats.totalMeals + '+'}` },
+    { ...STATS[1], value: `${platformStats.totalUsers > 1000 ? (platformStats.totalUsers / 1000).toFixed(1) + 'K+' : platformStats.totalUsers + '+'}` },
+    { ...STATS[2], value: `${platformStats.totalKg > 1000 ? (platformStats.totalKg / 1000).toFixed(1) + 'T+' : platformStats.totalKg + 'kg+'}` },
+  ] : STATS;
 
   const handleNav = (route) => {
     const routeHashes = {

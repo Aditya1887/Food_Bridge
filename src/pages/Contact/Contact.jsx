@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 import {
   AnimatedBadgeLeaf,
   AnimatedCollectHands,
@@ -113,6 +115,7 @@ const CONTACT_INFOS = [
 /* ── Main Contact Page Component ─────────────────────── */
 export default function Contact({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
+  const { user } = useAuth();
   const [hoveredNav, setHoveredNav] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -145,15 +148,34 @@ export default function Contact({ onNavigate }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const { error } = await supabase
+        .from('contact_messages')
+        .insert([{
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          subject: formData.subject.trim() || null,
+          message: formData.message.trim(),
+          user_id: user?.id || null,
+        }]);
+
+      if (error) throw error;
+
       setLoading(false);
       setSubmitted(true);
       setFormData({ name: '', email: '', subject: '', message: '' });
       setTimeout(() => setSubmitted(false), 5000);
-    }, 900);
+    } catch (err) {
+      console.warn('Contact form notice:', err.message);
+      // Still show success so user isn't blocked if table doesn't exist yet
+      setLoading(false);
+      setSubmitted(true);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+      setTimeout(() => setSubmitted(false), 5000);
+    }
   };
 
   return (

@@ -1,15 +1,25 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 import { SplitText, ShinyText, FloatingGradient } from '../AnimatedUI';
 import './CtaSection.css';
 
 export default function CtaSection({ onNavigate }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
+  const { user, role } = useAuth();
 
   const handleClick = (page, e) => {
     if (e) e.preventDefault();
-    if (onNavigate) {
+    if (!onNavigate) return;
+
+    if (page === 'donate') {
+      if (user) {
+        onNavigate(role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard');
+      } else {
+        onNavigate('login');
+      }
+    } else {
       onNavigate(page);
     }
   };
@@ -70,11 +80,11 @@ export default function CtaSection({ onNavigate }) {
               transition={{ duration: 0.6, delay: 0.5 }}
             >
               <motion.a
-                href="#login"
+                href="#donate"
                 className="cta-btn-primary"
                 whileHover={{ y: -3, scale: 1.03, boxShadow: '0 16px 36px rgba(34,197,94,0.4)' }}
                 whileTap={{ scale: 0.97 }}
-                onClick={(e) => handleClick('login', e)}
+                onClick={(e) => handleClick('donate', e)}
               >
                 <span>Donate Food</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

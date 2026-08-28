@@ -4,6 +4,8 @@ import { useTheme } from '../../components/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { foodService } from '../../services/foodService';
+import { pickupService } from '../../services/pickupService';
+import { notificationService } from '../../services/notificationService';
 import { getAvatarUrl, getUserInitials } from '../../services/avatarService';
 import AvatarPicker from '../../components/AvatarPicker/AvatarPicker';
 import './ReceiverDashboard.css';
@@ -32,6 +34,7 @@ export default function ReceiverDashboard({ onNavigate }) {
   // Data states
   const [availableFood, setAvailableFood] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
+  const [pickups, setPickups] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,10 +68,14 @@ export default function ReceiverDashboard({ onNavigate }) {
       });
       setAvailableFood(items || []);
 
-      // 2. Fetch user's submitted requests if logged in
+      // 2. Fetch user's submitted requests & pickups if logged in
       if (user?.id) {
-        const requests = await foodService.getReceiverRequests(user.id);
+        const [requests, userPickups] = await Promise.all([
+          foodService.getReceiverRequests(user.id),
+          pickupService.getReceiverPickups(user.id).catch(() => []),
+        ]);
         setMyRequests(requests || []);
+        setPickups(userPickups || []);
       }
     } catch (err) {
       console.warn('ReceiverDashboard fetch notice:', err.message);
@@ -147,6 +154,18 @@ export default function ReceiverDashboard({ onNavigate }) {
         notes: requestNotes.trim(),
       });
 
+      // Notify the donor about the new request
+      try {
+        await notificationService.notifyNewRequest(
+          selectedFoodItem.donor_id,
+          profile?.full_name || 'A receiver',
+          selectedFoodItem.food_name,
+          selectedFoodItem.id
+        );
+      } catch (notifErr) {
+        console.warn('Notification notice:', notifErr.message);
+      }
+
       showToast(`Request sent for "${selectedFoodItem.food_name}"! The donor has been alerted.`, 'success', 5000);
       setSelectedFoodItem(null);
       setActiveNav('requests');
@@ -193,6 +212,18 @@ export default function ReceiverDashboard({ onNavigate }) {
   const totalMealsReceived = myRequests
     .filter((r) => r.status === 'accepted' || r.status === 'completed')
     .reduce((sum, r) => sum + (Number(r.requested_servings) || Number(r.food?.servings) || 0), 0);
+
+  // Full-page loading skeleton
+  if (loadingData && availableFood.length === 0 && myRequests.length === 0) {
+    return (
+      <div className={`receiver-dashboard ${isDark ? 'dark-mode' : ''}`}>
+        <div className="fb-loading-overlay">
+          <div className="fb-spinner fb-spinner-lg" />
+          <span className="fb-loading-text">Loading available food near you...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`receiver-dashboard ${isDark ? 'dark-mode' : ''}`}>
@@ -583,46 +614,84 @@ export default function ReceiverDashboard({ onNavigate }) {
 
             {myRequests.length > 0 ? (
               <div className="rd-requests-list">
-                {myRequests.map((req) => (
-                  <div key={req.id} className="rd-request-row">
-                    <img
-                      src={req.food?.image_url || '/assets/dish_biryani.jpg'}
-                      alt={req.food?.food_name || 'Food item'}
-                      className="rd-request-thumb"
-                    />
+                {myRequests.map((req) => {
+                  const matchedPickup = pickups.find(
+                    (p) => p.request_id === req.id || p.food_id === req.food_id
+                  );
 
-                    <div className="rd-request-main">
-                      <h4 className="rd-request-food-name">{req.food?.food_name || 'Food Donation'}</h4>
-                      <p className="rd-request-sub">
-                        Requested: <strong>{req.requested_servings || req.food?.servings || 1} servings</strong> • Pickup: {req.food?.pickup_location}
-                      </p>
-                      {req.donor?.full_name && (
-                        <p className="rd-request-donor">
-                          Donor: {req.donor.organization_name || req.donor.full_name} {req.donor.phone ? `(${req.donor.phone})` : ''}
+                  return (
+                    <div key={req.id} className="rd-request-row">
+                      <img
+                        src={req.food?.image_url || '/assets/dish_biryani.jpg'}
+                        alt={req.food?.food_name || 'Food item'}
+                        className="rd-request-thumb"
+                      />
+
+                      <div className="rd-request-main">
+                        <h4 className="rd-request-food-name">{req.food?.food_name || 'Food Donation'}</h4>
+                        <p className="rd-request-sub">
+                          Requested: <strong>{req.requested_servings || req.food?.servings || 1} servings</strong> • Pickup: {req.food?.pickup_location}
                         </p>
+                        {req.donor?.full_name && (
+                          <p className="rd-request-donor">
+                            Donor: {req.donor.organization_name || req.donor.full_name} {req.donor.phone ? `(${req.donor.phone})` : ''}
+                          </p>
+                        )}
+                        {matchedPickup?.otp_code && (req.status === 'accepted' || req.status === 'assigned') && (
+                          <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            background: 'rgba(22, 163, 74, 0.08)',
+                            border: '1.5px solid rgba(22, 163, 74, 0.25)',
+                            borderRadius: '8px',
+                            padding: '4px 10px',
+                            marginTop: '6px',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            color: '#15803d',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>🔐 Pickup OTP:</span>
+                            <span style={{
+                              letterSpacing: '2px',
+                              fontSize: '13px',
+                              background: '#dcfce7',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              color: '#166534',
+                              fontWeight: 800,
+                            }}>
+                              {matchedPickup.otp_code}
+                            </span>
+                            <span style={{ color: '#64748b', fontWeight: '500', fontSize: '11px' }}>
+                              (Share with donor at pickup)
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="rd-request-status-col">
+                        <span className={`rd-status-pill rd-status-${req.status}`}>
+                          {req.status.toUpperCase()}
+                        </span>
+                        <span className="rd-request-time">
+                          {new Date(req.requested_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                        </span>
+                      </div>
+
+                      {req.status === 'pending' && (
+                        <button
+                          type="button"
+                          className="rd-btn-cancel-req"
+                          onClick={() => handleCancelRequest(req.id, req.food_id)}
+                        >
+                          Cancel
+                        </button>
                       )}
                     </div>
-
-                    <div className="rd-request-status-col">
-                      <span className={`rd-status-pill rd-status-${req.status}`}>
-                        {req.status.toUpperCase()}
-                      </span>
-                      <span className="rd-request-time">
-                        {new Date(req.requested_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                      </span>
-                    </div>
-
-                    {req.status === 'pending' && (
-                      <button
-                        type="button"
-                        className="rd-btn-cancel-req"
-                        onClick={() => handleCancelRequest(req.id, req.food_id)}
-                      >
-                        Cancel
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="rd-empty-state">
@@ -643,23 +712,75 @@ export default function ReceiverDashboard({ onNavigate }) {
         {/* ═══════════ IMPACT VIEW ═══════════ */}
         {activeNav === 'impact' && (
           <div className="rd-impact-view">
+            <div className="rd-section-title-wrap" style={{ marginBottom: '20px' }}>
+              <h2 className="rd-section-title">Your Community Impact 🌍</h2>
+              <p className="rd-section-desc">Every request you make helps rescue food and reduce waste</p>
+            </div>
             <div className="rd-impact-grid">
-              <div className="rd-stat-card">
-                <span className="rd-stat-num">{totalApprovedRequests}</span>
+              <motion.div className="rd-stat-card" whileHover={{ y: -3 }}>
+                <span className="rd-stat-num" style={{ color: '#16a34a' }}>{totalApprovedRequests}</span>
                 <span className="rd-stat-label">Approved Food Requests</span>
-              </div>
-              <div className="rd-stat-card">
-                <span className="rd-stat-num">{totalMealsReceived}</span>
+              </motion.div>
+              <motion.div className="rd-stat-card" whileHover={{ y: -3 }}>
+                <span className="rd-stat-num" style={{ color: '#3b82f6' }}>{totalMealsReceived}</span>
                 <span className="rd-stat-label">Meals Received & Shared</span>
-              </div>
-              <div className="rd-stat-card">
-                <span className="rd-stat-num">{(totalMealsReceived * 0.4).toFixed(1)} <small>KG</small></span>
+              </motion.div>
+              <motion.div className="rd-stat-card" whileHover={{ y: -3 }}>
+                <span className="rd-stat-num" style={{ color: '#f59e0b' }}>{(totalMealsReceived * 0.4).toFixed(1)} <small>KG</small></span>
                 <span className="rd-stat-label">Food Waste Rescued</span>
-              </div>
-              <div className="rd-stat-card">
-                <span className="rd-stat-num">{(totalMealsReceived * 0.4 * 2.98).toFixed(1)} <small>KG</small></span>
+              </motion.div>
+              <motion.div className="rd-stat-card" whileHover={{ y: -3 }}>
+                <span className="rd-stat-num" style={{ color: '#8b5cf6' }}>{(totalMealsReceived * 0.4 * 2.98).toFixed(1)} <small>KG</small></span>
                 <span className="rd-stat-label">CO₂ Emissions Avoided</span>
-              </div>
+              </motion.div>
+            </div>
+            <div style={{ marginTop: '24px', padding: '20px', background: 'rgba(22,163,74,0.04)', borderRadius: '14px', border: '1px solid rgba(22,163,74,0.1)' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--hero-title)', marginBottom: '8px' }}>💚 Keep making a difference!</h3>
+              <p style={{ fontSize: '13px', color: 'var(--hero-subtitle)', lineHeight: 1.6 }}>
+                Every meal you receive through FoodBridge is food rescued from waste. By coordinating with donors and NGOs in your area,
+                you're helping build a zero-waste community. Continue browsing available food to make an even bigger impact.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════ HELP & SUPPORT VIEW ═══════════ */}
+        {activeNav === 'support' && (
+          <div className="rd-support-view">
+            <div className="rd-section-title-wrap" style={{ marginBottom: '20px' }}>
+              <h2 className="rd-section-title">Help & Support 💬</h2>
+              <p className="rd-section-desc">Find answers to common questions or reach out for assistance</p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {[
+                { q: 'How do I request food?', a: 'Browse the available food listings, select an item, and click "Request Food". The donor will be notified and can accept or decline.' },
+                { q: 'What happens after my request is accepted?', a: 'You\'ll receive a notification with pickup details and an OTP code. Use this code for verification when collecting the food.' },
+                { q: 'Can I cancel a request?', a: 'Yes! Go to "My Food Requests" and click "Cancel" on any pending request. Accepted requests should be coordinated with the donor.' },
+                { q: 'Is FoodBridge free to use?', a: 'Absolutely! FoodBridge is a 100% free platform connecting surplus food donors with those who need it.' },
+                { q: 'How do I update my profile?', a: 'Click on your profile avatar in the top-right corner and select "Change Avatar" to update your photo.' },
+                { q: 'Who can I contact for help?', a: 'Email us at support@foodbridge.org or use the Contact page on the FoodBridge website. Our team typically responds within 24 hours.' },
+              ].map((faq, idx) => (
+                <details key={idx} style={{ padding: '16px 20px', background: 'rgba(22,163,74,0.03)', borderRadius: '12px', border: '1px solid rgba(22,163,74,0.08)', cursor: 'pointer' }}>
+                  <summary style={{ fontWeight: 700, fontSize: '14px', color: 'var(--hero-title)', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ color: '#16a34a', fontWeight: 800 }}>Q.</span> {faq.q}
+                  </summary>
+                  <p style={{ marginTop: '10px', fontSize: '13px', color: 'var(--hero-subtitle)', lineHeight: 1.6, paddingLeft: '24px' }}>
+                    {faq.a}
+                  </p>
+                </details>
+              ))}
+            </div>
+
+            <div style={{ marginTop: '24px', padding: '20px', background: 'linear-gradient(135deg, rgba(22,163,74,0.06), rgba(59,130,246,0.04))', borderRadius: '14px', border: '1px solid rgba(22,163,74,0.1)', textAlign: 'center' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--hero-title)', marginBottom: '6px' }}>Still need help?</h3>
+              <p style={{ fontSize: '13px', color: 'var(--hero-subtitle)', marginBottom: '12px' }}>Our team is here for you</p>
+              <a
+                href="mailto:support@foodbridge.org"
+                style={{ display: 'inline-block', padding: '10px 24px', background: '#16a34a', color: '#fff', borderRadius: '10px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}
+              >
+                ✉ Email Support
+              </a>
             </div>
           </div>
         )}

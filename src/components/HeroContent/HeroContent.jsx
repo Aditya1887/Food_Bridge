@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 import { SplitText, GradientText, BlurText } from '../AnimatedUI';
 import './HeroContent.css';
 
@@ -33,9 +34,19 @@ const buttonVariants = {
 };
 
 export default function HeroContent({ onNavigate }) {
+  const { user, role } = useAuth();
+
   const handleClick = (page, e) => {
     if (e) e.preventDefault();
-    if (onNavigate) {
+    if (!onNavigate) return;
+
+    if (page === 'donate') {
+      if (user) {
+        onNavigate(role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard');
+      } else {
+        onNavigate('login');
+      }
+    } else {
       onNavigate(page);
     }
   };
@@ -120,12 +131,12 @@ export default function HeroContent({ onNavigate }) {
       >
         <div className="cta-row top-row">
           <motion.a
-            href="#login"
+            href="#donate"
             className="cta-btn btn-donate"
             variants={buttonVariants}
             whileHover={{ y: -3, boxShadow: '0 14px 30px rgba(8,46,26,0.3)' }}
             whileTap={{ scale: 0.97 }}
-            onClick={(e) => handleClick('login', e)}
+            onClick={(e) => handleClick('donate', e)}
           >
             <span className="btn-icon-wrapper badge-dark">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

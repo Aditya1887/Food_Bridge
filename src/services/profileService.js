@@ -30,17 +30,12 @@ export const profileService = {
   async updateProfile(userId, updates) {
     if (!userId) throw new Error('User ID is required');
     try {
-      const payload = {
-        ...updates,
-        updated_at: new Date().toISOString(),
-      };
-
       const { data, error } = await supabase
         .from('profiles')
-        .update(payload)
+        .update(updates)
         .eq('id', userId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;

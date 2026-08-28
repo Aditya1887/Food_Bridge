@@ -1,0 +1,449 @@
+.map-view-container {
+  position: relative;
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1.5px solid rgba(22, 163, 74, 0.2);
+  background: #f8fafc;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  z-index: 1;
+}
+
+.map-view-canvas {
+  border-radius: 18px;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* ── Floating Location Search Bar Over Map ── */
+.map-search-overlay {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 540px;
+  pointer-events: auto;
+}
+
+.map-search-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(22, 163, 74, 0.25);
+  border-radius: 14px;
+  padding: 6px 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s ease;
+}
+
+.map-search-form:focus-within {
+  border-color: #16a34a;
+  box-shadow: 0 8px 28px rgba(22, 163, 74, 0.22);
+  background: #ffffff;
+}
+
+.map-search-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #16a34a;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.map-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: #0f172a;
+  outline: none;
+  font-weight: 500;
+}
+
+.map-search-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.map-search-clear {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color 0.15s ease;
+}
+
+.map-search-clear:hover {
+  color: #0f172a;
+}
+
+.map-gps-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.map-gps-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.map-gps-btn:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+.map-gps-btn.locating {
+  background: #0284c7;
+  animation: pulseLocate 1.2s infinite;
+}
+
+@keyframes pulseLocate {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+/* Autocomplete search results dropdown */
+.map-results-dropdown {
+  background: #ffffff;
+  border: 1.5px solid rgba(22, 163, 74, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+  max-height: 230px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.map-result-item:last-child {
+  border-bottom: none;
+}
+
+.map-result-item:hover {
+  background: #f0fdf4;
+}
+
+.map-result-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.map-result-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+
+.map-result-text strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.map-result-text span {
+  color: #64748b;
+  font-size: 11.5px;
+}
+
+/* Active Location Tag */
+.map-location-tag {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #166534;
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  max-width: 100%;
+}
+
+.map-tag-dot {
+  width: 7px;
+  height: 7px;
+  background: #22c55e;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+}
+
+.map-tag-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Custom Marker Icons ── */
+.food-marker-container {
+  background: transparent !important;
+  border: none !important;
+}
+
+.fb-marker-pin {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.fb-marker-pin:hover {
+  transform: scale(1.22);
+}
+
+.user-marker-container {
+  background: transparent !important;
+  border: none !important;
+}
+
+.fb-user-pin {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fb-user-core {
+  width: 13px;
+  height: 13px;
+  background: #2563eb;
+  border: 2.5px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  z-index: 2;
+}
+
+.fb-user-ripple {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.28);
+  animation: userRipple 2s infinite ease-out;
+  z-index: 1;
+}
+
+@keyframes userRipple {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+/* ── Leaflet Custom Popup Styling ── */
+.foodbridge-map-popup .leaflet-popup-content-wrapper {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 0;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  overflow: hidden;
+}
+
+.foodbridge-map-popup .leaflet-popup-content {
+  margin: 0;
+  line-height: 1.4;
+  font-family: inherit;
+}
+
+.foodbridge-map-popup .leaflet-popup-tip {
+  background: #ffffff;
+}
+
+.fb-popup-card {
+  padding: 12px 14px;
+  min-width: 210px;
+}
+
+.fb-popup-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.fb-popup-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.fb-popup-badge {
+  background: #dcfce7;
+  color: #166534;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.fb-popup-portions {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.fb-popup-address {
+  margin: 0 0 10px;
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.fb-popup-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.fb-popup-dist {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.fb-popup-cta {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.fb-popup-cta:hover {
+  background: #15803d;
+}
+
+/* ── Dark Mode ── */
+.dark-mode.map-view-container {
+  border-color: rgba(74, 222, 128, 0.2);
+  background: #071a0e;
+}
+
+.dark-mode .map-search-form {
+  background: rgba(15, 23, 42, 0.94);
+  border-color: rgba(74, 222, 128, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .map-search-input {
+  color: #f8fafc;
+}
+
+.dark-mode .map-search-input::placeholder {
+  color: #64748b;
+}
+
+.dark-mode .map-results-dropdown {
+  background: #0f172a;
+  border-color: rgba(74, 222, 128, 0.25);
+}
+
+.dark-mode .map-result-item {
+  border-bottom-color: #1e293b;
+}
+
+.dark-mode .map-result-item:hover {
+  background: #1e293b;
+}
+
+.dark-mode .map-result-text strong {
+  color: #f8fafc;
+}
+
+.dark-mode .map-result-text span {
+  color: #94a3b8;
+}
+
+.dark-mode .map-location-tag {
+  background: rgba(15, 23, 42, 0.92);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.25);
+}
+
+.dark-mode .foodbridge-map-popup .leaflet-popup-content-wrapper {
+  background: #0f172a;
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.dark-mode .foodbridge-map-popup .leaflet-popup-tip {
+  background: #0f172a;
+}
+
+.dark-mode .fb-popup-title {
+  color: #f8fafc;
+}
+
+.dark-mode .fb-popup-portions {
+  color: #cbd5e1;
+}
+
+.dark-mode .fb-popup-address {
+  color: #94a3b8;
+}
+
+.dark-mode .fb-popup-foot {
+  border-top-color: #1e293b;
+}
+
+.dark-mode .fb-popup-badge {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
+import { statsService } from '../../services/statsService';
 import {
   AnimatedMealBowl,
   AnimatedCommunityPeople,
@@ -145,10 +146,37 @@ function StatCard({ stat }) {
   );
 }
 
-/* ── Main Impact Page Component ──────────────────────── */
 export default function Impact({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
   const [hoveredNav, setHoveredNav] = useState(null);
+  const [platformStats, setPlatformStats] = useState(null);
+
+  useEffect(() => {
+    statsService.getPlatformStats().then((s) => {
+      if (s && (s.totalMeals > 0 || s.totalUsers > 0)) {
+        setPlatformStats(s);
+      }
+    }).catch(() => {});
+  }, []);
+
+  const dynamicImpactStats = platformStats ? [
+    {
+      ...IMPACT_STATS[0],
+      value: platformStats.totalMeals >= 1000 ? `${(platformStats.totalMeals / 1000).toFixed(1)}K+` : `${platformStats.totalMeals}+`,
+    },
+    {
+      ...IMPACT_STATS[1],
+      value: platformStats.totalUsers >= 1000 ? `${(platformStats.totalUsers / 1000).toFixed(1)}K+` : `${platformStats.totalUsers}+`,
+    },
+    {
+      ...IMPACT_STATS[2],
+      value: `${platformStats.donorCount + platformStats.receiverCount}+`,
+    },
+    {
+      ...IMPACT_STATS[3],
+      value: `${platformStats.completedRequests || 12}+`,
+    },
+  ] : IMPACT_STATS;
 
   const handleNav = (route) => {
     const routeHashes = {
@@ -344,7 +372,7 @@ export default function Impact({ onNavigate }) {
               transition={{ duration: 0.75, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="imp-stats-row">
-                {IMPACT_STATS.map((stat) => (
+                {dynamicImpactStats.map((stat) => (
                   <StatCard key={stat.id} stat={stat} />
                 ))}
               </div>

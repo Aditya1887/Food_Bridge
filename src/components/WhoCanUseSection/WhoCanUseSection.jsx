@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 import { SplitText, ShinyText, SpotlightCard } from '../AnimatedUI';
 import './WhoCanUseSection.css';
 
@@ -415,6 +416,7 @@ export default function WhoCanUseSection({ onNavigate }) {
   const scrollTrackRef = useRef(null);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.15 });
+  const { user, role } = useAuth();
 
   const activeList = activeTab === 'donors' ? donors : receivers;
 
@@ -432,9 +434,16 @@ export default function WhoCanUseSection({ onNavigate }) {
     }
   };
 
-  const handleActionClick = (route = 'login') => {
-    if (onNavigate) {
-      onNavigate(route);
+  const handleActionClick = () => {
+    if (!onNavigate) return;
+    if (activeTab === 'donors') {
+      if (user) {
+        onNavigate(role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard');
+      } else {
+        onNavigate('login');
+      }
+    } else {
+      onNavigate('food-listings');
     }
   };
 

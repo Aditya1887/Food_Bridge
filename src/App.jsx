@@ -16,6 +16,7 @@ import Login from './pages/Login/Login';
 import DonorDashboard from './pages/DonorDashboard/DonorDashboard';
 import ReceiverDashboard from './pages/ReceiverDashboard/ReceiverDashboard';
 import FoodListings from './pages/FoodListings/FoodListings';
+import AdminDashboard from './pages/AdminDashboard/AdminDashboard';
 import { PageTransition } from './components/AnimatedUI';
 
 const PAGE_HASHES = {
@@ -28,6 +29,7 @@ const PAGE_HASHES = {
   'find-food': '#food-listings',
   'donor-dashboard': '#donor-dashboard',
   'receiver-dashboard': '#receiver-dashboard',
+  'admin-dashboard': '#admin-dashboard',
   'dashboard': '#dashboard',
   'home': '',
 };
@@ -42,6 +44,7 @@ function getPageFromHash() {
   if (hash === '#food-listings' || hash === '#find-food' || hash === '#listings') return 'food-listings';
   if (hash === '#donor-dashboard') return 'donor-dashboard';
   if (hash === '#receiver-dashboard') return 'receiver-dashboard';
+  if (hash === '#admin-dashboard' || hash === '#admin') return 'admin-dashboard';
   if (hash === '#dashboard') return 'dashboard';
   return 'home';
 }
@@ -65,6 +68,17 @@ function MainAppContent() {
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
+
+  // Auto-redirect #dashboard to role-specific dashboard hash
+  useEffect(() => {
+    if (currentPage === 'dashboard' && user && !loading && role) {
+      const targetPage = role === 'admin' ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
+      const targetHash = PAGE_HASHES[targetPage];
+      if (targetHash && window.location.hash !== targetHash) {
+        window.location.hash = targetHash;
+      }
+    }
+  }, [currentPage, user, loading, role]);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -100,12 +114,30 @@ function MainAppContent() {
         }
         return <ReceiverDashboard onNavigate={handleNavigate} />;
 
+      case 'admin-dashboard':
+        if (loading) {
+          return <DashboardLoadingFallback />;
+        }
+        if (!user) {
+          return <Login onNavigate={handleNavigate} />;
+        }
+        if (role !== 'admin') {
+          // Non-admin users: redirect to their appropriate dashboard
+          return role === 'receiver'
+            ? <ReceiverDashboard onNavigate={handleNavigate} />
+            : <DonorDashboard onNavigate={handleNavigate} />;
+        }
+        return <AdminDashboard onNavigate={handleNavigate} />;
+
       case 'dashboard':
         if (loading) {
           return <DashboardLoadingFallback />;
         }
         if (!user) {
           return <Login onNavigate={handleNavigate} />;
+        }
+        if (role === 'admin') {
+          return <AdminDashboard onNavigate={handleNavigate} />;
         }
         if (role === 'receiver') {
           return <ReceiverDashboard onNavigate={handleNavigate} />;
@@ -136,27 +168,9 @@ function MainAppContent() {
 
 function DashboardLoadingFallback() {
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#f7faf7',
-      color: '#15803d',
-      fontFamily: 'sans-serif',
-      gap: '16px'
-    }}>
-      <div style={{
-        width: '40px',
-        height: '40px',
-        border: '3px solid #bbf7d0',
-        borderTopColor: '#16a34a',
-        borderRadius: '50%',
-        animation: 'spin 0.8s linear infinite'
-      }} />
-      <span style={{ fontSize: '14px', fontWeight: '600' }}>Loading FoodBridge Dashboard...</span>
-      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+    <div className="fb-loading-overlay">
+      <div className="fb-spinner fb-spinner-lg" />
+      <span className="fb-loading-text">Loading FoodBridge Dashboard...</span>
     </div>
   );
 }
