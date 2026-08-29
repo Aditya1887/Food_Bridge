@@ -2,16 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 import { statsService } from '../../services/statsService';
 import { pickupService } from '../../services/pickupService';
+import { getAvatarUrl, getUserInitials } from '../../services/avatarService';
+import AvatarPicker from '../../components/AvatarPicker/AvatarPicker';
 import './AdminDashboard.css';
 
 export default function AdminDashboard({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
-  const { user, profile, logout } = useAuth();
+  const { user, profile, logout, refreshProfile } = useAuth();
 
   const [activeNav, setActiveNav] = useState('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
@@ -54,7 +58,61 @@ export default function AdminDashboard({ onNavigate }) {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+
+    // Real-time subscriptions across all public tables for the admin dashboard
+    const adminProfilesChannel = supabase
+      .channel('admin_profiles_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        loadData();
+      })
+      .subscribe();
+
+    const adminFoodChannel = supabase
+      .channel('admin_food_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'food_items' }, () => {
+        loadData();
+      })
+      .subscribe();
+
+    const adminRequestsChannel = supabase
+      .channel('admin_requests_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'food_requests' }, () => {
+        loadData();
+      })
+      .subscribe();
+
+    const adminPickupsChannel = supabase
+      .channel('admin_pickups_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pickup_records' }, () => {
+        loadData();
+      })
+      .subscribe();
+
+    const adminScheduledChannel = supabase
+      .channel('admin_scheduled_pickups_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pickups' }, () => {
+        loadData();
+      })
+      .subscribe();
+
+    const adminMessagesChannel = supabase
+      .channel('admin_messages_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_messages' }, () => {
+        loadData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(adminProfilesChannel);
+      supabase.removeChannel(adminFoodChannel);
+      supabase.removeChannel(adminRequestsChannel);
+      supabase.removeChannel(adminPickupsChannel);
+      supabase.removeChannel(adminScheduledChannel);
+      supabase.removeChannel(adminMessagesChannel);
+    };
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -78,6 +136,8 @@ export default function AdminDashboard({ onNavigate }) {
   };
 
   const displayName = profile?.full_name || user?.user_metadata?.full_name || 'Admin';
+  const avatarUrl = getAvatarUrl(profile, user);
+  const initials = getUserInitials(profile, user);
 
   const NAV_ITEMS = [
     { id: 'overview', label: 'Overview', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /></svg> },
@@ -86,6 +146,7 @@ export default function AdminDashboard({ onNavigate }) {
     { id: 'requests', label: 'Requests', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg> },
     { id: 'pickups', label: 'Pickups', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg> },
     { id: 'messages', label: 'Messages', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg> },
+    { id: 'settings', label: 'Profile & Settings', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg> },
   ];
 
   const STAT_CARDS = [
@@ -326,7 +387,7 @@ export default function AdminDashboard({ onNavigate }) {
                     {card.icon}
                   </div>
                   <div>
-                    <div className="ad-stat-value">{card.value.toLocaleString()}</div>
+                    <div className="ad-stat-value">{typeof card.value === 'number' ? card.value.toLocaleString() : (card.value || 0)}</div>
                     <div className="ad-stat-label">{card.label}</div>
                   </div>
                 </motion.div>
@@ -433,7 +494,14 @@ export default function AdminDashboard({ onNavigate }) {
             <button
               key={item.id}
               className={`ad-nav-item ${activeNav === item.id ? 'active' : ''}`}
-              onClick={() => { setActiveNav(item.id); setMobileMenuOpen(false); }}
+              onClick={() => {
+                if (item.id === 'settings') {
+                  setProfileModalOpen(true);
+                } else {
+                  setActiveNav(item.id);
+                }
+                setMobileMenuOpen(false);
+              }}
             >
               <span className="ad-nav-icon">{item.icon}</span>
               <span>{item.label}</span>
@@ -496,6 +564,20 @@ export default function AdminDashboard({ onNavigate }) {
           {renderContent()}
         </div>
       </div>
+
+      {/* Profile & Settings Modal */}
+      <AvatarPicker
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        currentAvatar={profile?.avatar_url}
+        userId={user?.id}
+        profile={profile}
+        user={user}
+        onAvatarChange={() => {
+          refreshProfile();
+          showToast('Profile & avatar updated successfully!', 'success');
+        }}
+      />
 
       {/* Toast */}
       <AnimatePresence>

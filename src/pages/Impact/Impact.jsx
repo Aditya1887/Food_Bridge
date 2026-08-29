@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 import { statsService } from '../../services/statsService';
+import { getAvatarUrl } from '../../services/avatarService';
 import {
   AnimatedMealBowl,
   AnimatedCommunityPeople,
@@ -148,15 +151,52 @@ function StatCard({ stat }) {
 
 export default function Impact({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
+  const { user, role, profile } = useAuth();
+  const avatarUrl = getAvatarUrl(profile, user);
   const [hoveredNav, setHoveredNav] = useState(null);
   const [platformStats, setPlatformStats] = useState(null);
 
   useEffect(() => {
-    statsService.getPlatformStats().then((s) => {
-      if (s && (s.totalMeals > 0 || s.totalUsers > 0)) {
-        setPlatformStats(s);
-      }
-    }).catch(() => {});
+    const fetchStats = () => {
+      statsService
+        .getPlatformStats()
+        .then((s) => {
+          if (s && (s.totalMeals > 0 || s.totalUsers > 0)) {
+            setPlatformStats(s);
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchStats();
+
+    // Real-time statistics subscriptions
+    const foodChannel = supabase
+      .channel('impact_food_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'food_items' }, () => {
+        fetchStats();
+      })
+      .subscribe();
+
+    const requestChannel = supabase
+      .channel('impact_requests_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'food_requests' }, () => {
+        fetchStats();
+      })
+      .subscribe();
+
+    const userChannel = supabase
+      .channel('impact_users_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        fetchStats();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(foodChannel);
+      supabase.removeChannel(requestChannel);
+      supabase.removeChannel(userChannel);
+    };
   }, []);
 
   const dynamicImpactStats = platformStats ? [
@@ -298,13 +338,43 @@ export default function Impact({ onNavigate }) {
               </AnimatePresence>
             </motion.button>
 
-            <button className="imp-btn-join" onClick={() => handleNav('login')}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              Join Us
-            </button>
+            {user ? (
+              <button
+                className="imp-btn-join imp-btn-dashboard-stylish"
+                onClick={() => {
+                  const target = role === 'admin' ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
+                  handleNav(target);
+                }}
+              >
+                <div className="btn-dashboard-icon-wrap">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Dashboard" className="btn-dashboard-avatar-img" />
+                  ) : (
+                    <svg className="btn-dashboard-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                    </svg>
+                  )}
+                </div>
+                <span className="btn-dashboard-text">
+                  Dashboard
+                  <span className="btn-dashboard-live-dot" />
+                </span>
+                <svg className="btn-dashboard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            ) : (
+              <button className="imp-btn-join" onClick={() => handleNav('login')}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Join Us
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -348,7 +418,7 @@ export default function Impact({ onNavigate }) {
                 className="imp-btn-cta"
                 whileHover={{ scale: 1.03, boxShadow: '0 8px 24px rgba(27, 107, 51, 0.25)' }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => onNavigate('home')}
+                onClick={() => handleNav('home')}
               >
                 <span className="imp-cta-play-circle">
                   <motion.svg

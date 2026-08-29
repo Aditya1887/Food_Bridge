@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
+const ADMIN_EMAILS = ['adsharma1887@gmail.com'];
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
@@ -18,6 +20,8 @@ export function AuthProvider({ children }) {
       return null;
     }
 
+    const isMasterAdmin = ADMIN_EMAILS.includes((authUser.email || '').toLowerCase().trim());
+
     try {
       // 1. Try to fetch existing profile from public.profiles
       const { data, error } = await supabase
@@ -27,13 +31,22 @@ export function AuthProvider({ children }) {
         .maybeSingle();
 
       if (data && !error) {
-        setProfile(data);
-        setRole(data.role || authUser.user_metadata?.role || 'donor');
-        return data;
+        if (isMasterAdmin && data.role !== 'admin') {
+          try {
+            await supabase.from('profiles').update({ role: 'admin' }).eq('id', authUser.id);
+            data.role = 'admin';
+          } catch (e) {
+            console.warn('Auto admin elevation notice:', e.message);
+          }
+        }
+        const effectiveRole = isMasterAdmin ? 'admin' : (data.role || authUser.user_metadata?.role || 'donor');
+        setProfile({ ...data, role: effectiveRole });
+        setRole(effectiveRole);
+        return { ...data, role: effectiveRole };
       }
 
       // 2. Self-healing fallback: If profiles row does not exist yet, create it from auth metadata
-      const defaultRole = authUser.user_metadata?.role || 'donor';
+      const defaultRole = isMasterAdmin ? 'admin' : (authUser.user_metadata?.role || 'donor');
       const defaultName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User';
       const defaultPhone = authUser.user_metadata?.phone || '';
 
@@ -53,13 +66,13 @@ export function AuthProvider({ children }) {
         .maybeSingle();
 
       const resolved = createdProfile || newProfile;
-      setProfile(resolved);
-      setRole(resolved.role || defaultRole);
-      return resolved;
+      const effectiveRole = isMasterAdmin ? 'admin' : (resolved.role || defaultRole);
+      setProfile({ ...resolved, role: effectiveRole });
+      setRole(effectiveRole);
+      return { ...resolved, role: effectiveRole };
     } catch (err) {
       console.warn('AuthContext profile fetch notice:', err.message);
-      // Fallback to auth metadata if table read fails
-      const fallbackRole = authUser.user_metadata?.role || 'donor';
+      const fallbackRole = isMasterAdmin ? 'admin' : (authUser.user_metadata?.role || 'donor');
       setRole(fallbackRole);
       return null;
     }
@@ -109,6 +122,36 @@ export function AuthProvider({ children }) {
       subscription?.unsubscribe();
     };
   }, []);
+
+  // ── Real-time subscription for live user profile changes (verification, organization, avatar) ──
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const profileChannel = supabase
+      .channel(`auth_profile_live_${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.new) {
+            setProfile(payload.new);
+            if (payload.new.role) {
+              setRole(payload.new.role);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileChannel);
+    };
+  }, [user?.id]);
 
   // Login method
   const login = async ({ email, password }) => {
@@ -167,6 +210,7 @@ export function AuthProvider({ children }) {
   };
 
   // Update avatar and refresh profile
+  // Update avatar and refresh profile
   const updateAvatar = async (avatarUrl) => {
     if (!user) return null;
     try {
@@ -192,6 +236,32 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Update complete user profile information
+  const updateUserProfile = async (updates) => {
+    if (!user) return null;
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id)
+        .select()
+        .maybeSingle();
+
+      if (!error && data) {
+        setProfile(data);
+        if (data.role) setRole(data.role);
+        return data;
+      }
+
+      setProfile((prev) => prev ? { ...prev, ...updates } : prev);
+      return data;
+    } catch (err) {
+      console.warn('updateUserProfile notice:', err.message);
+      setProfile((prev) => prev ? { ...prev, ...updates } : prev);
+      return null;
+    }
+  };
+
   const value = {
     user,
     session,
@@ -204,6 +274,7 @@ export function AuthProvider({ children }) {
     logout,
     refreshProfile,
     updateAvatar,
+    updateUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

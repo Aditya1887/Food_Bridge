@@ -7,6 +7,7 @@ const navLinks = [
   { label: 'How It Works', href: '#how-it-works' },
   { label: 'Donate', href: '#login' },
   { label: 'Find Food', href: '#food-listings' },
+  { label: 'Pickup & Drop', href: '#pickup-drop' },
   { label: 'Impact', href: '#impact' },
   { label: 'Contact', href: '#contact' },
   { label: 'Privacy', href: '#' },
@@ -32,6 +33,7 @@ export default function Footer({ onNavigate }) {
     else if (link.label === 'About') onNavigate('about-us');
     else if (link.label === 'Impact') onNavigate('impact');
     else if (link.label === 'Contact') onNavigate('contact');
+    else if (link.label === 'Pickup & Drop') onNavigate('pickup-drop');
     else if (link.label === 'Home') onNavigate('home');
     else if (link.label === 'Donate') onNavigate('login');
     else if (link.label === 'Find Food') onNavigate('food-listings');

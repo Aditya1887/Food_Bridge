@@ -1,0 +1,534 @@
+/* ═══════════════════════════════════════════════════
+   FoodBridge — Pickup & Drop Coming Soon Page Styles
+   ═══════════════════════════════════════════════════ */
+
+.pickup-drop-page {
+  min-height: 100vh;
+  background-color: #f7faf7;
+  color: #1f2937;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.pd-main-container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 100px 24px 60px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+
+/* ═══════════ FLOATING TOAST ═══════════ */
+.pd-floating-toast {
+  position: fixed;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #edf7ee;
+  border: 1.5px solid #86efac;
+  color: #065f46;
+  padding: 12px 24px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.15);
+  z-index: 1000;
+}
+
+/* ═══════════ HERO SECTION ═══════════ */
+.pd-hero-section {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.pd-coming-soon-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  color: #15803d;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pd-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #16a34a;
+  box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7);
+  animation: pdPulse 1.8s infinite;
+}
+
+@keyframes pdPulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(22, 163, 74, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+  }
+}
+
+.pd-hero-headline {
+  font-size: 48px;
+  font-weight: 900;
+  line-height: 1.15;
+  color: #111827;
+  letter-spacing: -1px;
+  margin: 0;
+}
+
+.pd-highlight-text {
+  background: linear-gradient(135deg, #16a34a 0%, #0d9488 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.pd-hero-subhead {
+  font-size: 16.5px;
+  color: #4b5563;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 740px;
+}
+
+/* Waitlist Box */
+.pd-waitlist-box {
+  width: 100%;
+  max-width: 680px;
+  background: #ffffff;
+  border: 1.5px solid #dceddd;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  margin-top: 10px;
+}
+
+.pd-waitlist-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pd-form-inputs-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pd-email-input {
+  flex: 1.4;
+  min-width: 220px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  background: #f9fbf9;
+  outline: none;
+}
+
+.pd-email-input:focus {
+  border-color: #16a34a;
+  background: #ffffff;
+}
+
+.pd-role-select {
+  flex: 1;
+  min-width: 160px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  font-size: 13.5px;
+  font-weight: 600;
+  background: #f9fbf9;
+  outline: none;
+  cursor: pointer;
+}
+
+.pd-btn-notify {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.pd-btn-notify:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+}
+
+.pd-waitlist-note {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+  text-align: center;
+}
+
+.pd-waitlist-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0;
+}
+
+.pd-success-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 20px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.pd-waitlist-success h3 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+}
+
+.pd-waitlist-success p {
+  font-size: 13.5px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* ═══════════ PILLARS SECTION ═══════════ */
+.pd-pillars-section,
+.pd-how-it-works-section {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.pd-section-header {
+  text-align: center;
+}
+
+.pd-section-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 6px;
+}
+
+.pd-section-desc {
+  font-size: 14.5px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.pd-pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.pd-pillar-card {
+  background: #ffffff;
+  border: 1px solid #e7ede7;
+  border-radius: 18px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.25s ease;
+}
+
+.pd-pillar-icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #edf7ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.pd-pillar-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+}
+
+.pd-pillar-text {
+  font-size: 13.5px;
+  color: #4b5563;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.pd-pillar-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pd-pillar-bullets li {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #166534;
+}
+
+/* ═══════════ 3 STEPS INFOGRAPHIC ═══════════ */
+.pd-steps-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pd-step-tile {
+  background: #ffffff;
+  border: 1px solid #e7ede7;
+  border-radius: 18px;
+  padding: 24px;
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.pd-step-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pd-step-visual {
+  font-size: 28px;
+  margin: 4px 0;
+}
+
+.pd-step-tile h4 {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+}
+
+.pd-step-tile p {
+  font-size: 12.5px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pd-step-arrow {
+  font-size: 24px;
+  color: #16a34a;
+  font-weight: 900;
+}
+
+/* ═══════════ CTA SECTION ═══════════ */
+.pd-current-cta-section {
+  margin-top: 10px;
+}
+
+.pd-current-cta-card {
+  background: linear-gradient(135deg, #132219 0%, #173322 100%);
+  border-radius: 24px;
+  padding: 36px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  color: #ffffff;
+}
+
+.pd-cta-text h3 {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 8px;
+  color: #ffffff;
+}
+
+.pd-cta-text p {
+  font-size: 14px;
+  color: #d1d5db;
+  margin: 0;
+  max-width: 580px;
+  line-height: 1.5;
+}
+
+.pd-cta-text strong {
+  color: #86efac;
+}
+
+.pd-cta-buttons {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.pd-btn-cta-primary {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pd-btn-cta-primary:hover {
+  background: #15803d;
+}
+
+.pd-btn-cta-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pd-btn-cta-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ═══════════ DARK MODE ADAPTATIONS ═══════════ */
+.dark-mode.pickup-drop-page {
+  background-color: #0b140e;
+  color: #e5e7eb;
+}
+
+.dark-mode .pd-hero-headline,
+.dark-mode .pd-section-title,
+.dark-mode .pd-pillar-title,
+.dark-mode .pd-step-tile h4,
+.dark-mode .pd-waitlist-success h3 {
+  color: #f3f4f6;
+}
+
+.dark-mode .pd-hero-subhead,
+.dark-mode .pd-section-desc,
+.dark-mode .pd-pillar-text,
+.dark-mode .pd-step-tile p,
+.dark-mode .pd-waitlist-note,
+.dark-mode .pd-waitlist-success p {
+  color: #9ca3af;
+}
+
+.dark-mode .pd-waitlist-box,
+.dark-mode .pd-pillar-card,
+.dark-mode .pd-step-tile {
+  background-color: #132219;
+  border-color: #1f3627;
+}
+
+.dark-mode .pd-pillar-icon-box {
+  background-color: #1a3323;
+}
+
+.dark-mode .pd-email-input,
+.dark-mode .pd-role-select {
+  background-color: #0f1c14;
+  border-color: #2a4734;
+  color: #f3f4f6;
+}
+
+.dark-mode .pd-pillar-bullets li {
+  color: #86efac;
+}
+
+.dark-mode .pd-floating-toast {
+  background-color: #132219;
+  border-color: #235936;
+  color: #86efac;
+}
+
+/* ═══════════ RESPONSIVE BREAKPOINTS ═══════════ */
+@media (max-width: 900px) {
+  .pd-hero-headline {
+    font-size: 36px;
+  }
+
+  .pd-steps-row {
+    flex-direction: column;
+  }
+
+  .pd-step-arrow {
+    transform: rotate(90deg);
+  }
+
+  .pd-current-cta-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .pd-cta-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .pd-btn-cta-primary,
+  .pd-btn-cta-secondary {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .pd-form-inputs-row {
+    flex-direction: column;
+  }
+
+  .pd-email-input,
+  .pd-role-select,
+  .pd-btn-notify {
+    width: 100%;
+  }
+}

@@ -13,11 +13,15 @@
 }
 
 /* ─── Impact Badge Widget ─── */
-.glass-impact-widget {
-  pointer-events: auto;
+.glass-impact-widget-motion {
   position: absolute;
   bottom: 22%;
   right: 9.5%;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.glass-impact-widget {
   padding: 14px 18px;
   border-radius: 18px;
   background: var(--glass-bg);
@@ -29,7 +33,6 @@
   flex-direction: column;
   gap: 8px;
   transition: background var(--transition-speed), border-color var(--transition-speed), box-shadow var(--transition-speed);
-  will-change: transform;
 }
 
 .avatars-row {
@@ -88,7 +91,21 @@
    Responsive
    ═══════════════════════════════════════════════════════ */
 @media (max-width: 1280px) {
-  .glass-impact-widget {
+  .glass-impact-widget-motion {
     right: 5%;
+    bottom: 20%;
+  }
+}
+
+@media (max-width: 900px) {
+  .glass-impact-widget-motion {
+    right: 4%;
+    bottom: 18%;
+  }
+}
+
+@media (max-width: 768px) {
+  .glass-impact-widget-motion {
+    display: none;
   }
 }

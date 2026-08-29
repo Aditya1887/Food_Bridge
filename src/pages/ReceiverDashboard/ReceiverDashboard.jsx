@@ -43,6 +43,8 @@ export default function ReceiverDashboard({ onNavigate }) {
   const [selectedFoodItem, setSelectedFoodItem] = useState(null);
   const [requestServings, setRequestServings] = useState(5);
   const [requestNotes, setRequestNotes] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [deliveryPhone, setDeliveryPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   // Toast notification
@@ -90,7 +92,7 @@ export default function ReceiverDashboard({ onNavigate }) {
 
   // ── Realtime subscriptions for live updates ──
   useEffect(() => {
-    // Subscribe to food_items changes (new listings, status changes)
+    // 1. Subscribe to food_items changes (new donations appear automatically, status changes)
     const foodChannel = supabase
       .channel('receiver_food_live')
       .on(
@@ -100,10 +102,10 @@ export default function ReceiverDashboard({ onNavigate }) {
       )
       .subscribe();
 
-    // Subscribe to food_requests changes (status updates on user's requests)
+    // 2. Subscribe to food_requests changes (status updates when donor accepts/declines)
     const requestChannel = user?.id
       ? supabase
-          .channel('receiver_requests_live')
+          .channel(`receiver_requests_live_${user.id}`)
           .on(
             'postgres_changes',
             {
@@ -117,11 +119,58 @@ export default function ReceiverDashboard({ onNavigate }) {
           .subscribe()
       : null;
 
+    // 3. Subscribe to pickup_records changes (OTP codes generated, live fulfillment status)
+    const pickupChannel = user?.id
+      ? supabase
+          .channel(`receiver_pickups_live_${user.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'pickup_records',
+              filter: `receiver_id=eq.${user.id}`,
+            },
+            () => { loadData(); }
+          )
+          .subscribe()
+      : null;
+
+    // 4. Subscribe to notifications table
+    const notifChannel = user?.id
+      ? supabase
+          .channel(`receiver_notifs_live_${user.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'notifications',
+              filter: `user_id=eq.${user.id}`,
+            },
+            () => { loadData(); }
+          )
+          .subscribe()
+      : null;
+
     return () => {
       supabase.removeChannel(foodChannel);
       if (requestChannel) supabase.removeChannel(requestChannel);
+      if (pickupChannel) supabase.removeChannel(pickupChannel);
+      if (notifChannel) supabase.removeChannel(notifChannel);
     };
   }, [user?.id]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedFoodItem(null);
+        setUserDropdownOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -133,6 +182,8 @@ export default function ReceiverDashboard({ onNavigate }) {
     setSelectedFoodItem(foodItem);
     setRequestServings(Math.min(foodItem.servings || 5, 10));
     setRequestNotes('');
+    setDeliveryAddress(profile?.address || '');
+    setDeliveryPhone(profile?.phone || '');
   };
 
   const handleSubmitRequest = async (e) => {
@@ -144,6 +195,12 @@ export default function ReceiverDashboard({ onNavigate }) {
       return;
     }
 
+    const fulfillmentType = selectedFoodItem.fulfillment_type || 'receiver_pickup';
+    if (fulfillmentType === 'donor_delivery' && !deliveryAddress.trim()) {
+      showToast('Please enter your delivery destination address.', 'error');
+      return;
+    }
+
     setSubmitting(true);
     try {
       await foodService.createFoodRequest({
@@ -152,6 +209,9 @@ export default function ReceiverDashboard({ onNavigate }) {
         donorId: selectedFoodItem.donor_id,
         requestedServings: parseInt(requestServings) || 1,
         notes: requestNotes.trim(),
+        fulfillmentType,
+        deliveryAddress: deliveryAddress.trim() || profile?.address || '',
+        deliveryPhone: deliveryPhone.trim() || profile?.phone || '',
       });
 
       // Notify the donor about the new request
@@ -313,6 +373,21 @@ export default function ReceiverDashboard({ onNavigate }) {
             </svg>
             <span>Help & Support</span>
           </button>
+
+          <button
+            type="button"
+            className="rd-nav-item"
+            onClick={() => {
+              setAvatarPickerOpen(true);
+              setMobileMenuOpen(false);
+            }}
+          >
+            <svg className="rd-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+            <span>Profile & Settings</span>
+          </button>
         </nav>
 
         {/* Sidebar Footer Motivation */}
@@ -436,17 +511,6 @@ export default function ReceiverDashboard({ onNavigate }) {
                     <button
                       type="button"
                       className="rd-dropdown-item"
-                      onClick={() => { setUserDropdownOpen(false); setAvatarPickerOpen(true); }}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                      </svg>
-                      Change Avatar
-                    </button>
-                    <button
-                      type="button"
-                      className="rd-dropdown-item"
                       onClick={() => { setUserDropdownOpen(false); handleGoHome(); }}
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -547,7 +611,12 @@ export default function ReceiverDashboard({ onNavigate }) {
                           alt={item.food_name}
                           className="rd-card-img"
                         />
-                        <span className="rd-card-cat-badge">{item.category}</span>
+                        <div className="rd-card-badge-strip">
+                          <span className="rd-card-cat-badge">{item.category}</span>
+                          <span className={`rd-card-ff-badge rd-ff-${item.fulfillment_type || 'receiver_pickup'}`}>
+                            {item.fulfillment_type === 'donor_delivery' ? '🚗 Donor Delivery' : '🚶 Receiver Pickup'}
+                          </span>
+                        </div>
                       </div>
 
                       <div className="rd-card-content">
@@ -560,7 +629,9 @@ export default function ReceiverDashboard({ onNavigate }) {
                             <span className="rd-detail-val">{item.quantity || `${item.servings} servings`}</span>
                           </div>
                           <div className="rd-detail-row">
-                            <span className="rd-detail-label">Pickup:</span>
+                            <span className="rd-detail-label">
+                              {item.fulfillment_type === 'donor_delivery' ? 'Dispatch From:' : 'Pickup Point:'}
+                            </span>
                             <span className="rd-detail-val">{item.pickup_location}</span>
                           </div>
                           <div className="rd-detail-row">
@@ -618,6 +689,9 @@ export default function ReceiverDashboard({ onNavigate }) {
                   const matchedPickup = pickups.find(
                     (p) => p.request_id === req.id || p.food_id === req.food_id
                   );
+                  const isDonorDelivery =
+                    req.fulfillment_type === 'donor_delivery' ||
+                    req.food?.fulfillment_type === 'donor_delivery';
 
                   return (
                     <div key={req.id} className="rd-request-row">
@@ -628,9 +702,17 @@ export default function ReceiverDashboard({ onNavigate }) {
                       />
 
                       <div className="rd-request-main">
-                        <h4 className="rd-request-food-name">{req.food?.food_name || 'Food Donation'}</h4>
+                        <div className="rd-request-title-line">
+                          <h4 className="rd-request-food-name">{req.food?.food_name || 'Food Donation'}</h4>
+                          <span className={`rd-card-ff-badge rd-ff-${isDonorDelivery ? 'donor_delivery' : 'receiver_pickup'}`}>
+                            {isDonorDelivery ? '🚗 Donor Delivery' : '🚶 Receiver Pickup'}
+                          </span>
+                        </div>
                         <p className="rd-request-sub">
-                          Requested: <strong>{req.requested_servings || req.food?.servings || 1} servings</strong> • Pickup: {req.food?.pickup_location}
+                          Requested: <strong>{req.requested_servings || req.food?.servings || 1} servings</strong> •{' '}
+                          {isDonorDelivery
+                            ? `📍 Deliver to your address: ${req.delivery_address || 'Your address'}`
+                            : `📍 Pickup from donor: ${req.food?.pickup_location || 'Donor Kitchen Point'}`}
                         </p>
                         {req.donor?.full_name && (
                           <p className="rd-request-donor">
@@ -642,30 +724,32 @@ export default function ReceiverDashboard({ onNavigate }) {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '8px',
-                            background: 'rgba(22, 163, 74, 0.08)',
-                            border: '1.5px solid rgba(22, 163, 74, 0.25)',
+                            background: isDonorDelivery ? 'rgba(59, 130, 246, 0.08)' : 'rgba(22, 163, 74, 0.08)',
+                            border: `1.5px solid ${isDonorDelivery ? 'rgba(59, 130, 246, 0.25)' : 'rgba(22, 163, 74, 0.25)'}`,
                             borderRadius: '8px',
-                            padding: '4px 10px',
+                            padding: '6px 12px',
                             marginTop: '6px',
                             fontSize: '12px',
                             fontWeight: '700',
-                            color: '#15803d',
+                            color: isDonorDelivery ? '#1e40af' : '#15803d',
                             flexWrap: 'wrap'
                           }}>
-                            <span>🔐 Pickup OTP:</span>
+                            <span>{isDonorDelivery ? '🔐 Delivery OTP:' : '🔐 Pickup OTP:'}</span>
                             <span style={{
                               letterSpacing: '2px',
-                              fontSize: '13px',
-                              background: '#dcfce7',
-                              padding: '2px 8px',
+                              fontSize: '14px',
+                              background: isDonorDelivery ? '#dbeafe' : '#dcfce7',
+                              padding: '3px 8px',
                               borderRadius: '4px',
-                              color: '#166534',
+                              color: isDonorDelivery ? '#1e40af' : '#166534',
                               fontWeight: 800,
                             }}>
                               {matchedPickup.otp_code}
                             </span>
-                            <span style={{ color: '#64748b', fontWeight: '500', fontSize: '11px' }}>
-                              (Share with donor at pickup)
+                            <span style={{ color: '#64748b', fontWeight: '500', fontSize: '11.5px' }}>
+                              {isDonorDelivery
+                                ? '(Share with donor when they deliver to your address)'
+                                : '(Share with donor when picking up food)'}
                             </span>
                           </div>
                         )}
@@ -754,25 +838,18 @@ export default function ReceiverDashboard({ onNavigate }) {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {[
-                { q: 'How do I request food?', a: 'Browse the available food listings, select an item, and click "Request Food". The donor will be notified and can accept or decline.' },
-                { q: 'What happens after my request is accepted?', a: 'You\'ll receive a notification with pickup details and an OTP code. Use this code for verification when collecting the food.' },
-                { q: 'Can I cancel a request?', a: 'Yes! Go to "My Food Requests" and click "Cancel" on any pending request. Accepted requests should be coordinated with the donor.' },
-                { q: 'Is FoodBridge free to use?', a: 'Absolutely! FoodBridge is a 100% free platform connecting surplus food donors with those who need it.' },
-                { q: 'How do I update my profile?', a: 'Click on your profile avatar in the top-right corner and select "Change Avatar" to update your photo.' },
-                { q: 'Who can I contact for help?', a: 'Email us at support@foodbridge.org or use the Contact page on the FoodBridge website. Our team typically responds within 24 hours.' },
-              ].map((faq, idx) => (
-                <details key={idx} style={{ padding: '16px 20px', background: 'rgba(22,163,74,0.03)', borderRadius: '12px', border: '1px solid rgba(22,163,74,0.08)', cursor: 'pointer' }}>
-                  <summary style={{ fontWeight: 700, fontSize: '14px', color: 'var(--hero-title)', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#16a34a', fontWeight: 800 }}>Q.</span> {faq.q}
-                  </summary>
-                  <p style={{ marginTop: '10px', fontSize: '13px', color: 'var(--hero-subtitle)', lineHeight: 1.6, paddingLeft: '24px' }}>
-                    {faq.a}
-                  </p>
-                </details>
+                { q: 'How does food pickup & delivery work?', a: 'For Receiver Pickup, visit the donor location and share your 4-digit OTP. For Donor Delivery, the donor delivers to your address and you share the OTP upon delivery.' },
+                { q: 'When will FoodBridge Pickup & Drop launch?', a: 'We are actively developing our middleman delivery fleet. You can visit the Pickup & Drop page to join the early access waitlist.' },
+                { q: 'How do I cancel a food request?', a: 'You can cancel any pending request directly from your My Requests tab before the donor accepts it.' },
+              ].map((faq, i) => (
+                <div key={i} style={{ background: 'var(--card-bg, #fff)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color, #e5e7eb)' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--hero-title)', marginBottom: '6px' }}>{faq.q}</h4>
+                  <p style={{ fontSize: '13px', color: 'var(--hero-subtitle)', margin: 0, lineHeight: 1.5 }}>{faq.a}</p>
+                </div>
               ))}
             </div>
 
-            <div style={{ marginTop: '24px', padding: '20px', background: 'linear-gradient(135deg, rgba(22,163,74,0.06), rgba(59,130,246,0.04))', borderRadius: '14px', border: '1px solid rgba(22,163,74,0.1)', textAlign: 'center' }}>
+            <div style={{ marginTop: '24px', padding: '20px', background: 'rgba(22,163,74,0.04)', borderRadius: '14px', border: '1px solid rgba(22,163,74,0.1)' }}>
               <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--hero-title)', marginBottom: '6px' }}>Still need help?</h3>
               <p style={{ fontSize: '13px', color: 'var(--hero-subtitle)', marginBottom: '12px' }}>Our team is here for you</p>
               <a
@@ -810,15 +887,37 @@ export default function ReceiverDashboard({ onNavigate }) {
                 <h3>Request Food Donation</h3>
                 <p>Submit your request for <strong>{selectedFoodItem.food_name}</strong> to the donor.</p>
 
+                {/* Fulfillment Method Banner */}
+                {selectedFoodItem.fulfillment_type === 'donor_delivery' ? (
+                  <div className="rd-modal-ff-banner rd-ff-delivery-banner">
+                    <span className="rd-ff-icon">🚗</span>
+                    <div>
+                      <strong>Donor Delivery Selected</strong>
+                      <p>The donor will deliver this food to your address. Please verify your delivery details below.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rd-modal-ff-banner rd-ff-pickup-banner">
+                    <span className="rd-ff-icon">🚶</span>
+                    <div>
+                      <strong>Receiver Pickup Selected</strong>
+                      <p>You will visit the donor's location to collect this food.</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="rd-modal-food-summary">
                   <div><strong>Available:</strong> {selectedFoodItem.quantity || `${selectedFoodItem.servings} servings`}</div>
-                  <div><strong>Pickup Location:</strong> {selectedFoodItem.pickup_location}</div>
-                  <div><strong>Time Slot:</strong> {selectedFoodItem.pickup_time}</div>
+                  <div>
+                    <strong>{selectedFoodItem.fulfillment_type === 'donor_delivery' ? 'Dispatch From:' : 'Pickup Location:'}</strong>{' '}
+                    {selectedFoodItem.pickup_location}
+                  </div>
+                  <div><strong>Time Slot:</strong> {selectedFoodItem.pickup_time || 'Today (Flexible)'}</div>
                 </div>
 
                 <form onSubmit={handleSubmitRequest}>
                   <div className="rd-modal-field">
-                    <label>Servings Needed</label>
+                    <label>Servings Needed *</label>
                     <input
                       type="number"
                       min="1"
@@ -828,6 +927,32 @@ export default function ReceiverDashboard({ onNavigate }) {
                       required
                     />
                   </div>
+
+                  {selectedFoodItem.fulfillment_type === 'donor_delivery' && (
+                    <>
+                      <div className="rd-modal-field">
+                        <label>Your Delivery Destination Address *</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Shelter #4, Near Community Hall, Main Road"
+                          value={deliveryAddress}
+                          onChange={(e) => setDeliveryAddress(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="rd-modal-field">
+                        <label>Your Contact Phone Number *</label>
+                        <input
+                          type="tel"
+                          placeholder="e.g. +91 9876543210"
+                          value={deliveryPhone}
+                          onChange={(e) => setDeliveryPhone(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
 
                   <div className="rd-modal-field">
                     <label>Distribution Plan / Note for Donor (Optional)</label>
@@ -859,7 +984,7 @@ export default function ReceiverDashboard({ onNavigate }) {
         user={user}
         onAvatarChange={() => {
           refreshProfile();
-          showToast('Avatar updated successfully!', 'success');
+          showToast('Profile & avatar updated successfully!', 'success');
         }}
       />
     </div>

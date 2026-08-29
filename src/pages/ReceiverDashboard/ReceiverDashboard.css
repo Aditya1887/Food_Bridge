@@ -20,20 +20,26 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 24px 18px;
+  padding: 16px 14px;
   position: sticky;
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   z-index: 100;
   transition: all 0.3s ease;
+}
+
+.rd-sidebar::-webkit-scrollbar {
+  display: none;
 }
 
 .rd-sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 28px;
+  margin-bottom: 16px;
 }
 
 .rd-brand {
@@ -1003,6 +1009,117 @@
   color: #f3f4f6;
   background-color: #0f1c14;
   border-color: #274532;
+}
+
+/* ═══════════ FULFILLMENT BADGES & MODAL BANNERS ═══════════ */
+.rd-card-badge-strip {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.rd-card-cat-badge {
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.rd-card-ff-badge {
+  font-size: 10.5px;
+  font-weight: 750;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.rd-card-ff-badge.rd-ff-receiver_pickup {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.rd-card-ff-badge.rd-ff-donor_delivery {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.rd-request-title-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rd-modal-ff-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.rd-modal-ff-banner strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.rd-modal-ff-banner p {
+  margin: 0;
+}
+
+.rd-ff-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.rd-ff-delivery-banner {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  color: #1e40af;
+}
+
+.rd-ff-pickup-banner {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  color: #15803d;
+}
+
+/* Dark Mode Overrides */
+.dark-mode .rd-ff-delivery-banner {
+  background: #0d1e33;
+  border-color: #1e3a8a;
+  color: #93c5fd;
+}
+
+.dark-mode .rd-ff-pickup-banner {
+  background: #0e2417;
+  border-color: #166534;
+  color: #86efac;
+}
+
+.dark-mode .rd-card-ff-badge.rd-ff-receiver_pickup {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+  border-color: #275238;
+}
+
+.dark-mode .rd-card-ff-badge.rd-ff-donor_delivery {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border-color: #1e3a8a;
 }
 
 /* ═══════════ RESPONSIVE ═══════════ */

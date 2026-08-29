@@ -1,26 +1,26 @@
-import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useRef, useEffect } from 'react';
+import { useTheme } from '../ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   BUILT_IN_AVATARS,
-  svgToDataUri,
   uploadAvatarFile,
-  updateProfileAvatar,
   getAvatarUrl,
   getUserInitials,
 } from '../../services/avatarService';
+import { profileService } from '../../services/profileService';
 import './AvatarPicker.css';
 
+const CITIES = [
+  'Mumbai, Maharashtra',
+  'Delhi NCR, India',
+  'Bengaluru, Karnataka',
+  'Pune, Maharashtra',
+  'Hyderabad, Telangana',
+  'Kolkata, West Bengal',
+];
+
 /**
- * AvatarPicker — Reusable modal for selecting built-in avatars or uploading a custom photo.
- *
- * Props:
- *   isOpen       — boolean, controls visibility
- *   onClose      — function, called to close the picker
- *   currentAvatar — string, current avatar_url from profile
- *   userId       — string, user ID for upload
- *   profile      — object, user profile
- *   user         — object, auth user
- *   onAvatarChange — function(newAvatarUrl), called after avatar is updated
+ * AvatarPicker / ProfileSettingsModal — Clean, non-scrollable Profile & Settings Center connected to Supabase.
  */
 export default function AvatarPicker({
   isOpen,
@@ -31,219 +31,581 @@ export default function AvatarPicker({
   user,
   onAvatarChange,
 }) {
-  const [selectedAvatar, setSelectedAvatar] = useState(currentAvatar || '');
-  const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
+  const { updateUserProfile, refreshProfile } = useAuth();
+
+  const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'avatars' | 'preferences' | 'impact'
+
+  // Real backend form data
+  const [formData, setFormData] = useState({
+    full_name: '',
+    phone: '',
+    organization_name: '',
+    city: 'Mumbai, Maharashtra',
+    address: '',
+    bio: '',
+  });
+
+  const [selectedAvatar, setSelectedAvatar] = useState('');
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploadFile, setUploadFile] = useState(null);
-  const [error, setError] = useState('');
+
+  // Real backend user stats
+  const [userStats, setUserStats] = useState({
+    mealsShared: 0,
+    mealsReceived: 0,
+    kgSaved: 0,
+    activeListings: 0,
+    totalRequests: 0,
+  });
+
+  // Notification preferences
+  const [notifications, setNotifications] = useState({
+    emailAlerts: true,
+    smsAlerts: true,
+    pickupReminders: true,
+    weeklyReport: false,
+  });
+
+  // UI status
+  const [loading, setLoading] = useState(false);
+  const [fetchingData, setFetchingData] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
   const fileInputRef = useRef(null);
 
-  const currentDisplayUrl = getAvatarUrl(profile, user);
-  const initials = getUserInitials(profile, user);
+  const effectiveUserId = userId || user?.id;
+  const effectiveRole = profile?.role || user?.user_metadata?.role || 'donor';
 
-  const handleSelectBuiltIn = (avatarId) => {
-    setSelectedAvatar(avatarId);
+  // Fetch real backend data whenever modal opens
+  useEffect(() => {
+    if (!isOpen || !effectiveUserId) return;
+
+    let isMounted = true;
+    setFetchingData(true);
+
+    const loadRealUserData = async () => {
+      try {
+        // 1. Fetch real latest profile from Supabase
+        const realProfile = await profileService.getProfile(effectiveUserId);
+        const resolved = realProfile || profile;
+
+        if (isMounted && resolved) {
+          setFormData({
+            full_name: resolved.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || '',
+            phone: resolved.phone || user?.user_metadata?.phone || '',
+            organization_name: resolved.organization_name || '',
+            city: resolved.city || 'Mumbai, Maharashtra',
+            address: resolved.address || '',
+            bio: resolved.bio || 'Helping build a zero-hunger, zero-waste community with FoodBridge.',
+          });
+          setSelectedAvatar(resolved.avatar_url || user?.user_metadata?.avatar_url || '');
+        }
+
+        // 2. Fetch real stats from Supabase
+        const stats = await profileService.getUserStats(effectiveUserId, effectiveRole);
+        if (isMounted && stats) {
+          setUserStats(stats);
+        }
+      } catch (err) {
+        console.warn('Load user profile notice:', err.message);
+      } finally {
+        if (isMounted) setFetchingData(false);
+      }
+    };
+
+    loadRealUserData();
+
     setPreviewUrl(null);
     setUploadFile(null);
-    setError('');
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, effectiveUserId, effectiveRole]);
+
+  // Handle escape key to close cleanly
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  // Lock background window scroll strictly while Profile & Settings modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  const initials = getUserInitials(profile, user);
+  const currentDisplayUrl = getAvatarUrl(profile, user);
+
+  // Active preview image
+  const getActivePreviewSrc = () => {
+    if (previewUrl) return previewUrl;
+    if (selectedAvatar) {
+      const builtIn = BUILT_IN_AVATARS.find((a) => a.id === selectedAvatar);
+      if (builtIn) return builtIn.src;
+      if (selectedAvatar.startsWith('http') || selectedAvatar.startsWith('data:image/') || selectedAvatar.startsWith('/assets/')) {
+        return selectedAvatar;
+      }
+    }
+    return currentDisplayUrl;
+  };
+
+  const activePreviewSrc = getActivePreviewSrc();
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectAvatar = (avatar) => {
+    setSelectedAvatar(avatar.id);
+    setPreviewUrl(null);
+    setUploadFile(null);
+    setErrorMsg('');
   };
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file
     if (!file.type.startsWith('image/')) {
-      setError('Please select an image file (JPG, PNG, etc.)');
+      setErrorMsg('Please select a valid image file (JPG, PNG, WebP).');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be smaller than 5MB');
+      setErrorMsg('Image size must be less than 5MB.');
       return;
     }
 
-    setError('');
+    setErrorMsg('');
     setUploadFile(file);
     setSelectedAvatar('');
 
-    // Create preview
     const reader = new FileReader();
     reader.onload = (ev) => setPreviewUrl(ev.target.result);
     reader.readAsDataURL(file);
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    setError('');
+  const toggleNotification = (key) => {
+    setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleSaveProfile = async (e) => {
+    if (e) e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
 
     try {
+      if (!effectiveUserId) throw new Error('User session not found.');
+
       let finalAvatarUrl = selectedAvatar;
 
-      // If user selected a custom file, upload/convert it
+      // 1. Process custom file upload if selected
       if (uploadFile) {
-        setUploading(true);
         try {
-          const publicOrDataUrl = await uploadAvatarFile(userId, uploadFile);
-          finalAvatarUrl = publicOrDataUrl;
+          const uploadedUrl = await uploadAvatarFile(effectiveUserId, uploadFile);
+          if (uploadedUrl) {
+            finalAvatarUrl = uploadedUrl;
+          }
         } catch (uploadErr) {
-          console.warn('Avatar upload notice:', uploadErr.message);
-          setError(uploadErr.message || 'Could not process image file. Try selecting a built-in avatar.');
-          setSaving(false);
-          setUploading(false);
-          return;
+          console.warn('Avatar file upload warning:', uploadErr.message);
         }
-        setUploading(false);
       }
 
-      // Update profile in database
-      if (finalAvatarUrl) {
-        await updateProfileAvatar(userId, finalAvatarUrl);
+      const profilePayload = {
+        full_name: formData.full_name.trim(),
+        phone: formData.phone.trim(),
+        organization_name: formData.organization_name.trim() || null,
+        city: formData.city.trim(),
+        address: formData.address.trim() || null,
+        avatar_url: finalAvatarUrl || profile?.avatar_url || '',
+        updated_at: new Date().toISOString(),
+      };
+
+      // 2. Save in database
+      if (updateUserProfile) {
+        await updateUserProfile(profilePayload);
+      } else {
+        await profileService.updateProfile(effectiveUserId, profilePayload);
       }
 
-      if (onAvatarChange) onAvatarChange(finalAvatarUrl);
-      onClose();
+      if (refreshProfile) {
+        await refreshProfile();
+      }
+
+      if (onAvatarChange) {
+        onAvatarChange(finalAvatarUrl);
+      }
+
+      setSuccessMsg('Profile updated successfully!');
+      setTimeout(() => {
+        setSuccessMsg('');
+        onClose();
+      }, 1000);
     } catch (err) {
-      setError(err.message || 'Failed to save avatar.');
+      console.error('Save profile error:', err);
+      setErrorMsg(err.message || 'Failed to update profile settings.');
     } finally {
-      setSaving(false);
-      setUploading(false);
+      setLoading(false);
     }
   };
-
-  // Determine what to show as the preview
-  const getPreviewSrc = () => {
-    if (previewUrl) return previewUrl;
-    if (selectedAvatar) {
-      const builtIn = BUILT_IN_AVATARS.find((a) => a.id === selectedAvatar);
-      if (builtIn) return svgToDataUri(builtIn.svg);
-    }
-    return currentDisplayUrl;
-  };
-
-  const previewSrc = getPreviewSrc();
 
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      <div className="ap-backdrop" onClick={onClose}>
-        <motion.div
-          className="ap-modal"
-          onClick={(e) => e.stopPropagation()}
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        >
-          {/* Header */}
-          <div className="ap-header">
-            <h3 className="ap-title">Choose Your Avatar</h3>
-            <button type="button" className="ap-close-btn" onClick={onClose}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+    <div
+      className="ap-backdrop"
+      onClick={onClose}
+    >
+      <div
+        className="profile-modal-container"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* ════ TOP HERO BANNER ════ */}
+        <div className="pm-header-banner">
+          <div className="pm-user-glance">
+            <div
+              className="pm-avatar-wrap"
+              onClick={() => setActiveTab('avatars')}
+              title="Change avatar"
+            >
+              <div className="pm-avatar-circle">
+                {activePreviewSrc ? (
+                  <img src={activePreviewSrc} alt="Avatar" className="pm-avatar-img" />
+                ) : (
+                  <span className="pm-avatar-initials">{initials}</span>
+                )}
+              </div>
+              <div className="pm-avatar-badge-edit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="pm-user-details">
+              <div className="pm-user-name-row">
+                <h3 className="pm-user-name">{formData.full_name || 'FoodBridge Member'}</h3>
+                <span className="pm-role-pill">
+                  {effectiveRole.toUpperCase()}
+                </span>
+                {profile?.is_verified && (
+                  <span className="pm-verified-tag">
+                    <svg viewBox="0 0 24 24" fill="#16a34a" width="12" height="12">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                    </svg>
+                    Verified
+                  </span>
+                )}
+              </div>
+              <p className="pm-user-email">{user?.email || 'member@foodbridge.org'}</p>
+            </div>
           </div>
 
-          {/* Current Preview */}
-          <div className="ap-preview-section">
-            <div className="ap-preview-circle">
-              {previewSrc ? (
-                <img src={previewSrc} alt="Avatar preview" className="ap-preview-img" />
-              ) : (
-                <span className="ap-preview-initials">{initials}</span>
+          <button type="button" className="pm-close-btn" onClick={onClose} aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        {/* ════ TABS NAVIGATION BAR (Backend-connected) ════ */}
+        <div className="pm-tabs-bar">
+          {[
+            { id: 'profile', label: '👤 Profile Info' },
+            { id: 'avatars', label: '🎨 Choose Avatar' },
+            { id: 'preferences', label: '⚙️ Settings' },
+            { id: 'impact', label: '📊 Real Impact' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={`pm-tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <span className="pm-tab-label-text">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* ════ TAB BODY (Adaptive Smart Scroll) ════ */}
+        <div className="pm-tab-body-wrapper">
+              {/* TAB 1: Real Profile Information */}
+              {activeTab === 'profile' && (
+                <div className="pm-tab-pane">
+                  <form onSubmit={handleSaveProfile} className="pm-compact-form">
+                    <div className="pm-row-2">
+                      <div className="pm-field">
+                        <label className="pm-lbl">Full Name</label>
+                        <input
+                          type="text"
+                          name="full_name"
+                          value={formData.full_name}
+                          onChange={handleInputChange}
+                          placeholder="Your Name"
+                          required
+                          className="pm-ctrl"
+                        />
+                      </div>
+                      <div className="pm-field">
+                        <label className="pm-lbl">Phone Number</label>
+                        <input
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          placeholder="+91 98765 43210"
+                          className="pm-ctrl"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pm-row-2">
+                      <div className="pm-field">
+                        <label className="pm-lbl">Organization / Cause</label>
+                        <input
+                          type="text"
+                          name="organization_name"
+                          value={formData.organization_name}
+                          onChange={handleInputChange}
+                          placeholder="Organization (optional)"
+                          className="pm-ctrl"
+                        />
+                      </div>
+                      <div className="pm-field">
+                        <label className="pm-lbl">City / Region</label>
+                        <select
+                          name="city"
+                          value={formData.city}
+                          onChange={handleInputChange}
+                          className="pm-ctrl pm-sel"
+                        >
+                          {CITIES.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="pm-field">
+                      <label className="pm-lbl">Pickup Drop Point / Address</label>
+                      <input
+                        type="text"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        placeholder="e.g. Ground Floor Gate #2, Sector 5"
+                        className="pm-ctrl"
+                      />
+                    </div>
+
+                    <div className="pm-field">
+                      <label className="pm-lbl">Community Bio</label>
+                      <input
+                        type="text"
+                        name="bio"
+                        value={formData.bio}
+                        onChange={handleInputChange}
+                        placeholder="Short mission statement..."
+                        className="pm-ctrl"
+                      />
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* TAB 2: AI Animated Avatars Grid */}
+              {activeTab === 'avatars' && (
+                <div className="pm-tab-pane">
+                  {/* Clean 4x2 Avatar Grid */}
+                  <div className="pm-clean-avatar-grid">
+                    {BUILT_IN_AVATARS.map((avatar) => {
+                      const isSelected = selectedAvatar === avatar.id;
+                      return (
+                        <button
+                          key={avatar.id}
+                          type="button"
+                          className={`pm-clean-avatar-btn ${isSelected ? 'selected' : ''}`}
+                          onClick={() => handleSelectAvatar(avatar)}
+                        >
+                          <img src={avatar.src} alt="Avatar" className="pm-clean-avatar-img" />
+                          {isSelected && (
+                            <div className="pm-clean-check-badge">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Compact Custom Photo Upload Bar */}
+                  <div className="pm-compact-upload-bar">
+                    <div className="pm-upload-info-text">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" width="18" height="18">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                      <span>{uploadFile ? uploadFile.name : 'Or upload a custom photo (JPG/PNG, Max 5MB)'}</span>
+                    </div>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      style={{ display: 'none' }}
+                    />
+
+                    <button
+                      type="button"
+                      className="pm-btn-upload-trigger"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Browse
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: Real Settings & Notifications */}
+              {activeTab === 'preferences' && (
+                <div className="pm-tab-pane">
+                  <div className="pm-settings-list">
+                    {[
+                      { key: 'emailAlerts', title: 'Email Notifications', desc: 'Updates on accepted food donations & requests' },
+                      { key: 'smsAlerts', title: 'Real-time SMS Alerts', desc: 'Verification OTP and immediate driver arrival codes' },
+                      { key: 'pickupReminders', title: 'Pickup Reminders', desc: 'Reminders 30 minutes before food pickup window' },
+                    ].map((item) => (
+                      <div key={item.key} className="pm-setting-item">
+                        <div>
+                          <strong className="pm-setting-title">{item.title}</strong>
+                          <p className="pm-setting-desc">{item.desc}</p>
+                        </div>
+                        <label className="pm-switch">
+                          <input
+                            type="checkbox"
+                            checked={notifications[item.key]}
+                            onChange={() => toggleNotification(item.key)}
+                          />
+                          <span className="pm-slider" />
+                        </label>
+                      </div>
+                    ))}
+
+                    <div className="pm-setting-item pm-theme-item">
+                      <div>
+                        <strong className="pm-setting-title">Appearance Theme</strong>
+                        <p className="pm-setting-desc">Currently in {isDark ? 'Dark' : 'Light'} Mode</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="pm-btn-compact-theme"
+                        onClick={toggleTheme}
+                      >
+                        {isDark ? '🌙 Dark Mode' : '☀️ Light Mode'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: Real Impact from Backend */}
+              {activeTab === 'impact' && (
+                <div className="pm-tab-pane">
+                  <div className="pm-real-stats-grid">
+                    <div className="pm-real-stat-card">
+                      <span className="pm-rstat-num">
+                        {effectiveRole === 'donor' ? (userStats.mealsShared || 0) : (userStats.mealsReceived || 0)}
+                      </span>
+                      <span className="pm-rstat-lbl">
+                        {effectiveRole === 'donor' ? 'Meals Shared' : 'Meals Received'}
+                      </span>
+                    </div>
+
+                    <div className="pm-real-stat-card">
+                      <span className="pm-rstat-num">
+                        {userStats.kgSaved || 0} kg
+                      </span>
+                      <span className="pm-rstat-lbl">Waste Prevented</span>
+                    </div>
+
+                    <div className="pm-real-stat-card">
+                      <span className="pm-rstat-num">
+                        {effectiveRole === 'donor' ? (userStats.activeListings || 0) : (userStats.totalRequests || 0)}
+                      </span>
+                      <span className="pm-rstat-lbl">
+                        {effectiveRole === 'donor' ? 'Active Listings' : 'Total Requests'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pm-user-meta-summary">
+                    <div className="pm-meta-pill">
+                      <span>🌱 Status:</span>
+                      <strong>{profile?.is_verified ? 'Verified Community Partner' : 'Active Community Member'}</strong>
+                    </div>
+                    <div className="pm-meta-pill">
+                      <span>📅 Member Since:</span>
+                      <strong>{user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Active Member'}</strong>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
-            <span className="ap-preview-label">
-              {previewUrl ? 'Custom Photo' : selectedAvatar ? BUILT_IN_AVATARS.find((a) => a.id === selectedAvatar)?.label : 'Current Avatar'}
-            </span>
-          </div>
 
-          {/* Built-in Avatars Grid */}
-          <div className="ap-section-label">Select a built-in avatar</div>
-          <div className="ap-grid">
-            {BUILT_IN_AVATARS.map((avatar) => (
-              <motion.button
-                key={avatar.id}
+            {/* ════ NOTIFICATIONS / ALERTS ════ */}
+            {errorMsg && (
+              <div className="pm-status-banner error">
+                <span>{errorMsg}</span>
+              </div>
+            )}
+            {successMsg && (
+              <div className="pm-status-banner success">
+                <span>{successMsg}</span>
+              </div>
+            )}
+
+            {/* ════ FOOTER ════ */}
+            <div className="pm-compact-footer">
+              <button type="button" className="pm-btn-cancel-flat" onClick={onClose}>
+                Cancel
+              </button>
+              <button
                 type="button"
-                className={`ap-avatar-btn ${selectedAvatar === avatar.id ? 'ap-selected' : ''}`}
-                onClick={() => handleSelectBuiltIn(avatar.id)}
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.95 }}
-                title={avatar.label}
+                className="pm-btn-save-flat"
+                onClick={handleSaveProfile}
+                disabled={loading || fetchingData}
               >
-                <img
-                  src={svgToDataUri(avatar.svg)}
-                  alt={avatar.label}
-                  className="ap-avatar-img"
-                />
-                {selectedAvatar === avatar.id && (
-                  <div className="ap-check-badge">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </div>
-                )}
-              </motion.button>
-            ))}
-          </div>
-
-          {/* Upload Custom */}
-          <div className="ap-section-label">Or upload your own photo</div>
-          <div className="ap-upload-area">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="ap-file-input"
-            />
-            <motion.button
-              type="button"
-              className="ap-upload-btn"
-              onClick={() => fileInputRef.current?.click()}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-              <span>{uploadFile ? uploadFile.name : 'Choose Image (Max 5MB)'}</span>
-            </motion.button>
-          </div>
-
-          {/* Error */}
-          {error && (
-            <div className="ap-error">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              <span>{error}</span>
+                {loading ? 'Saving...' : 'Save Changes'}
+              </button>
             </div>
-          )}
-
-          {/* Actions */}
-          <div className="ap-actions">
-            <button type="button" className="ap-cancel-btn" onClick={onClose}>Cancel</button>
-            <motion.button
-              type="button"
-              className="ap-save-btn"
-              onClick={handleSave}
-              disabled={saving || (!selectedAvatar && !uploadFile)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {uploading ? 'Uploading...' : saving ? 'Saving...' : 'Save Avatar'}
-            </motion.button>
-          </div>
-        </motion.div>
       </div>
-    </AnimatePresence>
+    </div>
   );
 }
+

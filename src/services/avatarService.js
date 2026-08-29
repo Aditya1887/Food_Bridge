@@ -1,70 +1,94 @@
 import { supabase } from '../lib/supabase';
 
 /**
- * Built-in avatar options — colorful SVG data URIs
- * Each avatar has a unique id, label, and background color scheme
+ * Built-in AI-Generated 3D Animation Character Avatars
+ * High-quality 3D rendered character avatars representing FoodBridge community heroes
  */
 export const BUILT_IN_AVATARS = [
   {
-    id: 'avatar_leaf',
-    label: 'Green Leaf',
-    bg: '#dcfce7',
+    id: 'avatar_eco_hero',
+    label: 'Eco Hero',
+    category: 'Heroes',
+    role: 'Food Rescuer',
+    src: '/assets/avatars/avatar_eco_hero.jpg',
     color: '#16a34a',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#dcfce7"/><path d="M40 15 C30 25 25 40 35 55 C38 60 42 60 45 55 C55 40 50 25 40 15Z" fill="#16a34a"/><path d="M40 55 C40 40 35 30 30 22" stroke="#15803d" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`,
+    bg: '#dcfce7',
+    desc: 'Passionate green crusader fighting everyday food waste',
   },
   {
-    id: 'avatar_sun',
-    label: 'Warm Sun',
-    bg: '#fef9c3',
-    color: '#ca8a04',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#fef9c3"/><circle cx="40" cy="40" r="16" fill="#f59e0b"/><g stroke="#f59e0b" stroke-width="3" stroke-linecap="round"><line x1="40" y1="12" x2="40" y2="18"/><line x1="40" y1="62" x2="40" y2="68"/><line x1="12" y1="40" x2="18" y2="40"/><line x1="62" y1="40" x2="68" y2="40"/><line x1="20" y1="20" x2="24" y2="24"/><line x1="56" y1="56" x2="60" y2="60"/><line x1="20" y1="60" x2="24" y2="56"/><line x1="56" y1="24" x2="60" y2="20"/></g></svg>`,
-  },
-  {
-    id: 'avatar_heart',
-    label: 'Kind Heart',
-    bg: '#fce7f3',
-    color: '#db2777',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#fce7f3"/><path d="M40 62 C28 50 16 42 16 30 C16 22 22 16 30 16 C34 16 38 18 40 22 C42 18 46 16 50 16 C58 16 64 22 64 30 C64 42 52 50 40 62Z" fill="#ec4899"/></svg>`,
-  },
-  {
-    id: 'avatar_bowl',
-    label: 'Food Bowl',
-    bg: '#dbeafe',
-    color: '#2563eb',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#dbeafe"/><path d="M15 40 Q40 20 65 40" stroke="#3b82f6" stroke-width="3" fill="none"/><path d="M15 42 C20 58 60 58 65 42" stroke="#3b82f6" stroke-width="3" fill="none"/><line x1="28" y1="28" x2="28" y2="38" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/><line x1="40" y1="24" x2="40" y2="38" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/><line x1="52" y1="28" x2="52" y2="38" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/></svg>`,
-  },
-  {
-    id: 'avatar_star',
-    label: 'Bright Star',
-    bg: '#fef3c7',
+    id: 'avatar_chef_smile',
+    label: 'Master Chef',
+    category: 'Chefs & Bakers',
+    role: 'Culinary Donor',
+    src: '/assets/avatars/avatar_chef_smile.jpg',
     color: '#d97706',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#fef3c7"/><path d="M40 14 L46 30 L63 30 L49 40 L54 56 L40 46 L26 56 L31 40 L17 30 L34 30 Z" fill="#f59e0b"/></svg>`,
+    bg: '#fef3c7',
+    desc: 'Crafting quality surplus into wholesome meals',
   },
   {
-    id: 'avatar_wave',
-    label: 'Ocean Wave',
-    bg: '#e0f2fe',
-    color: '#0284c7',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#e0f2fe"/><path d="M10 45 Q20 30 30 45 Q40 60 50 45 Q60 30 70 45" stroke="#0ea5e9" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M10 55 Q20 40 30 55 Q40 70 50 55 Q60 40 70 55" stroke="#38bdf8" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/></svg>`,
+    id: 'avatar_community_heart',
+    label: 'Community Angel',
+    category: 'Volunteers',
+    role: 'Relief Coordinator',
+    src: '/assets/avatars/avatar_community_heart.jpg',
+    color: '#3b82f6',
+    bg: '#dbeafe',
+    desc: 'Connecting local families with care and warmth',
   },
   {
-    id: 'avatar_mountain',
-    label: 'Green Mountain',
-    bg: '#ecfdf5',
+    id: 'avatar_baker_joy',
+    label: 'Artisan Baker',
+    category: 'Chefs & Bakers',
+    role: 'Bakery Partner',
+    src: '/assets/avatars/avatar_baker_joy.jpg',
+    color: '#ea580c',
+    bg: '#ffedd5',
+    desc: 'Sharing daily fresh artisanal bread & treats',
+  },
+  {
+    id: 'avatar_courier_swift',
+    label: 'Swift Courier',
+    category: 'Heroes',
+    role: 'Express Logistics',
+    src: '/assets/avatars/avatar_courier_swift.jpg',
     color: '#059669',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#ecfdf5"/><path d="M10 60 L30 25 L40 38 L55 18 L70 60Z" fill="#10b981"/><path d="M55 18 L62 30 L48 30Z" fill="#d1fae5"/></svg>`,
+    bg: '#ecfdf5',
+    desc: 'Rapid zero-emission food rescue and delivery',
   },
   {
-    id: 'avatar_flower',
-    label: 'Spring Flower',
-    bg: '#fdf2f8',
-    color: '#c026d3',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#fdf2f8"/><circle cx="40" cy="30" r="8" fill="#e879f9"/><circle cx="48" cy="38" r="8" fill="#d946ef"/><circle cx="44" cy="48" r="8" fill="#e879f9"/><circle cx="36" cy="48" r="8" fill="#d946ef"/><circle cx="32" cy="38" r="8" fill="#e879f9"/><circle cx="40" cy="40" r="6" fill="#fbbf24"/></svg>`,
+    id: 'avatar_caregiver_warm',
+    label: 'Warm Caregiver',
+    category: 'Community',
+    role: 'Shelter Director',
+    src: '/assets/avatars/avatar_caregiver_warm.jpg',
+    color: '#0891b2',
+    bg: '#cffafe',
+    desc: 'Nurturing shelter residents & senior communities',
+  },
+  {
+    id: 'avatar_gardener_green',
+    label: 'Sprout Farmer',
+    category: 'Heroes',
+    role: 'Organic Farmer',
+    src: '/assets/avatars/avatar_gardener_green.jpg',
+    color: '#65a30d',
+    bg: '#ecfccb',
+    desc: 'Growing & sharing farm-fresh sustainable crops',
+  },
+  {
+    id: 'avatar_hero_girl',
+    label: 'Champion Girl',
+    category: 'Heroes',
+    role: 'Youth Ambassador',
+    src: '/assets/avatars/avatar_hero_girl.jpg',
+    color: '#15803d',
+    bg: '#dcfce7',
+    desc: 'Inspiring zero-hunger action in every neighborhood',
   },
 ];
 
 /**
- * Convert an SVG string to a data URI for use as an image src
+ * Convert an SVG string to a data URI for use as an image src (fallback)
  */
 export function svgToDataUri(svgString) {
   return `data:image/svg+xml,${encodeURIComponent(svgString)}`;
@@ -72,31 +96,28 @@ export function svgToDataUri(svgString) {
 
 /**
  * Get the display avatar URL for a user profile
- * Priority: custom uploaded URL > built-in avatar > initials fallback
+ * Priority: custom uploaded URL / Data URI / Built-in AI Avatar > initials fallback
  */
 export function getAvatarUrl(profile, user) {
-  // 1. Check for custom uploaded avatar URL (Supabase Storage)
-  if (profile?.avatar_url && profile.avatar_url.startsWith('http')) {
-    return profile.avatar_url;
+  const avatarVal = profile?.avatar_url || user?.user_metadata?.avatar_url;
+  if (!avatarVal) return null;
+
+  // 1. Check for built-in avatar selection (stored as avatar id like 'avatar_eco_hero')
+  const builtIn = BUILT_IN_AVATARS.find((a) => a.id === avatarVal);
+  if (builtIn) {
+    return builtIn.src;
   }
 
-  // 2. Check for built-in avatar selection (stored as avatar id like 'avatar_leaf')
-  if (profile?.avatar_url) {
-    const builtIn = BUILT_IN_AVATARS.find((a) => a.id === profile.avatar_url);
-    if (builtIn) {
-      return svgToDataUri(builtIn.svg);
-    }
+  // 2. Check for image URLs (Supabase Storage, absolute asset paths, or base64 data URIs)
+  if (
+    avatarVal.startsWith('http') ||
+    avatarVal.startsWith('data:image/') ||
+    avatarVal.startsWith('/assets/')
+  ) {
+    return avatarVal;
   }
 
-  // 3. Check user metadata
-  if (user?.user_metadata?.avatar_url) {
-    const metaAvatar = user.user_metadata.avatar_url;
-    if (metaAvatar.startsWith('http')) return metaAvatar;
-    const builtIn = BUILT_IN_AVATARS.find((a) => a.id === metaAvatar);
-    if (builtIn) return svgToDataUri(builtIn.svg);
-  }
-
-  // 4. Return null — caller should show initials fallback
+  // 3. Return null — caller should show initials fallback
   return null;
 }
 

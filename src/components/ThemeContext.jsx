@@ -3,10 +3,29 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    try {
+      const savedTheme = localStorage.getItem('foodbridge_theme');
+      if (savedTheme !== null) {
+        return savedTheme === 'dark';
+      }
+      // Always default to light mode on first visit
+      return false;
+    } catch {
+      return false;
+    }
+  });
 
   const toggleTheme = useCallback(() => {
-    setIsDark(prev => !prev);
+    setIsDark((prev) => {
+      const nextTheme = !prev;
+      try {
+        localStorage.setItem('foodbridge_theme', nextTheme ? 'dark' : 'light');
+      } catch (err) {
+        console.warn('Could not save theme to localStorage:', err);
+      }
+      return nextTheme;
+    });
   }, []);
 
   useEffect(() => {

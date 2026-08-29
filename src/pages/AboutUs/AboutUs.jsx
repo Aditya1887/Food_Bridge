@@ -1,7 +1,9 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 import { statsService } from '../../services/statsService';
+import { getAvatarUrl } from '../../services/avatarService';
 import { SplitText, BlurText, GradientText, ShinyText, SpotlightCard, AnimatedCounter, FloatingGradient } from '../../components/AnimatedUI';
 import './AboutUs.css';
 
@@ -241,6 +243,8 @@ function BrandLogo({ onNavigate, isDark }) {
 
 export default function AboutUs({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
+  const { user, role, profile } = useAuth();
+  const avatarUrl = getAvatarUrl(profile, user);
   const [hoveredNav, setHoveredNav] = useState(null);
   const [platformStats, setPlatformStats] = useState(null);
   const heroRef = useRef(null);
@@ -398,13 +402,43 @@ export default function AboutUs({ onNavigate }) {
               </AnimatePresence>
             </motion.button>
 
-            <button className="au-btn-join" onClick={() => handleNav('login')}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              Join Us
-            </button>
+            {user ? (
+              <button
+                className="au-btn-join au-btn-dashboard-stylish"
+                onClick={() => {
+                  const target = role === 'admin' ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
+                  handleNav(target);
+                }}
+              >
+                <div className="btn-dashboard-icon-wrap">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Dashboard" className="btn-dashboard-avatar-img" />
+                  ) : (
+                    <svg className="btn-dashboard-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                    </svg>
+                  )}
+                </div>
+                <span className="btn-dashboard-text">
+                  Dashboard
+                  <span className="btn-dashboard-live-dot" />
+                </span>
+                <svg className="btn-dashboard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            ) : (
+              <button className="au-btn-join" onClick={() => handleNav('login')}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Join Us
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -773,7 +807,7 @@ export default function AboutUs({ onNavigate }) {
                     className="au-cta-btn-primary"
                     whileHover={{ scale: 1.03, y: -2, boxShadow: '0 12px 32px rgba(34, 197, 94, 0.4)' }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={(e) => { e.preventDefault(); onNavigate('home'); }}
+                    onClick={(e) => { e.preventDefault(); handleNav('login'); }}
                   >
                     <span className="au-btn-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -790,7 +824,7 @@ export default function AboutUs({ onNavigate }) {
                     className="au-cta-btn-glass"
                     whileHover={{ scale: 1.03, y: -2, background: 'rgba(255, 255, 255, 0.15)' }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={(e) => { e.preventDefault(); onNavigate('home'); }}
+                    onClick={(e) => { e.preventDefault(); handleNav('food-listings'); }}
                   >
                     <span className="au-btn-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -812,7 +846,7 @@ export default function AboutUs({ onNavigate }) {
       {/* ═══════════ FOOTER ═══════════ */}
       <footer className="au-footer">
         <div className="au-section-container au-footer-inner">
-          <BrandLogo onNavigate={onNavigate} isDark={isDark} />
+          <BrandLogo onNavigate={handleNav} isDark={isDark} />
           <div className="au-footer-links">
             {['Home', 'How It Works', 'Donate', 'Find Food', 'Impact', 'Contact'].map((label) => (
               <a
@@ -821,11 +855,13 @@ export default function AboutUs({ onNavigate }) {
                 className="au-footer-link"
                 onClick={(e) => {
                   e.preventDefault();
-                  if (label === 'Home') onNavigate('home');
-                  else if (label === 'How It Works') onNavigate('how-it-works');
-                  else if (label === 'Impact') onNavigate('impact');
-                  else if (label === 'Contact') onNavigate('contact');
-                  else onNavigate('home');
+                  if (label === 'Home') handleNav('home');
+                  else if (label === 'How It Works') handleNav('how-it-works');
+                  else if (label === 'Impact') handleNav('impact');
+                  else if (label === 'Contact') handleNav('contact');
+                  else if (label === 'Find Food') handleNav('food-listings');
+                  else if (label === 'Donate') handleNav('login');
+                  else handleNav('home');
                 }}
               >
                 {label}

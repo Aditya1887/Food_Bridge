@@ -129,9 +129,26 @@ export default function FoodListings({ onNavigate }) {
       })
       .subscribe();
 
+    const notifChannel = user?.id
+      ? supabase
+          .channel(`public_user_notifs_${user.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'notifications',
+              filter: `user_id=eq.${user.id}`,
+            },
+            () => fetchBackendNotifications()
+          )
+          .subscribe()
+      : null;
+
     return () => {
       supabase.removeChannel(foodChannel);
       supabase.removeChannel(requestChannel);
+      if (notifChannel) supabase.removeChannel(notifChannel);
     };
   }, [user?.id]);
 
@@ -140,6 +157,17 @@ export default function FoodListings({ onNavigate }) {
       fetchBackendNotifications();
     }
   }, [user?.id, role]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setActiveModalItem(null);
+        setCityDropdownOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Sync profile form when profile loads
   useEffect(() => {
@@ -582,127 +610,52 @@ export default function FoodListings({ onNavigate }) {
               </AnimatePresence>
             </div>
 
-            {/* User Profile Pill */}
-            <div className="fl-user-wrapper">
-              <div
-                className="fl-user-pill"
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                title="Manage Profile"
-              >
-                <div className="fl-avatar-circle">
-                  {userAvatarUrl ? (
-                    <img src={userAvatarUrl} alt={userDisplayName} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                  ) : (
-                    userInitials
-                  )}
-                </div>
-                <div className="fl-user-info">
-                  <span className="fl-user-name">{userDisplayName}</span>
-                  <span className="fl-user-role">{userRoleDisplay}</span>
-                </div>
-                <svg className="fl-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+            {/* User Action Button / Profile Pill */}
+            {user ? (
+              <div className="fl-user-wrapper">
+                <button
+                  className="fl-btn-dashboard-stylish"
+                  onClick={() => {
+                    const target = role === 'admin' ? 'admin-dashboard' : role === 'donor' ? 'donor-dashboard' : 'receiver-dashboard';
+                    if (onNavigate) onNavigate(target);
+                  }}
+                  title="Go to Dashboard"
+                >
+                  <div className="btn-dashboard-icon-wrap">
+                    {userAvatarUrl ? (
+                      <img src={userAvatarUrl} alt="Dashboard" className="btn-dashboard-avatar-img" />
+                    ) : (
+                      <svg className="btn-dashboard-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className="btn-dashboard-text">
+                    Dashboard
+                    <span className="btn-dashboard-live-dot" />
+                  </span>
+                  <svg className="btn-dashboard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
               </div>
-
-              {/* Profile Dropdown Menu */}
-              <AnimatePresence>
-                {isProfileOpen && (
-                  <motion.div
-                    className="fl-profile-dropdown"
-                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    <div className="fl-pdropdown-header">
-                      <div className="fl-pdropdown-avatar">
-                        {userAvatarUrl ? (
-                          <img src={userAvatarUrl} alt={userDisplayName} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                        ) : (
-                          userInitials
-                        )}
-                      </div>
-                      <div>
-                        <strong>{userDisplayName}</strong>
-                        <p>{user?.email || 'Receiver Account'}</p>
-                      </div>
-                    </div>
-
-                    <div className="fl-pdropdown-body">
-                      {user && (
-                        <button
-                          className="fl-pdropdown-item"
-                          onClick={() => {
-                            setIsProfileOpen(false);
-                            setIsEditProfileOpen(true);
-                          }}
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                          Edit Profile Details
-                        </button>
-                      )}
-
-                      <button
-                        className="fl-pdropdown-item"
-                        onClick={() => {
-                          setIsProfileOpen(false);
-                          if (!user) {
-                            if (onNavigate) onNavigate('login');
-                          } else {
-                            const target = role === 'donor' ? 'donor-dashboard' : 'receiver-dashboard';
-                            if (onNavigate) onNavigate(target);
-                          }
-                        }}
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="3" y="3" width="7" height="7" />
-                          <rect x="14" y="3" width="7" height="7" />
-                          <rect x="14" y="14" width="7" height="7" />
-                          <rect x="3" y="14" width="7" height="7" />
-                        </svg>
-                        {user ? 'Open Dashboard' : 'Login to Dashboard'}
-                      </button>
-
-                      {user ? (
-                        <button
-                          className="fl-pdropdown-item logout"
-                          onClick={() => {
-                            setIsProfileOpen(false);
-                            if (logout) logout();
-                          }}
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                            <polyline points="16 17 21 12 16 7" />
-                            <line x1="21" y1="12" x2="9" y2="12" />
-                          </svg>
-                          Sign Out
-                        </button>
-                      ) : (
-                        <button
-                          className="fl-pdropdown-item login"
-                          onClick={() => {
-                            setIsProfileOpen(false);
-                            if (onNavigate) onNavigate('login');
-                          }}
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                            <polyline points="10 17 15 12 10 7" />
-                            <line x1="15" y1="12" x2="3" y2="12" />
-                          </svg>
-                          Login / Register
-                        </button>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            ) : (
+              <button
+                className="fl-btn-login"
+                onClick={() => {
+                  if (onNavigate) onNavigate('login');
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Login / Sign Up
+              </button>
+            )}
 
             {/* Theme Toggle */}
             <button
@@ -1196,6 +1149,9 @@ export default function FoodListings({ onNavigate }) {
                               <span className="fl-tag tag-veg">
                                 {item.diet === 'Vegetarian' ? 'Veg' : item.diet}
                               </span>
+                              <span className={`fl-tag ${item.fulfillment_type === 'donor_delivery' ? 'tag-delivery' : 'tag-pickup'}`}>
+                                {item.fulfillment_type === 'donor_delivery' ? '🚗 Delivery' : '🚶 Pickup'}
+                              </span>
                             </div>
 
                             {/* Action Button */}
@@ -1310,8 +1266,13 @@ export default function FoodListings({ onNavigate }) {
 
                 <div className="fl-modal-info-col">
                   <div className="fl-modal-header">
-                    <span className="fl-modal-badge">{activeModalItem.category}</span>
-                    <span className="fl-modal-diet">{activeModalItem.diet}</span>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                      <span className="fl-modal-badge">{activeModalItem.category}</span>
+                      <span className="fl-modal-diet">{activeModalItem.diet}</span>
+                      <span className={`fl-modal-diet ${activeModalItem.fulfillment_type === 'donor_delivery' ? 'tag-delivery' : 'tag-pickup'}`}>
+                        {activeModalItem.fulfillment_type === 'donor_delivery' ? '🚗 Donor Delivery' : '🚶 Receiver Pickup'}
+                      </span>
+                    </div>
                     <h2 className="fl-modal-title">{activeModalItem.title}</h2>
                     <p className="fl-modal-donor">
                       Listed by <strong>{activeModalItem.donor}</strong> • {activeModalItem.location}

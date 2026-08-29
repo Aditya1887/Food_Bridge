@@ -47,6 +47,7 @@ export default function Navbar({ onNavigate }) {
     else if (link.label === 'About' || link.label === 'About Us') onNavigate('about-us');
     else if (link.label === 'Impact') onNavigate('impact');
     else if (link.label === 'Contact') onNavigate('contact');
+    else if (link.label === 'Pickup & Drop') onNavigate('pickup-drop');
     else if (link.label === 'Find Food' || link.label === 'Food Listings') onNavigate('food-listings');
     else if (link.label === 'Donate') {
       if (user) {
@@ -198,7 +199,7 @@ export default function Navbar({ onNavigate }) {
           {user ? (
             <motion.a
               href="#dashboard"
-              className="btn-login"
+              className="btn-login btn-dashboard-stylish"
               onClick={(e) => {
                 e.preventDefault();
                 const targetPage = role === 'admin' ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
@@ -206,43 +207,32 @@ export default function Navbar({ onNavigate }) {
                 window.location.hash = `#${targetPage}`;
                 window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
               }}
-              whileHover={{ y: -2, boxShadow: '0 12px 25px rgba(13,50,29,0.25)' }}
+              whileHover={{ y: -2, scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
             >
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={displayName}
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '1.5px solid rgba(255,255,255,0.3)',
-                    marginRight: 4,
-                  }}
-                />
-              ) : (
-                <span
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: '50%',
-                    background: 'rgba(255,255,255,0.2)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 11,
-                    fontWeight: 800,
-                    color: '#fff',
-                    marginRight: 4,
-                    letterSpacing: '0.02em',
-                  }}
-                >
-                  {initials}
-                </span>
-              )}
-              {displayName ? displayName.split(' ')[0] : 'Dashboard'}
+              <div className="btn-dashboard-icon-wrap">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Dashboard"
+                    className="btn-dashboard-avatar-img"
+                  />
+                ) : (
+                  <svg className="btn-dashboard-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                  </svg>
+                )}
+              </div>
+              <span className="btn-dashboard-text">
+                Dashboard
+                <span className="btn-dashboard-live-dot" />
+              </span>
+              <svg className="btn-dashboard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
             </motion.a>
           ) : (
             <motion.a

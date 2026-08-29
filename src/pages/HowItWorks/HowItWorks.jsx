@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 import { statsService } from '../../services/statsService';
+import { getAvatarUrl } from '../../services/avatarService';
 import { SplitText, BlurText, GradientText, ShinyText, AnimatedCounter } from '../../components/AnimatedUI';
 import './HowItWorks.css';
 
@@ -124,26 +126,6 @@ const STATS = [
   },
 ];
 
-/* ── Animated counter ────────────────────────────────── */
-function useCountUp(target, duration = 1800, active = false) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!active) return;
-    let start = 0;
-    const num = parseFloat(target.replace(/[^0-9.]/g, ''));
-    const step = num / (duration / 16);
-    const timer = setInterval(() => {
-      start += step;
-      if (start >= num) { setCount(num); clearInterval(timer); }
-      else setCount(start);
-    }, 16);
-    return () => clearInterval(timer);
-  }, [active, target, duration]);
-  const suffix = target.replace(/[0-9.]/g, '');
-  const display = parseFloat(target) >= 10 ? Math.round(count) : count.toFixed(1);
-  return display + suffix;
-}
-
 function StatItem({ icon, value, label }) {
   return (
     <motion.div
@@ -180,6 +162,8 @@ function DashedArc({ from, to, radius }) {
 /* ── Main component ──────────────────────────────────── */
 export default function HowItWorks({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
+  const { user, role, profile } = useAuth();
+  const avatarUrl = getAvatarUrl(profile, user);
   const [hoveredNav, setHoveredNav] = useState(null);
   const [platformStats, setPlatformStats] = useState(null);
   // RADIUS: % of the 0-100 SVG viewBox — must match the CSS --orbit-r proportion
@@ -320,13 +304,43 @@ export default function HowItWorks({ onNavigate }) {
                 )}
               </AnimatePresence>
             </motion.button>
-            <button className="hiw-btn-join" onClick={() => handleNav('login')}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              Join Us
-            </button>
+            {user ? (
+              <button
+                className="hiw-btn-join hiw-btn-dashboard-stylish"
+                onClick={() => {
+                  const target = role === 'admin' ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
+                  handleNav(target);
+                }}
+              >
+                <div className="btn-dashboard-icon-wrap">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Dashboard" className="btn-dashboard-avatar-img" />
+                  ) : (
+                    <svg className="btn-dashboard-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                    </svg>
+                  )}
+                </div>
+                <span className="btn-dashboard-text">
+                  Dashboard
+                  <span className="btn-dashboard-live-dot" />
+                </span>
+                <svg className="btn-dashboard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            ) : (
+              <button className="hiw-btn-join" onClick={() => handleNav('login')}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Join Us
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -399,7 +413,7 @@ export default function HowItWorks({ onNavigate }) {
               className="hiw-btn-primary"
               whileHover={{ scale: 1.04, boxShadow: '0 10px 28px rgba(46,125,50,0.35)' }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => onNavigate('home')}
+              onClick={() => handleNav('home')}
             >
               <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor">
                 <circle cx="12" cy="12" r="10" fillOpacity="0.25" />
@@ -412,7 +426,7 @@ export default function HowItWorks({ onNavigate }) {
               className="hiw-btn-secondary"
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => onNavigate('impact')}
+              onClick={() => handleNav('impact')}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="17" height="17">
                 <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
@@ -430,7 +444,7 @@ export default function HowItWorks({ onNavigate }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.48 }}
           >
-            {STATS.map((s, i) => (
+            {dynamicStats.map((s, i) => (
               <React.Fragment key={s.label}>
                 {i > 0 && <div className="hiw-stat-sep" />}
                 <StatItem {...s} />

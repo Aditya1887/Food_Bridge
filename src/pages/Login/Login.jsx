@@ -146,7 +146,9 @@ export default function Login({ onNavigate }) {
         const data = await login({ email, password });
 
         if (data?.session) {
-          const resolvedRole = data.user?.user_metadata?.role || 'donor';
+          const userEmail = (data.user?.email || email).toLowerCase().trim();
+          const isAdmin = userEmail === 'adsharma1887@gmail.com' || (data.user?.user_metadata?.role === 'admin');
+          const resolvedRole = isAdmin ? 'admin' : (data.user?.user_metadata?.role || 'donor');
           showToast('Welcome back! You have successfully logged in.', 'success', 3000);
           setTimeout(() => {
             if (resolvedRole === 'admin') {

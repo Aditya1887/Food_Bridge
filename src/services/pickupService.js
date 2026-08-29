@@ -14,34 +14,66 @@ export const pickupService = {
   /**
    * Create a pickup record after a food request is accepted
    */
-  async createPickupRecord({ requestId, foodId, donorId, receiverId, pickupLocation, latitude, longitude, scheduledTime }) {
-    try {
-      const otpCode = this.generateOTP();
+  async createPickupRecord({
+    requestId,
+    foodId,
+    donorId,
+    receiverId,
+    pickupLocation,
+    latitude,
+    longitude,
+    scheduledTime,
+    fulfillmentType,
+    deliveryAddress,
+  }) {
+    const otpCode = this.generateOTP();
 
-      const payload = {
-        request_id: requestId,
-        food_id: foodId,
-        donor_id: donorId,
-        receiver_id: receiverId,
-        otp_code: otpCode,
-        status: 'assigned',
-        pickup_location: pickupLocation || '',
-        latitude: latitude || null,
-        longitude: longitude || null,
-        scheduled_time: scheduledTime || new Date().toISOString(),
-      };
+    let payload = {
+      request_id: requestId,
+      food_id: foodId,
+      donor_id: donorId,
+      receiver_id: receiverId,
+      otp_code: otpCode,
+      status: 'assigned',
+      pickup_location: pickupLocation || '',
+      latitude: latitude || null,
+      longitude: longitude || null,
+      scheduled_time: scheduledTime || new Date().toISOString(),
+      fulfillment_type: fulfillmentType || 'receiver_pickup',
+      delivery_address: deliveryAddress || null,
+    };
 
-      const { data, error } = await supabase
-        .from('pickup_records')
-        .insert([payload])
-        .select()
-        .single();
+    let attempts = 0;
+    const maxAttempts = 6;
 
-      if (error) throw error;
-      return data;
-    } catch (err) {
-      console.error('createPickupRecord error:', err);
-      throw err;
+    while (attempts < maxAttempts) {
+      attempts++;
+      try {
+        const { data, error } = await supabase
+          .from('pickup_records')
+          .insert([payload])
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        const msg = err.message || '';
+        const schemaMatch =
+          msg.match(/Could not find the '([^']+)' column/i) ||
+          msg.match(/column "([^"]+)" of relation/i) ||
+          msg.match(/column "([^"]+)" does not exist/i);
+
+        if (schemaMatch && schemaMatch[1] && payload[schemaMatch[1]] !== undefined) {
+          const badCol = schemaMatch[1];
+          console.warn(`[pickupService] Column "${badCol}" not found in pickup_records. Retrying without it.`);
+          delete payload[badCol];
+          continue;
+        }
+
+        console.error('createPickupRecord error:', err);
+        throw err;
+      }
     }
   },
 
@@ -145,26 +177,38 @@ export const pickupService = {
         updates.completed_at = new Date().toISOString();
       }
 
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('pickup_records')
         .update(updates)
         .eq('id', pickupId)
         .select()
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (!data) {
+        const altRes = await supabase
+          .from('pickup_records')
+          .update(updates)
+          .eq('request_id', pickupId)
+          .select()
+          .maybeSingle();
+        data = altRes.data;
+      }
 
       // If completed, also update the request and food item
       if (newStatus === 'completed' && data) {
-        await supabase
-          .from('food_requests')
-          .update({ status: 'completed' })
-          .eq('id', data.request_id);
+        if (data.request_id) {
+          await supabase
+            .from('food_requests')
+            .update({ status: 'completed' })
+            .eq('id', data.request_id);
+        }
 
-        await supabase
-          .from('food_items')
-          .update({ status: 'collected' })
-          .eq('id', data.food_id);
+        if (data.food_id) {
+          await supabase
+            .from('food_items')
+            .update({ status: 'collected' })
+            .eq('id', data.food_id);
+        }
       }
 
       return data;
@@ -175,25 +219,47 @@ export const pickupService = {
   },
 
   /**
-   * Verify OTP for a pickup
+   * Verify OTP for a pickup (supports pickup id or request id)
    */
   async verifyOTP(pickupId, inputOTP) {
     try {
-      const { data: pickup, error } = await supabase
+      let { data: pickup } = await supabase
         .from('pickup_records')
-        .select('otp_code, status')
+        .select('id, otp_code, status, request_id, food_id')
         .eq('id', pickupId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      if (!pickup) throw new Error('Pickup record not found');
-
-      if (pickup.otp_code !== inputOTP) {
-        return { success: false, message: 'Invalid OTP. Please try again.' };
+      if (!pickup) {
+        const alt = await supabase
+          .from('pickup_records')
+          .select('id, otp_code, status, request_id, food_id')
+          .eq('request_id', pickupId)
+          .maybeSingle();
+        pickup = alt.data;
       }
 
-      // OTP matches — mark as verified
-      await this.updatePickupStatus(pickupId, 'verified');
+      if (!pickup) {
+        // Look up by inputOTP among active pickups
+        const byOtp = await supabase
+          .from('pickup_records')
+          .select('id, otp_code, status, request_id, food_id')
+          .eq('otp_code', String(inputOTP).trim())
+          .neq('status', 'completed')
+          .limit(1)
+          .maybeSingle();
+        pickup = byOtp.data;
+      }
+
+      if (!pickup) {
+        return { success: false, message: 'Pickup record not found.' };
+      }
+
+      if (pickup.otp_code && String(pickup.otp_code).trim() !== String(inputOTP).trim()) {
+        return { success: false, message: 'Invalid OTP code. Please check with the receiver.' };
+      }
+
+      // OTP matches — mark as completed
+      await this.updatePickupStatus(pickup.id, 'completed');
       return { success: true, message: 'OTP verified successfully!' };
     } catch (err) {
       console.error('verifyOTP error:', err);

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { getAvatarUrl } from '../../services/avatarService';
 import {
   AnimatedBadgeLeaf,
   AnimatedCollectHands,
@@ -115,7 +116,8 @@ const CONTACT_INFOS = [
 /* ── Main Contact Page Component ─────────────────────── */
 export default function Contact({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
-  const { user } = useAuth();
+  const { user, role, profile } = useAuth();
+  const avatarUrl = getAvatarUrl(profile, user);
   const [hoveredNav, setHoveredNav] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -317,16 +319,46 @@ export default function Contact({ onNavigate }) {
               </AnimatePresence>
             </motion.button>
 
-            <button
-              className="cnt-btn-join"
-              onClick={() => handleNav('login')}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              Join Us
-            </button>
+            {user ? (
+              <button
+                className="cnt-btn-join cnt-btn-dashboard-stylish"
+                onClick={() => {
+                  const target = role === 'admin' ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
+                  handleNav(target);
+                }}
+              >
+                <div className="btn-dashboard-icon-wrap">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Dashboard" className="btn-dashboard-avatar-img" />
+                  ) : (
+                    <svg className="btn-dashboard-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                    </svg>
+                  )}
+                </div>
+                <span className="btn-dashboard-text">
+                  Dashboard
+                  <span className="btn-dashboard-live-dot" />
+                </span>
+                <svg className="btn-dashboard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                className="cnt-btn-join"
+                onClick={() => handleNav('login')}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Join Us
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -590,7 +622,7 @@ export default function Contact({ onNavigate }) {
                 className="cnt-btn-partner"
                 whileHover={{ scale: 1.05, background: '#1b6b33', color: '#ffffff' }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => onNavigate('home')}
+                onClick={() => handleNav('home')}
               >
                 Become a Partner
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -645,7 +677,7 @@ export default function Contact({ onNavigate }) {
           <div className="cnt-footer-grid">
             {/* Column 1: Brand */}
             <div className="cnt-fcol-brand">
-              <button className="cnt-fbrand" onClick={() => onNavigate('home')}>
+              <button className="cnt-fbrand" onClick={() => handleNav('home')}>
                 <svg className="cnt-flogo-svg" viewBox="0 0 48 48" fill="none">
                   <path d="M24 6 C21 10 21 15 24 18 C27 15 27 10 24 6 Z" fill="#4ade80" />
                   <path d="M17 10 C14 12 14 16 18 18 C19 15 18 12 17 10 Z" fill="#4ade80" />
@@ -668,8 +700,8 @@ export default function Contact({ onNavigate }) {
               <h4 className="cnt-fcol-heading">Quick Links</h4>
               <ul className="cnt-flinks">
                 <li><button onClick={() => handleNav('home')}>Home</button></li>
-                <li><button onClick={() => handleNav('home')}>Donate</button></li>
-                <li><button onClick={() => handleNav('home')}>Find Food</button></li>
+                <li><button onClick={() => handleNav('login')}>Donate</button></li>
+                <li><button onClick={() => handleNav('food-listings')}>Find Food</button></li>
                 <li><button onClick={() => handleNav('contact')}>Contact</button></li>
               </ul>
             </div>
@@ -687,7 +719,7 @@ export default function Contact({ onNavigate }) {
 
           {/* Bottom Copyright Bar */}
           <div className="cnt-footer-bottom">
-            <span>© 2024 FoodBridge. All rights reserved.</span>
+            <span>© {new Date().getFullYear()} FoodBridge. All rights reserved.</span>
             <AnimatedBadgeLeaf size={16} color="#4ade80" />
           </div>
         </div>

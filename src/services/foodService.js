@@ -159,48 +159,102 @@ export const foodService = {
 
   /**
    * Create a new Food Item listing in public.food_items
+   * Includes resilient self-healing for schema cache differences (e.g. allergens, storage_condition)
    */
   async createFoodItem(foodData) {
-    try {
-      const { data, error } = await supabase
-        .from('food_items')
-        .insert([foodData])
-        .select()
-        .single();
+    let payload = { ...foodData };
+    let attempts = 0;
+    const maxAttempts = 8;
 
-      if (error) throw error;
-      return data;
-    } catch (err) {
-      console.error('createFoodItem error:', err);
-      throw err;
+    while (attempts < maxAttempts) {
+      attempts++;
+      try {
+        const { data, error } = await supabase
+          .from('food_items')
+          .insert([payload])
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        const msg = err.message || '';
+        // Check for missing column error: "Could not find the 'xyz' column of 'food_items' in the schema cache"
+        const schemaMatch =
+          msg.match(/Could not find the '([^']+)' column/i) ||
+          msg.match(/column "([^"]+)" of relation/i) ||
+          msg.match(/column "([^"]+)" does not exist/i);
+
+        if (schemaMatch && schemaMatch[1] && payload[schemaMatch[1]] !== undefined) {
+          const badCol = schemaMatch[1];
+          console.warn(`[foodService] Column "${badCol}" not found in food_items table. Retrying without it.`);
+          delete payload[badCol];
+          continue; // Retry insertion without the missing column
+        }
+
+        console.error('createFoodItem error:', err);
+        throw err;
+      }
     }
   },
 
   /**
-   * Update an existing Food Item listing
+   * Update an existing Food Item listing with self-healing retry
    */
   async updateFoodItem(id, updates) {
-    try {
-      const { data, error } = await supabase
-        .from('food_items')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+    let payload = { ...updates };
+    let attempts = 0;
+    const maxAttempts = 8;
 
-      if (error) throw error;
-      return data;
-    } catch (err) {
-      console.error('updateFoodItem error:', err);
-      throw err;
+    while (attempts < maxAttempts) {
+      attempts++;
+      try {
+        const { data, error } = await supabase
+          .from('food_items')
+          .update(payload)
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        const msg = err.message || '';
+        const schemaMatch =
+          msg.match(/Could not find the '([^']+)' column/i) ||
+          msg.match(/column "([^"]+)" of relation/i) ||
+          msg.match(/column "([^"]+)" does not exist/i);
+
+        if (schemaMatch && schemaMatch[1] && payload[schemaMatch[1]] !== undefined) {
+          const badCol = schemaMatch[1];
+          console.warn(`[foodService] Column "${badCol}" not found in food_items table. Retrying update without it.`);
+          delete payload[badCol];
+          continue;
+        }
+
+        console.error('updateFoodItem error:', err);
+        throw err;
+      }
     }
   },
 
   /**
-   * Delete / Cancel a Food Item listing
+   * Delete / Cancel a Food Item listing with safe cascade
    */
   async deleteFoodItem(id) {
     try {
+      // 1. Clean up or dissociate related pickup records and food requests if any exist
+      try {
+        await supabase.from('pickup_records').delete().eq('food_id', id);
+      } catch (pErr) {
+        console.warn('Cascade pickup delete notice:', pErr.message);
+      }
+      try {
+        await supabase.from('food_requests').delete().eq('food_id', id);
+      } catch (rErr) {
+        console.warn('Cascade request delete notice:', rErr.message);
+      }
+
       const { error } = await supabase
         .from('food_items')
         .delete()
@@ -221,39 +275,70 @@ export const foodService = {
    * Create a request for a food item (by a Receiver)
    * Automatically changes food item status from 'available' to 'requested'
    */
-  async createFoodRequest({ foodId, receiverId, donorId, requestedServings, notes }) {
-    try {
-      const payload = {
-        food_id: foodId,
-        receiver_id: receiverId,
-        donor_id: donorId,
-        status: 'pending',
-        requested_servings: requestedServings || 1,
-        notes: notes || '',
-      };
+  async createFoodRequest({
+    foodId,
+    receiverId,
+    donorId,
+    requestedServings,
+    notes,
+    fulfillmentType,
+    deliveryAddress,
+    deliveryPhone,
+  }) {
+    let payload = {
+      food_id: foodId,
+      receiver_id: receiverId,
+      donor_id: donorId,
+      status: 'pending',
+      requested_servings: requestedServings || 1,
+      notes: notes || '',
+      fulfillment_type: fulfillmentType || 'receiver_pickup',
+      delivery_address: deliveryAddress || null,
+      delivery_phone: deliveryPhone || null,
+    };
 
-      const { data, error } = await supabase
-        .from('food_requests')
-        .insert([payload])
-        .select()
-        .single();
+    let attempts = 0;
+    const maxAttempts = 6;
 
-      if (error) throw error;
-
-      // Update food_items status to 'requested' so it reflects in real-time
+    while (attempts < maxAttempts) {
+      attempts++;
       try {
-        await supabase
-          .from('food_items')
-          .update({ status: 'requested' })
-          .eq('id', foodId);
-      } catch (foodErr) {
-        console.warn('Could not update food item status directly:', foodErr.message);
-      }
+        const { data, error } = await supabase
+          .from('food_requests')
+          .insert([payload])
+          .select()
+          .single();
 
-      return data;
-    } catch (err) {
-      console.error('createFoodRequest error:', err);
-      throw err;
+        if (error) throw error;
+
+        // Update food_items status to 'requested' so it reflects in real-time
+        try {
+          await supabase
+            .from('food_items')
+            .update({ status: 'requested' })
+            .eq('id', foodId);
+        } catch (foodErr) {
+          console.warn('Could not update food item status directly:', foodErr.message);
+        }
+
+        return data;
+      } catch (err) {
+        const msg = err.message || '';
+        const schemaMatch =
+          msg.match(/Could not find the '([^']+)' column/i) ||
+          msg.match(/column "([^"]+)" of relation/i) ||
+          msg.match(/column "([^"]+)" does not exist/i);
+
+        if (schemaMatch && schemaMatch[1] && payload[schemaMatch[1]] !== undefined) {
+          const badCol = schemaMatch[1];
+          console.warn(`[foodService] Column "${badCol}" not found in food_requests table. Retrying without it.`);
+          delete payload[badCol];
+          continue;
+        }
+
+        console.error('createFoodRequest error:', err);
+        throw err;
+      }
     }
   },
 

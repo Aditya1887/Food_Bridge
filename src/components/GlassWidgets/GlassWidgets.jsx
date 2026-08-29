@@ -21,11 +21,18 @@ export default function GlassWidgets() {
       {/* Lower Right — Impact Badge with SpotlightCard */}
       <motion.div
         className="glass-impact-widget-motion"
-        initial={{ x: 80, opacity: 0, scale: 0.85 }}
-        animate={{ x: 0, opacity: 1, scale: 1 }}
-        transition={{ duration: 0.9, delay: 1.0, ease: [0.22, 1, 0.36, 1] }}
-        style={{
-          transform: `translate(${mousePos.x * -8}px, ${mousePos.y * -6}px)`,
+        initial={{ x: 80, y: 0, opacity: 0, scale: 0.85 }}
+        animate={{
+          x: mousePos.x * -8,
+          y: mousePos.y * -6,
+          opacity: 1,
+          scale: 1,
+        }}
+        transition={{
+          duration: 0.5,
+          ease: 'easeOut',
+          opacity: { duration: 0.9, delay: 1.0 },
+          scale: { duration: 0.9, delay: 1.0 },
         }}
       >
         <SpotlightCard

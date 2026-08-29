@@ -12,7 +12,16 @@ export default function CountUp({
   separator = ',',
   decimals = 0,
 }) {
-  const [value, setValue] = useState(from);
+  const parseNum = (val) => {
+    if (typeof val === 'number' && !isNaN(val)) return val;
+    const parsed = parseFloat(val);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  const targetTo = parseNum(to);
+  const startFrom = parseNum(from);
+
+  const [value, setValue] = useState(startFrom);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
   const hasStartedRef = useRef(false);
@@ -26,7 +35,7 @@ export default function CountUp({
 
     timeoutId = setTimeout(() => {
       const startTime = performance.now();
-      const durationMs = duration * 1000;
+      const durationMs = (duration || 2) * 1000;
 
       const animate = (currentTime) => {
         const elapsed = currentTime - startTime;
@@ -34,28 +43,29 @@ export default function CountUp({
 
         // Ease Out Quart
         const ease = 1 - Math.pow(1 - progress, 4);
-        const current = from + (to - from) * ease;
+        const current = startFrom + (targetTo - startFrom) * ease;
 
         setValue(current);
 
         if (progress < 1) {
           frameId = requestAnimationFrame(animate);
         } else {
-          setValue(to);
+          setValue(targetTo);
         }
       };
 
       frameId = requestAnimationFrame(animate);
-    }, delay * 1000);
+    }, (delay || 0) * 1000);
 
     return () => {
       clearTimeout(timeoutId);
       if (frameId) cancelAnimationFrame(frameId);
     };
-  }, [isInView, from, to, duration, delay]);
+  }, [isInView, startFrom, targetTo, duration, delay]);
 
   const formatNumber = (num) => {
-    const fixed = num.toFixed(decimals);
+    const safeNum = parseNum(num);
+    const fixed = safeNum.toFixed(decimals);
     if (!separator) return fixed;
     const parts = fixed.split('.');
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, separator);

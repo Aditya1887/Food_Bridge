@@ -67,6 +67,78 @@
 - [x] **Tested dark mode across all pages**: Seamless CSS token switching across all views.
 - [x] **Fixed all discovered runtime errors**: Resolved RLS policy constraints, removed hardcoded `updated_at` column references to prevent PostgREST schema cache errors, and made avatar updates resilient.
 
+### Phase 8: Donor Dashboard Complete Audit & End-to-End Workflow Implementation ✅ COMPLETED
+- [x] **Fixed Runtime `servingsNum` / `weightNum` ReferenceError**: Resolved undeclared variable bugs during donation listing creation in `DonorDashboard.jsx`.
+- [x] **Implemented 7-Tab Navigation Router in Donor Dashboard**:
+  - `dashboard`: Real-time motivational banner, recent food listings, active pickup window with inline OTP verification, lifetime statistics, and quick hub shortcuts.
+  - `donations`: My Food Listings with real-time search, category filter, dynamic status chips (`all`, `available`, `requested`, `reserved`, `collected`), detailed listing cards with `Details`, `Edit`, and `Delete` actions.
+  - `requests`: Incoming Requests Hub with status tabs (`all`, `pending`, `accepted`, `completed`, `rejected`), requester organization profile, contact phone links, receiver notes, `Accept` / `Decline` action triggers, and inline driver OTP verification.
+  - `schedule`: Volunteer Pickup Booking with verified partner NGO selection, date/time slot picker, and interactive scheduled pickup timeline.
+  - `history`: Donations History & Receipts with summary stats (completed donations, meals delivered, kg rescued), search bar, and "Food Rescue Impact Certificate" generation.
+  - `impact`: Lifetime Community Impact Analytics with 4 hero KPI cards (Meals Shared, Waste Prevented, CO2 Prevented, Trees Equivalent) and unlocked/locked Milestone Badges.
+  - `support`: Donor Help & Support Center with interactive FAQ accordion, guidelines, and direct contact message submission writing to `contact_messages`.
+- [x] **Implemented 6 Interactive Modals & Studios**:
+  - `Create Donation Modal`: Dish presets, custom photo upload with Supabase storage, category, portions, and storage conditions.
+  - `Inspect Donation Modal`: Comprehensive food item details, weight, portions, pickup point, and timestamps.
+  - `Edit Food Listing Modal`: Live update of title, category, servings, weight, and pickup point.
+  - `Impact Certificate Modal`: Official FoodBridge Certificate of Appreciation with custom name, date, item, portions, certificate ID, and print/save trigger.
+  - `Schedule Volunteer Pickup Modal`: Direct booking with partner NGOs.
+  - `Profile & Settings Studio (`AvatarPicker`)`: Zero-scroll, viewport-centered modal with customizable built-in avatars and real-time backend profile sync.
+- [x] **Multi-Table Real-Time Supabase Sync**: Real-time Postgres channels listening to `food_items`, `food_requests`, and `pickup_records` for instant cross-tab live updates without manual page refreshes.
+### Phase 9: Donation Fulfillment Models & FoodBridge Pickup & Drop Hub ✅ COMPLETED
+- [x] **Added Required Fulfillment Options**:
+  - 🚶 **Receiver Pickup** (`receiver_pickup`): The receiver collects food from donor's kitchen.
+  - 🚗 **Donor Delivery** (`donor_delivery`): The donor delivers food directly to receiver's address.
+  - 🚚 **FoodBridge Pickup & Drop — Coming Soon** (`foodbridge_delivery`): Disabled with Coming Soon badge and link to dedicated page.
+- [x] **Stored Fulfillment Method in Supabase**: Updated `food_items`, `food_requests`, and `pickup_records` with `fulfillment_type` and `delivery_address` columns + client self-healing fallback.
+- [x] **Connected Distinct Workflows**:
+  - For **Receiver Pickup**: Donor specifies kitchen location → Receiver visits donor → Donor enters OTP shown on receiver's phone → Verified & Completed.
+  - For **Donor Delivery**: Receiver specifies delivery destination & phone number → Donor sees destination in Requests Hub → Donor delivers → Donor enters OTP provided by receiver upon arrival → Verified & Completed.
+- [x] **Created Dedicated Coming Soon Page (`PickupDrop.jsx` + `PickupDrop.css`)**:
+  - Tagline: *"We Pick It Up. We Get It There."*
+  - Smart route dispatch, thermal hygiene protection, dual-OTP handoff, 3-step visual infographics.
+  - Interactive **"Notify Me When Available"** early access waitlist saving to `contact_messages`.
+  - Registered route `#pickup-drop` with lazy loading in `App.jsx`, linked from `Navbar.jsx`, `Footer.jsx`, `DonorDashboard.jsx`, and `ReceiverDashboard.jsx`.
+- [x] **Verified Clean Production Build**: `npm run build` succeeds with 0 errors and 0 warnings in ~3.3s.
+
+### Phase 10: Complete Donor Dashboard Error Audit & Zero Hardcoded Data Resolution ✅ COMPLETED
+- [x] **Eliminated All Hardcoded NGO Partner Data**:
+  - Dynamically query registered receiver organizations and NGOs from Supabase `profiles` table (`role = 'receiver' OR organization_name IS NOT NULL`).
+  - Populated all schedule pickup selectors dynamically with real partner names and cities.
+- [x] **Dynamic Donor Standing Tier & Milestone Progress**:
+  - Replaced hardcoded "Level 3 Guardian" and static "50 Meals Goal" with dynamic level computation (`Green Contributor`, `Hunger Hero`, `Community Pillar`, `Guardian of Hope`) and milestone target scaling ($10 \rightarrow 25 \rightarrow 50 \rightarrow 100 \rightarrow 250 \rightarrow 500 \rightarrow 1000$).
+- [x] **Cascade Safe Food Listing Deletions**:
+  - Enhanced `foodService.deleteFoodItem(id)` to proactively dissociate and clean up dependent `pickup_records` and `food_requests` before deleting `food_items`, preventing Postgres foreign key constraint errors (`23503`).
+- [x] **Normalized Request Status Handler**:
+  - Standardized `handleUpdateIncomingRequest(requestId, foodId, status)` across `DonorDashboard.jsx` and `foodService.js` to ensure clean parameter handling.
+- [x] **Fixed Memory Leak on Image Upload Previews**:
+  - Managed blob URLs via `imagePreviewUrl` state and `URL.revokeObjectURL(url)` lifecycle cleanup.
+- [x] **Strict Form Input Validation**:
+  - Enforced strict positive integer validation for portions (`servings >= 1`) and weight (`weight > 0 kg`).
+- [x] **Theme-Aware Toast Styling**:
+  - Migrated floating toast from hardcoded pastel backgrounds to CSS classes `.toast-success` and `.toast-error` with full dark mode theme tokens.
+- [x] **Added Scoped `@media print` Styles for Impact Certificate**:
+  - Certificate prints cleanly to PDF without sidebar, headers, and dashboard background interference.
+- [x] **Production Build Verified**: `npm run build` completed with 0 errors in ~2.4s.
+
+### Phase 11: Luxury Impact Certificate & Lifetime Credential Redesign ✅ COMPLETED
+- [x] **Executive Guilloché & Ornamental Frame**:
+  - Implemented multi-layer gold (`#d97706`) and emerald (`#15803d`) borders with ornate corner brackets and subtle radial watermark background.
+- [x] **UN SDG 2 & 12 Alignment Citation**:
+  - Formal commendation header with FoodBridge Global Zero Hunger Network crest, laurel leaf emblem, and diamond separator.
+- [x] **Serif Typography & Recipient Highlighting**:
+  - Classic serif heading and recipient name with distinction pill badge ("🌟 Verified Zero-Waste Hero & Community Pillar").
+- [x] **Impact Metrics Triad Showcase**:
+  - Embedded 3 distinct visual impact badges (Meals Shared, Food Rescued in KG, and CO₂e Emissions Abated in KG).
+- [x] **Dual Signatures & 3D Metallic Golden Seal**:
+  - Realistic cursive signatures for *Dr. Elena Vance* (Director of Community Relief) and *A. Sharma* (Lead Trustee) framing a 3D embossed sunburst golden seal with hanging ribbons.
+- [x] **Verifiable Metadata & Quick Action Toolbar**:
+  - Credential ID (`#FB-CERT-XXXXX`), issuance date, cryptographic verification registry status, 🖨️ "Print / Save Official PDF", and 📋 "Copy Credential ID" with clipboard toast.
+- [x] **Master Lifetime Certificate Generator**:
+  - Added lifetime credential generator in Tab 6 (Impact Analytics) for cumulative donor contributions.
+- [x] **Pixel-Perfect A4 Portrait Print Stylesheet**:
+  - `@media print` optimized with `@page { size: A4 portrait; margin: 10mm; }` isolating the certificate seamlessly.
+
 ---
 
 ## 📁 Key File Map
@@ -83,7 +155,7 @@
 | `src/services/statsService.js` | Platform aggregates and admin data queries |
 | `src/services/avatarService.js` | Built-in avatar helpers and custom avatar upload |
 | `src/components/MapView/MapView.jsx` | Leaflet/OSM map, Nominatim search, GPS, rescue radius |
-| `src/pages/DonorDashboard/` | Donor food listing, request management, OTP verification |
+| `src/pages/DonorDashboard/` | Donor food listing, 7 tab hubs, request hub, OTP verification, certificate generator |
 | `src/pages/ReceiverDashboard/` | Receiver food discovery, request tracking, pickup list |
 | `src/pages/AdminDashboard/` | Platform statistics, user verification, moderation |
 | `src/pages/FoodListings/` | Public food search, map view, filter accordions, claim modal |
@@ -102,3 +174,4 @@
    - `food-images` (Public bucket)
 3. **Storage Policies**: Run `supabase_storage_policies.sql` in Supabase SQL Editor.
 4. **Auth Settings**: Toggle OFF "Confirm email" in Supabase Dashboard (Authentication → Providers → Email) for instant onboarding.
+

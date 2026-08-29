@@ -1,6 +1,8 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { AnimatedCounter, AnimatedTooltip } from '../AnimatedUI';
+import { statsService } from '../../services/statsService';
+import { supabase } from '../../lib/supabase';
 import './ImpactBar.css';
 
 import {
@@ -10,8 +12,8 @@ import {
   AnimatedNgoHeart,
 } from '../AnimatedIcons/AnimatedIcons';
 
-/* ─── Stat Data with Animated Icons ─── */
-const stats = [
+/* ─── Default Stat Data with Animated Icons ─── */
+const DEFAULT_STATS = [
   {
     icon: <AnimatedMealBowl size={26} color="#34db76" bg="rgba(52, 219, 118, 0.15)" />,
     display: '12.4K+',
@@ -58,6 +60,50 @@ function StatItem({ stat, inView, delay }) {
 export default function ImpactBar() {
   const barRef = useRef(null);
   const isInView = useInView(barRef, { once: true, amount: 0.3 });
+  const [liveStats, setLiveStats] = useState(DEFAULT_STATS);
+
+  useEffect(() => {
+    const fetchLiveImpact = () => {
+      statsService
+        .getPlatformStats()
+        .then((s) => {
+          if (s && (s.totalMeals > 0 || s.totalUsers > 0)) {
+            const mealsStr = s.totalMeals >= 1000 ? `${(s.totalMeals / 1000).toFixed(1)}K+` : `${s.totalMeals}+`;
+            const usersStr = s.totalUsers >= 1000 ? `${(s.totalUsers / 1000).toFixed(1)}K+` : `${s.totalUsers}+`;
+            const receiversStr = `${s.receiverCount || 12}+`;
+
+            setLiveStats([
+              { ...DEFAULT_STATS[0], display: mealsStr },
+              { ...DEFAULT_STATS[1], display: usersStr },
+              { ...DEFAULT_STATS[2], display: '540+' },
+              { ...DEFAULT_STATS[3], display: receiversStr },
+            ]);
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchLiveImpact();
+
+    const foodChannel = supabase
+      .channel('impact_bar_food_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'food_items' }, () => {
+        fetchLiveImpact();
+      })
+      .subscribe();
+
+    const requestChannel = supabase
+      .channel('impact_bar_requests_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'food_requests' }, () => {
+        fetchLiveImpact();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(foodChannel);
+      supabase.removeChannel(requestChannel);
+    };
+  }, []);
 
   return (
     <motion.div
@@ -101,10 +147,10 @@ export default function ImpactBar() {
 
         {/* Stats */}
         <div className="stats-group">
-          {stats.map((stat, i) => (
+          {liveStats.map((stat, i) => (
             <div key={stat.label} className="stat-with-divider">
               <StatItem stat={stat} inView={isInView} delay={0.8 + i * 0.15} />
-              {i < stats.length - 1 && <div className="stat-divider" />}
+              {i < liveStats.length - 1 && <div className="stat-divider" />}
             </div>
           ))}
         </div>
