@@ -34,9 +34,26 @@ export default function AdminDashboard({ onNavigate }) {
   // Navigation & Modal States
   const [activeNav, setActiveNav] = useState('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('foodbridge_admin_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+
+  const toggleSidebarCollapse = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('foodbridge_admin_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   // Global Toast
   const [toastMessage, setToastMessage] = useState('');
@@ -387,13 +404,15 @@ export default function AdminDashboard({ onNavigate }) {
         setActiveNav={setActiveNav}
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={toggleSidebarCollapse}
         onGoHome={handleGoHome}
         onLogout={handleLogout}
         counts={navCounts}
       />
 
       {/* ── Main Container ── */}
-      <div className="ad-main-container">
+      <div className={`ad-main-container ${sidebarCollapsed ? 'ad-main-collapsed' : ''}`}>
         {/* Top Header Navigation */}
         <AdminTopNav
           activeNav={activeNav}
@@ -403,8 +422,10 @@ export default function AdminDashboard({ onNavigate }) {
           isDark={isDark}
           toggleTheme={toggleTheme}
           setMobileMenuOpen={setMobileMenuOpen}
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={toggleSidebarCollapse}
           onOpenSearch={() => setSearchModalOpen(true)}
-          onOpenSettings={() => setProfileModalOpen(true)}
+          onOpenSettings={() => setActiveNav('settings')}
           onGoHome={handleGoHome}
           onLogout={handleLogout}
           onNavigate={onNavigate}

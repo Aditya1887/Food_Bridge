@@ -1,3 +1,4 @@
+import '../AdminDashboard.css';
 import React, { useMemo } from 'react';
 
 export default function AdminActivityView({

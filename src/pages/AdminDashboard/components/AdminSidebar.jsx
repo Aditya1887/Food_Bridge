@@ -1,3 +1,4 @@
+import '../AdminDashboard.css';
 import React from 'react';
 import { motion } from 'framer-motion';
 
@@ -6,6 +7,8 @@ export default function AdminSidebar({
   setActiveNav,
   mobileMenuOpen,
   setMobileMenuOpen,
+  isCollapsed = false,
+  onToggleCollapse,
   onGoHome,
   onLogout,
   counts = {},
@@ -196,10 +199,12 @@ export default function AdminSidebar({
 
   return (
     <>
-      <aside className={`ad-sidebar ${mobileMenuOpen ? 'ad-sidebar-open' : ''}`}>
+      <aside
+        className={`ad-sidebar ${isCollapsed ? 'ad-sidebar-collapsed' : ''} ${mobileMenuOpen ? 'ad-sidebar-open' : ''}`}
+      >
         {/* Brand Header */}
         <div className="ad-sidebar-header">
-          <div className="ad-brand" onClick={onGoHome} role="button" tabIndex={0}>
+          <div className="ad-brand" onClick={onGoHome} role="button" tabIndex={0} title="FoodBridge Admin">
             <div className="ad-logo-icon">
               <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M24 6 C21 10 21 15 24 18 C27 15 27 10 24 6 Z" fill="#22c55e" stroke="none" />
@@ -212,14 +217,37 @@ export default function AdminSidebar({
                 <path d="M10 30 C14 42 34 42 38 30" stroke="#4ade80" strokeWidth="2.8" fill="none" />
               </svg>
             </div>
-            <div>
-              <span className="ad-brand-name">
-                <span className="ad-brand-white">Food</span>
-                <span className="ad-brand-green">Bridge</span>
-              </span>
-              <span className="ad-brand-tagline">Share Food. Share Hope.</span>
-            </div>
+            {!isCollapsed && (
+              <div className="ad-brand-text-wrap">
+                <span className="ad-brand-name">
+                  <span className="ad-brand-white">Food</span>
+                  <span className="ad-brand-green">Bridge</span>
+                </span>
+                <span className="ad-brand-tagline">Share Food. Share Hope.</span>
+              </div>
+            )}
           </div>
+
+          {/* Desktop Collapse Toggle Button */}
+          {onToggleCollapse && (
+            <button
+              type="button"
+              className="ad-sidebar-collapse-btn"
+              onClick={onToggleCollapse}
+              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                {isCollapsed ? (
+                  <path d="M13 17l5-5-5-5M6 17l5-5-5-5" />
+                ) : (
+                  <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5" />
+                )}
+              </svg>
+            </button>
+          )}
+
+          {/* Mobile Close Button */}
           <button
             type="button"
             className="ad-close-mobile-btn"
@@ -234,7 +262,7 @@ export default function AdminSidebar({
         <nav className="ad-nav" aria-label="Admin Navigation">
           {NAV_GROUPS.map((sec, idx) => (
             <div key={idx} className="ad-nav-group">
-              {sec.group && <div className="ad-nav-group-title">{sec.group}</div>}
+              {sec.group && !isCollapsed && <div className="ad-nav-group-title">{sec.group}</div>}
               {sec.items.map((item) => {
                 const isActive = activeNav === item.id;
                 return (
@@ -246,18 +274,20 @@ export default function AdminSidebar({
                       setActiveNav(item.id);
                       setMobileMenuOpen(false);
                     }}
+                    title={isCollapsed ? item.label : undefined}
                   >
                     <span className="ad-nav-icon">{item.icon}</span>
-                    <span className="ad-nav-label">{item.label}</span>
+                    {!isCollapsed && <span className="ad-nav-label">{item.label}</span>}
+                    {isCollapsed && <span className="ad-nav-tooltip">{item.label}</span>}
                     {item.badge !== null && item.badge !== undefined && item.badge > 0 && (
                       <span
-                        className="ad-nav-badge"
+                        className={`ad-nav-badge ${isCollapsed ? 'collapsed-dot' : ''}`}
                         style={{
                           backgroundColor: item.badgeColor || '#22c55e',
                           color: '#052e16',
                         }}
                       >
-                        {item.badge}
+                        {!isCollapsed ? item.badge : ''}
                       </span>
                     )}
                   </button>
@@ -267,39 +297,53 @@ export default function AdminSidebar({
           ))}
         </nav>
 
-        {/* Inspiration Card */}
-        <div className="ad-sidebar-promo-card">
-          <div className="ad-promo-deco-leaf">
-            <svg viewBox="0 0 60 60" fill="none">
-              <path
-                d="M10 50 C20 20, 50 10, 55 5 C45 25, 35 45, 10 50 Z"
-                fill="rgba(74, 222, 128, 0.15)"
-                stroke="#4ade80"
-                strokeWidth="1.5"
-              />
-              <path d="M10 50 Q 30 30 55 5" stroke="#4ade80" strokeWidth="1.2" strokeDasharray="3 3" />
-            </svg>
+        {/* Inspiration Card (Only in expanded state) */}
+        {!isCollapsed && (
+          <div className="ad-sidebar-promo-card">
+            <div className="ad-promo-deco-leaf">
+              <svg viewBox="0 0 60 60" fill="none">
+                <path
+                  d="M10 50 C20 20, 50 10, 55 5 C45 25, 35 45, 10 50 Z"
+                  fill="rgba(74, 222, 128, 0.15)"
+                  stroke="#4ade80"
+                  strokeWidth="1.5"
+                />
+                <path d="M10 50 Q 30 30 55 5" stroke="#4ade80" strokeWidth="1.2" strokeDasharray="3 3" />
+              </svg>
+            </div>
+            <p className="ad-promo-title">Good food today, better tomorrow. 🌱</p>
+            <span className="ad-promo-sub">Zero-Waste Community</span>
           </div>
-          <p className="ad-promo-title">Good food today, better tomorrow. 🌱</p>
-          <span className="ad-promo-sub">Zero-Waste Community</span>
-        </div>
+        )}
 
         {/* Sidebar Footer Actions */}
         <div className="ad-sidebar-footer">
-          <button type="button" className="ad-footer-link-btn" onClick={onGoHome}>
+          <button
+            type="button"
+            className="ad-footer-link-btn"
+            onClick={onGoHome}
+            title={isCollapsed ? 'View Public Site' : undefined}
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
               <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
-            <span>View Public Site</span>
+            {!isCollapsed && <span>View Public Site</span>}
+            {isCollapsed && <span className="ad-nav-tooltip">View Public Site</span>}
           </button>
-          <button type="button" className="ad-footer-link-btn ad-logout-btn" onClick={onLogout}>
+          <button
+            type="button"
+            className="ad-footer-link-btn ad-logout-btn"
+            onClick={onLogout}
+            title={isCollapsed ? 'Log Out' : undefined}
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
-            <span>Log Out</span>
+            {!isCollapsed && <span>Log Out</span>}
+            {isCollapsed && <span className="ad-nav-tooltip">Log Out</span>}
           </button>
         </div>
       </aside>

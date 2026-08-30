@@ -1,3 +1,4 @@
+import '../AdminDashboard.css';
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAvatarUrl, getUserInitials } from '../../../services/avatarService';

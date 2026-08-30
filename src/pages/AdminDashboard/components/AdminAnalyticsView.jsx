@@ -1,3 +1,4 @@
+import '../AdminDashboard.css';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { CountUp } from '../../../components/AnimatedUI';

@@ -1,3 +1,4 @@
+import '../AdminDashboard.css';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -9,6 +10,8 @@ export default function AdminTopNav({
   isDark,
   toggleTheme,
   setMobileMenuOpen,
+  isCollapsed = false,
+  onToggleCollapse,
   onOpenSearch,
   onOpenSettings,
   onGoHome,
@@ -58,7 +61,7 @@ export default function AdminTopNav({
 
   return (
     <header className="ad-top-header">
-      {/* Left: Hamburger & Current View Title */}
+      {/* Left: Hamburger, Desktop Toggle & Current View Title */}
       <div className="ad-header-left">
         <button
           type="button"
@@ -72,6 +75,26 @@ export default function AdminTopNav({
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
+
+        {onToggleCollapse && (
+          <button
+            type="button"
+            className="ad-top-collapse-btn"
+            onClick={onToggleCollapse}
+            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M9 3v18" />
+              {isCollapsed ? (
+                <path d="M13 9l3 3-3 3" />
+              ) : (
+                <path d="M16 15l-3-3 3-3" />
+              )}
+            </svg>
+          </button>
+        )}
 
         <div className="ad-breadcrumb-wrap">
           <span className="ad-breadcrumb-root">Admin</span>

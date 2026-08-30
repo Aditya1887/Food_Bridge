@@ -1,3 +1,4 @@
+import '../AdminDashboard.css';
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 

@@ -1,3 +1,4 @@
+import '../AdminDashboard.css';
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { CountUp } from '../../../components/AnimatedUI';
