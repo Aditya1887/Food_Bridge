@@ -139,6 +139,34 @@
 - [x] **Pixel-Perfect A4 Portrait Print Stylesheet**:
   - `@media print` optimized with `@page { size: A4 portrait; margin: 10mm; }` isolating the certificate seamlessly.
 
+### Phase 12: SVG Line Attribute Runtime Error Resolution ✅ COMPLETED
+- [x] **Resolved `<line> attribute y2: Expected length, "undefined"` Error**:
+  - Traced root cause to `AnimatedBarChart` in `src/components/AnimatedIcons/AnimatedIcons.jsx` used by `WhyFoodBridgeSection.jsx`.
+  - Replaced direct Framer Motion SVG attribute animation (`animate={{ y2: [14, 11, 14] }}`) with GPU-accelerated CSS transforms (`style={{ transformOrigin: '...' }}` and `initial={{ scaleY: 1 }}` / `animate={{ scaleY: [...] }}`).
+  - Completely eliminated SVG length attribute warning and console errors without changing UI animation visuals or backend operations.
+  - Verified with clean production build `npm run build` with 0 errors.
+
+### Phase 13: Vercel Production Deployment Optimization ✅ COMPLETED
+- [x] **Created `vercel.json` SPA & Edge Configuration**:
+  - Configured SPA rewrite rule (`/(.*) -> /index.html`) to guarantee route resolution and prevent 404s.
+  - Added immutable caching headers for static assets (`/assets/(.*)` with `max-age=31536000`).
+  - Added security headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`).
+- [x] **Hardened Supabase Client Initialization (`src/lib/supabase.js`)**:
+  - Added explicit runtime validation with actionable error messaging if environment variables are missing.
+  - Provided graceful fallback initialization to prevent hard application crashes on fresh preview branches.
+  - Explicitly configured auth options (`persistSession: true`, `autoRefreshToken: true`, `detectSessionInUrl: true`).
+- [x] **Created `.env.example` Template**:
+  - Documented required Supabase variables for Vercel Project Settings.
+- [x] **Optimized `package.json` Dependencies**:
+  - Removed unused `react-router-dom` dependency to keep dependencies clean.
+- [x] **Fixed Password Reset Redirect URL**:
+  - Standardized `redirectTo: ${window.location.origin}/#login` in `Login.jsx` to ensure clean navigation back to login.
+- [x] **Configured Base URL in `vite.config.js`**:
+  - Explicitly declared `base: '/'` for consistent static asset resolution on Vercel.
+- [x] **Production Build & Preview Verified**:
+  - `npm run build` succeeds in ~2.5s with 0 errors.
+  - `vite preview` verified with HTTP 200 responses on root and static assets.
+
 ---
 
 ## 📁 Key File Map

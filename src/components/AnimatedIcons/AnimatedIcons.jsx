@@ -905,7 +905,9 @@ export function AnimatedBarChart({ size = 24, color = '#a855f7' }) {
         y1="20"
         x2="6"
         y2="14"
-        animate={{ y2: [14, 11, 14] }}
+        style={{ transformOrigin: '6px 20px' }}
+        initial={{ scaleY: 1 }}
+        animate={{ scaleY: [1, 1.45, 1] }}
         transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', delay: 0 }}
       />
       <motion.line
@@ -913,7 +915,9 @@ export function AnimatedBarChart({ size = 24, color = '#a855f7' }) {
         y1="20"
         x2="12"
         y2="4"
-        animate={{ y2: [4, 7, 4] }}
+        style={{ transformOrigin: '12px 20px' }}
+        initial={{ scaleY: 1 }}
+        animate={{ scaleY: [1, 0.75, 1] }}
         transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
       />
       <motion.line
@@ -921,7 +925,9 @@ export function AnimatedBarChart({ size = 24, color = '#a855f7' }) {
         y1="20"
         x2="18"
         y2="10"
-        animate={{ y2: [10, 6, 10] }}
+        style={{ transformOrigin: '18px 20px' }}
+        initial={{ scaleY: 1 }}
+        animate={{ scaleY: [1, 1.35, 1] }}
         transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
       />
     </motion.svg>

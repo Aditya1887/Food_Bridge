@@ -928,7 +928,7 @@ export default function Login({ onNavigate }) {
                           }
                           try {
                             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                              redirectTo: window.location.origin,
+                              redirectTo: `${window.location.origin}/#login`,
                             });
                             if (error) throw error;
                             showToast('Password reset link sent to your email. Please check your inbox.', 'success', 7000);
