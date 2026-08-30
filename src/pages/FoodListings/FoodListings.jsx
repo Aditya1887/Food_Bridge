@@ -23,7 +23,8 @@ const CITIES = [
 
 export default function FoodListings({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
-  const { user, profile, role, logout, refreshProfile } = useAuth();
+  const { user, profile, role, isAdmin, logout, refreshProfile } = useAuth();
+  const isUserAdmin = isAdmin || role === 'admin';
 
   // ─── STATE MANAGEMENT ───
   const [selectedCity, setSelectedCity] = useState(CITIES[0]);
@@ -616,7 +617,7 @@ export default function FoodListings({ onNavigate }) {
                 <button
                   className="fl-btn-dashboard-stylish"
                   onClick={() => {
-                    const target = role === 'admin' ? 'admin-dashboard' : role === 'donor' ? 'donor-dashboard' : 'receiver-dashboard';
+                    const target = isUserAdmin ? 'admin-dashboard' : role === 'donor' ? 'donor-dashboard' : 'receiver-dashboard';
                     if (onNavigate) onNavigate(target);
                   }}
                   title="Go to Dashboard"
@@ -634,7 +635,7 @@ export default function FoodListings({ onNavigate }) {
                     )}
                   </div>
                   <span className="btn-dashboard-text">
-                    Dashboard
+                    {isUserAdmin ? 'Admin Panel' : 'Dashboard'}
                     <span className="btn-dashboard-live-dot" />
                   </span>
                   <svg className="btn-dashboard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

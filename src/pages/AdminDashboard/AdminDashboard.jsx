@@ -512,6 +512,14 @@ export default function AdminDashboard({ onNavigate }) {
 
           <div style={{ flex: 1 }} />
 
+          <button className="ad-nav-item" onClick={handleGoHome}>
+            <svg className="ad-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            <span>View Website</span>
+          </button>
+
           <button className="ad-nav-item" onClick={handleLogout}>
             <svg className="ad-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -522,6 +530,11 @@ export default function AdminDashboard({ onNavigate }) {
           </button>
         </nav>
       </aside>
+
+      {/* Mobile backdrop */}
+      {mobileMenuOpen && (
+        <div className="ad-sidebar-backdrop" onClick={() => setMobileMenuOpen(false)} aria-hidden="true" />
+      )}
 
       {/* Main */}
       <div className="ad-main-container">

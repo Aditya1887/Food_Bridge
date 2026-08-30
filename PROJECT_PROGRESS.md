@@ -177,6 +177,25 @@
 - [x] **Build & Runtime Validation**:
   - `npm run build` succeeds with 0 errors, 0 warnings (2.44s).
 
+### Phase 15: Admin Panel Production Bug Fix & Universal Role Resolution ✅ COMPLETED
+- [x] **Investigated & Fixed Production-vs-Dev Discrepancy**:
+  - Traced root cause: In production, users with email `adsharma1887@gmail.com` had profile rows in Supabase with `role: 'donor'`, causing `AuthContext.jsx`'s real-time subscription (`auth_profile_live_${user.id}`) to overwrite in-memory admin privileges to `'donor'`.
+  - In addition, Navbar and navigation buttons across pages (`AboutUs`, `Contact`, `FoodListings`, `HowItWorks`, `Impact`) only checked `role === 'admin'` and routed users to `#donor-dashboard` instead of `#admin-dashboard`.
+- [x] **Unified Admin Privilege Engine (`src/context/AuthContext.jsx`)**:
+  - Exported universal `checkIsAdmin(user, profile, role)` evaluating `ADMIN_EMAILS` (`adsharma1887@gmail.com` and `VITE_ADMIN_EMAILS`), metadata, and database roles.
+  - Hardened real-time postgres changes listener to guarantee master admin roles are preserved.
+  - Exported `isAdmin` boolean directly from `useAuth()`.
+- [x] **Protected Navigation & Routing (`src/App.jsx`, `src/components/Navbar/Navbar.jsx`, Pages)**:
+  - Updated `#dashboard` auto-redirection and `#admin-dashboard` route guard in `App.jsx` to utilize `checkIsAdmin`.
+  - Updated Navbar dynamic dashboard CTA button to link directly to `admin-dashboard` with "Admin Panel" label for admins.
+  - Updated all page dashboard buttons (`AboutUs.jsx`, `Contact.jsx`, `FoodListings.jsx`, `HowItWorks.jsx`, `Impact.jsx`, `Login.jsx`).
+  - Added dedicated "🛡️ Open Admin Panel" switch option in `DonorDashboard.jsx` and `ReceiverDashboard.jsx` sidebars and profile dropdowns so admin users can seamlessly toggle between perspectives.
+- [x] **Admin Dashboard Responsive Polish (`AdminDashboard.jsx`, `AdminDashboard.css`)**:
+  - Added mobile backdrop overlay for mobile menu drawer.
+  - Added quick "View Website" navigation button in the Admin sidebar.
+- [x] **Build & Verification**:
+  - Production build `npm run build` succeeds cleanly in ~4.5s.
+
 ---
 
 ## 📁 Key File Map

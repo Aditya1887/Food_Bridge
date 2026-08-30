@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, checkIsAdmin } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { foodService } from '../../services/foodService';
 import { pickupService } from '../../services/pickupService';
@@ -21,7 +21,8 @@ const FOOD_CATEGORIES = [
 
 export default function ReceiverDashboard({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
-  const { user, profile, logout, refreshProfile } = useAuth();
+  const { user, profile, role, isAdmin, logout, refreshProfile } = useAuth();
+  const isUserAdmin = isAdmin || role === 'admin' || checkIsAdmin(user, profile, role);
 
   const avatarUrl = getAvatarUrl(profile, user);
   const avatarInitials = getUserInitials(profile, user);
@@ -388,6 +389,28 @@ export default function ReceiverDashboard({ onNavigate }) {
             </svg>
             <span>Profile & Settings</span>
           </button>
+
+          {isUserAdmin && (
+            <button
+              type="button"
+              className="rd-nav-item rd-admin-switch-btn"
+              onClick={() => {
+                if (onNavigate) onNavigate('admin-dashboard');
+                window.location.hash = '#admin-dashboard';
+                setMobileMenuOpen(false);
+              }}
+              style={{
+                color: '#10b981',
+                fontWeight: 700,
+                background: 'rgba(16,185,129,0.12)',
+                border: '1px solid rgba(16,185,129,0.25)',
+                marginTop: '6px',
+              }}
+            >
+              <span className="rd-nav-icon" style={{ fontSize: '15px' }}>🛡️</span>
+              <span>Admin Panel</span>
+            </button>
+          )}
         </nav>
 
         {/* Sidebar Footer Motivation */}
@@ -508,6 +531,29 @@ export default function ReceiverDashboard({ onNavigate }) {
                       <p className="rd-dropdown-email">{displayEmail}</p>
                     </div>
                     <div className="rd-dropdown-divider" />
+                    {isUserAdmin && (
+                      <>
+                        <button
+                          type="button"
+                          className="rd-dropdown-item"
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            if (onNavigate) onNavigate('admin-dashboard');
+                            window.location.hash = '#admin-dashboard';
+                          }}
+                          style={{ color: '#16a34a', fontWeight: 600 }}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1" />
+                            <rect x="14" y="3" width="7" height="7" rx="1" />
+                            <rect x="14" y="14" width="7" height="7" rx="1" />
+                            <rect x="3" y="14" width="7" height="7" rx="1" />
+                          </svg>
+                          🛡️ Open Admin Panel
+                        </button>
+                        <div className="rd-dropdown-divider" />
+                      </>
+                    )}
                     <button
                       type="button"
                       className="rd-dropdown-item"

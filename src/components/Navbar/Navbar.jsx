@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, checkIsAdmin } from '../../context/AuthContext';
 import { getAvatarUrl, getUserInitials } from '../../services/avatarService';
 import { ShinyText } from '../AnimatedUI';
 import './Navbar.css';
@@ -17,11 +17,12 @@ const navLinks = [
 
 export default function Navbar({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
-  const { user, role, profile } = useAuth();
+  const { user, role, profile, isAdmin } = useAuth();
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
+  const isUserAdmin = isAdmin || role === 'admin' || checkIsAdmin(user, profile, role);
   const avatarUrl = getAvatarUrl(profile, user);
   const initials = getUserInitials(profile, user);
   const displayName = profile?.full_name || user?.user_metadata?.full_name || '';
@@ -51,7 +52,8 @@ export default function Navbar({ onNavigate }) {
     else if (link.label === 'Find Food' || link.label === 'Food Listings') onNavigate('food-listings');
     else if (link.label === 'Donate') {
       if (user) {
-        onNavigate(role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard');
+        const dest = isUserAdmin ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
+        onNavigate(dest);
       } else {
         onNavigate('login');
       }
@@ -202,7 +204,7 @@ export default function Navbar({ onNavigate }) {
               className="btn-login btn-dashboard-stylish"
               onClick={(e) => {
                 e.preventDefault();
-                const targetPage = role === 'admin' ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
+                const targetPage = isUserAdmin ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
                 if (onNavigate) onNavigate(targetPage);
                 window.location.hash = `#${targetPage}`;
                 window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
@@ -227,7 +229,7 @@ export default function Navbar({ onNavigate }) {
                 )}
               </div>
               <span className="btn-dashboard-text">
-                Dashboard
+                {isUserAdmin ? 'Admin Panel' : 'Dashboard'}
                 <span className="btn-dashboard-live-dot" />
               </span>
               <svg className="btn-dashboard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

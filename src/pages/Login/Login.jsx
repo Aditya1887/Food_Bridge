@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, checkIsAdmin } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import {
   AnimatedCollectHands,
@@ -146,9 +146,8 @@ export default function Login({ onNavigate }) {
         const data = await login({ email, password });
 
         if (data?.session) {
-          const userEmail = (data.user?.email || email).toLowerCase().trim();
-          const isAdmin = userEmail === 'adsharma1887@gmail.com' || (data.user?.user_metadata?.role === 'admin');
-          const resolvedRole = isAdmin ? 'admin' : (data.user?.user_metadata?.role || 'donor');
+          const isAdminUser = checkIsAdmin(data.user, null, data.user?.user_metadata?.role);
+          const resolvedRole = isAdminUser ? 'admin' : (data.user?.user_metadata?.role || 'donor');
           showToast('Welcome back! You have successfully logged in.', 'success', 3000);
           setTimeout(() => {
             if (resolvedRole === 'admin') {

@@ -151,7 +151,8 @@ function StatCard({ stat }) {
 
 export default function Impact({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
-  const { user, role, profile } = useAuth();
+  const { user, role, profile, isAdmin } = useAuth();
+  const isUserAdmin = isAdmin || role === 'admin';
   const avatarUrl = getAvatarUrl(profile, user);
   const [hoveredNav, setHoveredNav] = useState(null);
   const [platformStats, setPlatformStats] = useState(null);
@@ -342,7 +343,7 @@ export default function Impact({ onNavigate }) {
               <button
                 className="imp-btn-join imp-btn-dashboard-stylish"
                 onClick={() => {
-                  const target = role === 'admin' ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
+                  const target = isUserAdmin ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
                   handleNav(target);
                 }}
               >
@@ -359,7 +360,7 @@ export default function Impact({ onNavigate }) {
                   )}
                 </div>
                 <span className="btn-dashboard-text">
-                  Dashboard
+                  {isUserAdmin ? 'Admin Panel' : 'Dashboard'}
                   <span className="btn-dashboard-live-dot" />
                 </span>
                 <svg className="btn-dashboard-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

@@ -3,7 +3,35 @@ import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
-const ADMIN_EMAILS = ['adsharma1887@gmail.com'];
+const BUILT_IN_ADMIN_EMAILS = ['adsharma1887@gmail.com'];
+const ENV_ADMIN_EMAILS = [
+  import.meta.env.VITE_ADMIN_EMAILS || '',
+  import.meta.env.VITE_ADMIN_EMAIL || '',
+]
+  .flatMap((str) => str.split(','))
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+
+export const ADMIN_EMAILS = Array.from(new Set([...BUILT_IN_ADMIN_EMAILS, ...ENV_ADMIN_EMAILS]));
+
+/**
+ * Universal helper to check if a user qualifies for Admin privileges.
+ * Checks email list, profile role, auth role, and metadata.
+ */
+export function checkIsAdmin(authUser, userProfile, currentRole) {
+  const email = (
+    authUser?.email ||
+    userProfile?.email ||
+    authUser?.user_metadata?.email ||
+    ''
+  ).toLowerCase().trim();
+
+  if (email && ADMIN_EMAILS.includes(email)) return true;
+  if ((currentRole || '').toLowerCase() === 'admin') return true;
+  if ((userProfile?.role || '').toLowerCase() === 'admin') return true;
+  if ((authUser?.user_metadata?.role || '').toLowerCase() === 'admin') return true;
+  return false;
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -20,7 +48,7 @@ export function AuthProvider({ children }) {
       return null;
     }
 
-    const isMasterAdmin = ADMIN_EMAILS.includes((authUser.email || '').toLowerCase().trim());
+    const isMasterAdmin = checkIsAdmin(authUser, null, null);
 
     try {
       // 1. Try to fetch existing profile from public.profiles
@@ -139,10 +167,10 @@ export function AuthProvider({ children }) {
         },
         (payload) => {
           if (payload.new) {
-            setProfile(payload.new);
-            if (payload.new.role) {
-              setRole(payload.new.role);
-            }
+            const isMasterAdmin = checkIsAdmin(user, payload.new, payload.new.role);
+            const updatedRole = isMasterAdmin ? 'admin' : (payload.new.role || 'donor');
+            setProfile({ ...payload.new, role: updatedRole });
+            setRole(updatedRole);
           }
         }
       )
@@ -210,7 +238,6 @@ export function AuthProvider({ children }) {
   };
 
   // Update avatar and refresh profile
-  // Update avatar and refresh profile
   const updateAvatar = async (avatarUrl) => {
     if (!user) return null;
     try {
@@ -262,11 +289,15 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const isUserAdmin = checkIsAdmin(user, profile, role);
+  const effectiveRole = isUserAdmin ? 'admin' : (role || profile?.role || user?.user_metadata?.role || 'donor');
+
   const value = {
     user,
     session,
     profile,
-    role: role || profile?.role || user?.user_metadata?.role || 'donor',
+    role: effectiveRole,
+    isAdmin: isUserAdmin,
     loading,
     isAuthenticated: !!user,
     login,

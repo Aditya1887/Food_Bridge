@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, checkIsAdmin } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { foodService, uploadFoodImage } from '../../services/foodService';
 import { pickupService } from '../../services/pickupService';
@@ -48,7 +48,8 @@ const DONOR_FAQS = [
 
 export default function DonorDashboard({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
-  const { user, profile, logout, refreshProfile } = useAuth();
+  const { user, profile, role, isAdmin, logout, refreshProfile } = useAuth();
+  const isUserAdmin = isAdmin || role === 'admin' || checkIsAdmin(user, profile, role);
 
   const avatarUrl = getAvatarUrl(profile, user);
   const avatarInitials = getUserInitials(profile, user);
@@ -1175,10 +1176,31 @@ export default function DonorDashboard({ onNavigate }) {
           >
             <svg className="dd-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
             <span>Profile & Settings</span>
           </button>
+
+          {isUserAdmin && (
+            <button
+              type="button"
+              className="dd-nav-item dd-admin-switch-btn"
+              onClick={() => {
+                if (onNavigate) onNavigate('admin-dashboard');
+                window.location.hash = '#admin-dashboard';
+              }}
+              style={{
+                color: '#10b981',
+                fontWeight: 700,
+                background: 'rgba(16,185,129,0.12)',
+                border: '1px solid rgba(16,185,129,0.25)',
+                marginTop: '6px',
+              }}
+            >
+              <span className="dd-nav-icon" style={{ fontSize: '15px' }}>🛡️</span>
+              <span>Admin Panel</span>
+            </button>
+          )}
         </nav>
 
         {/* Sidebar Footer CTA */}
@@ -1354,7 +1376,29 @@ export default function DonorDashboard({ onNavigate }) {
                       <p className="dd-dropdown-name">{displayName}</p>
                       <p className="dd-dropdown-email">{displayEmail}</p>
                     </div>
-                    <div className="dd-dropdown-divider" />
+                    {isUserAdmin && (
+                      <>
+                        <button
+                          type="button"
+                          className="dd-dropdown-item"
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            if (onNavigate) onNavigate('admin-dashboard');
+                            window.location.hash = '#admin-dashboard';
+                          }}
+                          style={{ color: '#16a34a', fontWeight: 600 }}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1" />
+                            <rect x="14" y="3" width="7" height="7" rx="1" />
+                            <rect x="14" y="14" width="7" height="7" rx="1" />
+                            <rect x="3" y="14" width="7" height="7" rx="1" />
+                          </svg>
+                          🛡️ Open Admin Panel
+                        </button>
+                        <div className="dd-dropdown-divider" />
+                      </>
+                    )}
                     <button
                       type="button"
                       className="dd-dropdown-item"

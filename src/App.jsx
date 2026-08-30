@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { ThemeProvider } from './components/ThemeContext';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider, useAuth, checkIsAdmin } from './context/AuthContext';
 import Navbar from './components/Navbar/Navbar';
 import HeroSection from './components/HeroSection/HeroSection';
 import JourneySection from './components/JourneySection/JourneySection';
@@ -57,7 +57,7 @@ function getPageFromHash() {
 
 function MainAppContent() {
   const [currentPage, setCurrentPage] = useState(getPageFromHash);
-  const { user, role, loading } = useAuth();
+  const { user, role, profile, isAdmin, loading } = useAuth();
 
   const handleNavigate = (page) => {
     setCurrentPage(page);
@@ -77,18 +77,18 @@ function MainAppContent() {
 
   // Auto-redirect #dashboard to role-specific dashboard hash
   useEffect(() => {
-    if (currentPage === 'dashboard' && user && !loading && role) {
-      const isAdmin = role === 'admin' || (user?.email?.toLowerCase().trim() === 'adsharma1887@gmail.com');
-      const targetPage = isAdmin ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
+    if (currentPage === 'dashboard' && user && !loading) {
+      const isUserAdmin = isAdmin || role === 'admin' || checkIsAdmin(user, profile, role);
+      const targetPage = isUserAdmin ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
       const targetHash = PAGE_HASHES[targetPage];
       if (targetHash && window.location.hash !== targetHash) {
         window.location.hash = targetHash;
       }
     }
-  }, [currentPage, user, loading, role]);
+  }, [currentPage, user, loading, role, isAdmin, profile]);
 
   const renderPage = () => {
-    const isAdminUser = role === 'admin' || (user?.email?.toLowerCase().trim() === 'adsharma1887@gmail.com');
+    const isAdminUser = isAdmin || role === 'admin' || checkIsAdmin(user, profile, role);
 
     switch (currentPage) {
       case 'how-it-works':

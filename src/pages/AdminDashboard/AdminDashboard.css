@@ -551,6 +551,15 @@
     transform: translateX(0);
   }
 
+  .ad-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 95;
+    backdrop-filter: blur(3px);
+  }
+
   .ad-main-container {
     margin-left: 0;
   }
