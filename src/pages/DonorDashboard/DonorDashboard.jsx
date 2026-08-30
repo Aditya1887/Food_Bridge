@@ -1768,6 +1768,7 @@ export default function DonorDashboard({ onNavigate }) {
                   onChange={(e) => setDonationsSearchQuery(e.target.value)}
                   className="dd-input-search"
                   aria-label="Search your food listings"
+                  autoComplete="off"
                 />
               </div>
 
@@ -2103,6 +2104,7 @@ export default function DonorDashboard({ onNavigate }) {
                       onChange={(e) => setPickupForm({ ...pickupForm, date: e.target.value })}
                       required
                       className="dd-input-control"
+                      autoComplete="off"
                     />
                   </div>
 
@@ -2197,6 +2199,7 @@ export default function DonorDashboard({ onNavigate }) {
                 onChange={(e) => setHistorySearchQuery(e.target.value)}
                 className="dd-input-search-history"
                 aria-label="Search completed donation records"
+                autoComplete="off"
               />
             </div>
 
@@ -2371,6 +2374,7 @@ export default function DonorDashboard({ onNavigate }) {
                       onChange={(e) => setSupportForm({ ...supportForm, subject: e.target.value })}
                       className="dd-input-control"
                       required
+                      autoComplete="off"
                     />
                   </div>
 
@@ -2550,6 +2554,7 @@ export default function DonorDashboard({ onNavigate }) {
                           onChange={(e) => setDonationForm({ ...donationForm, title: e.target.value })}
                           required
                           autoFocus
+                          autoComplete="off"
                         />
                       </div>
 
@@ -2581,6 +2586,7 @@ export default function DonorDashboard({ onNavigate }) {
                             value={donationForm.servings}
                             onChange={(e) => setDonationForm({ ...donationForm, servings: e.target.value })}
                             required
+                            autoComplete="off"
                           />
                         </div>
                         <div className="dd-modal-field">
@@ -2595,6 +2601,7 @@ export default function DonorDashboard({ onNavigate }) {
                             value={donationForm.weight}
                             onChange={(e) => setDonationForm({ ...donationForm, weight: e.target.value })}
                             required
+                            autoComplete="off"
                           />
                         </div>
                       </div>
@@ -2623,6 +2630,7 @@ export default function DonorDashboard({ onNavigate }) {
                             placeholder="e.g. Nuts, Dairy, Gluten"
                             value={donationForm.allergens}
                             onChange={(e) => setDonationForm({ ...donationForm, allergens: e.target.value })}
+                            autoComplete="off"
                           />
                         </div>
                       </div>
@@ -2678,6 +2686,7 @@ export default function DonorDashboard({ onNavigate }) {
                           value={donationForm.location}
                           onChange={(e) => setDonationForm({ ...donationForm, location: e.target.value })}
                           required
+                          autoComplete="street-address"
                         />
                       </div>
 
@@ -2930,6 +2939,7 @@ export default function DonorDashboard({ onNavigate }) {
                       value={editForm.food_name}
                       onChange={(e) => setEditForm({ ...editForm, food_name: e.target.value })}
                       required
+                      autoComplete="off"
                     />
                   </div>
 
@@ -2960,6 +2970,7 @@ export default function DonorDashboard({ onNavigate }) {
                         value={editForm.servings}
                         onChange={(e) => setEditForm({ ...editForm, servings: e.target.value })}
                         required
+                        autoComplete="off"
                       />
                     </div>
                     <div className="dd-modal-field">
@@ -2972,6 +2983,7 @@ export default function DonorDashboard({ onNavigate }) {
                         value={editForm.food_weight_kg}
                         onChange={(e) => setEditForm({ ...editForm, food_weight_kg: e.target.value })}
                         required
+                        autoComplete="off"
                       />
                     </div>
                   </div>
@@ -2989,6 +3001,7 @@ export default function DonorDashboard({ onNavigate }) {
                       value={editForm.pickup_location}
                       onChange={(e) => setEditForm({ ...editForm, pickup_location: e.target.value })}
                       required
+                      autoComplete="street-address"
                     />
                   </div>
 
@@ -3241,6 +3254,7 @@ export default function DonorDashboard({ onNavigate }) {
                       value={pickupForm.date}
                       onChange={(e) => setPickupForm({ ...pickupForm, date: e.target.value })}
                       required
+                      autoComplete="off"
                     />
                   </div>
 

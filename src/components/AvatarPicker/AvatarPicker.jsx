@@ -367,6 +367,7 @@ export default function AvatarPicker({
                           placeholder="Your Name"
                           required
                           className="pm-ctrl"
+                          autoComplete="name"
                         />
                       </div>
                       <div className="pm-field">
@@ -379,6 +380,7 @@ export default function AvatarPicker({
                           onChange={handleInputChange}
                           placeholder="+91 98765 43210"
                           className="pm-ctrl"
+                          autoComplete="tel"
                         />
                       </div>
                     </div>
@@ -394,6 +396,7 @@ export default function AvatarPicker({
                           onChange={handleInputChange}
                           placeholder="Organization (optional)"
                           className="pm-ctrl"
+                          autoComplete="organization"
                         />
                       </div>
                       <div className="pm-field">
@@ -404,6 +407,7 @@ export default function AvatarPicker({
                           value={formData.city}
                           onChange={handleInputChange}
                           className="pm-ctrl pm-sel"
+                          autoComplete="address-level2"
                         >
                           {CITIES.map((c) => (
                             <option key={c} value={c}>{c}</option>
@@ -422,6 +426,7 @@ export default function AvatarPicker({
                         onChange={handleInputChange}
                         placeholder="e.g. Ground Floor Gate #2, Sector 5"
                         className="pm-ctrl"
+                        autoComplete="street-address"
                       />
                     </div>
 
@@ -435,6 +440,7 @@ export default function AvatarPicker({
                         onChange={handleInputChange}
                         placeholder="Short mission statement..."
                         className="pm-ctrl"
+                        autoComplete="off"
                       />
                     </div>
                   </form>

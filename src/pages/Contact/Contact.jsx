@@ -481,6 +481,7 @@ export default function Contact({ onNavigate }) {
                         required
                         className="cnt-input"
                         aria-label="Your Name"
+                        autoComplete="name"
                       />
                     </div>
 
@@ -501,6 +502,7 @@ export default function Contact({ onNavigate }) {
                         required
                         className="cnt-input"
                         aria-label="Your Email"
+                        autoComplete="email"
                       />
                     </div>
                   </div>
@@ -526,6 +528,7 @@ export default function Contact({ onNavigate }) {
                         placeholder="Subject"
                         className="cnt-input"
                         aria-label="Subject"
+                        autoComplete="off"
                       />
                     </div>
                   </div>

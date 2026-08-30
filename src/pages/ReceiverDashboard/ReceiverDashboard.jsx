@@ -930,6 +930,7 @@ export default function ReceiverDashboard({ onNavigate }) {
                       value={requestServings}
                       onChange={(e) => setRequestServings(e.target.value)}
                       required
+                      autoComplete="off"
                     />
                   </div>
 
@@ -945,6 +946,7 @@ export default function ReceiverDashboard({ onNavigate }) {
                           value={deliveryAddress}
                           onChange={(e) => setDeliveryAddress(e.target.value)}
                           required
+                          autoComplete="street-address"
                         />
                       </div>
 
@@ -958,6 +960,7 @@ export default function ReceiverDashboard({ onNavigate }) {
                           value={deliveryPhone}
                           onChange={(e) => setDeliveryPhone(e.target.value)}
                           required
+                          autoComplete="tel"
                         />
                       </div>
                     </>

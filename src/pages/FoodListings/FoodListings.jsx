@@ -1429,6 +1429,7 @@ export default function FoodListings({ onNavigate }) {
                       value={profileForm.fullName}
                       onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
                       placeholder="e.g. Aditya Sharma"
+                      autoComplete="name"
                     />
                   </div>
 
@@ -1441,6 +1442,7 @@ export default function FoodListings({ onNavigate }) {
                       value={profileForm.phone}
                       onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
                       placeholder="e.g. +91 98201 44521"
+                      autoComplete="tel"
                     />
                   </div>
 
@@ -1451,6 +1453,7 @@ export default function FoodListings({ onNavigate }) {
                       name="city"
                       value={profileForm.city}
                       onChange={(e) => setProfileForm({ ...profileForm, city: e.target.value })}
+                      autoComplete="address-level2"
                     >
                       {CITIES.map((c) => (
                         <option key={c.id} value={c.name}>{c.name}</option>
@@ -1467,6 +1470,7 @@ export default function FoodListings({ onNavigate }) {
                       value={profileForm.organizationName}
                       onChange={(e) => setProfileForm({ ...profileForm, organizationName: e.target.value })}
                       placeholder="e.g. Helping Hands Foundation"
+                      autoComplete="organization"
                     />
                   </div>
 
