@@ -472,6 +472,7 @@ export default function Contact({ onNavigate }) {
                         </svg>
                       </div>
                       <input
+                        id="cnt-name"
                         type="text"
                         name="name"
                         value={formData.name}
@@ -479,6 +480,7 @@ export default function Contact({ onNavigate }) {
                         placeholder="Your Name"
                         required
                         className="cnt-input"
+                        aria-label="Your Name"
                       />
                     </div>
 
@@ -490,6 +492,7 @@ export default function Contact({ onNavigate }) {
                         </svg>
                       </div>
                       <input
+                        id="cnt-email"
                         type="email"
                         name="email"
                         value={formData.email}
@@ -497,6 +500,7 @@ export default function Contact({ onNavigate }) {
                         placeholder="Your Email"
                         required
                         className="cnt-input"
+                        aria-label="Your Email"
                       />
                     </div>
                   </div>
@@ -514,12 +518,14 @@ export default function Contact({ onNavigate }) {
                         </svg>
                       </div>
                       <input
+                        id="cnt-subject"
                         type="text"
                         name="subject"
                         value={formData.subject}
                         onChange={handleInputChange}
                         placeholder="Subject"
                         className="cnt-input"
+                        aria-label="Subject"
                       />
                     </div>
                   </div>
@@ -534,6 +540,7 @@ export default function Contact({ onNavigate }) {
                         </svg>
                       </div>
                       <textarea
+                        id="cnt-message"
                         name="message"
                         value={formData.message}
                         onChange={handleInputChange}
@@ -541,6 +548,7 @@ export default function Contact({ onNavigate }) {
                         rows={4}
                         required
                         className="cnt-textarea"
+                        aria-label="Your Message"
                       />
                     </div>
                   </div>

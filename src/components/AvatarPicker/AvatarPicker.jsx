@@ -357,8 +357,9 @@ export default function AvatarPicker({
                   <form onSubmit={handleSaveProfile} className="pm-compact-form">
                     <div className="pm-row-2">
                       <div className="pm-field">
-                        <label className="pm-lbl">Full Name</label>
+                        <label htmlFor="pm-full-name" className="pm-lbl">Full Name</label>
                         <input
+                          id="pm-full-name"
                           type="text"
                           name="full_name"
                           value={formData.full_name}
@@ -369,8 +370,9 @@ export default function AvatarPicker({
                         />
                       </div>
                       <div className="pm-field">
-                        <label className="pm-lbl">Phone Number</label>
+                        <label htmlFor="pm-phone" className="pm-lbl">Phone Number</label>
                         <input
+                          id="pm-phone"
                           type="tel"
                           name="phone"
                           value={formData.phone}
@@ -383,8 +385,9 @@ export default function AvatarPicker({
 
                     <div className="pm-row-2">
                       <div className="pm-field">
-                        <label className="pm-lbl">Organization / Cause</label>
+                        <label htmlFor="pm-organization-name" className="pm-lbl">Organization / Cause</label>
                         <input
+                          id="pm-organization-name"
                           type="text"
                           name="organization_name"
                           value={formData.organization_name}
@@ -394,8 +397,9 @@ export default function AvatarPicker({
                         />
                       </div>
                       <div className="pm-field">
-                        <label className="pm-lbl">City / Region</label>
+                        <label htmlFor="pm-city" className="pm-lbl">City / Region</label>
                         <select
+                          id="pm-city"
                           name="city"
                           value={formData.city}
                           onChange={handleInputChange}
@@ -409,8 +413,9 @@ export default function AvatarPicker({
                     </div>
 
                     <div className="pm-field">
-                      <label className="pm-lbl">Pickup Drop Point / Address</label>
+                      <label htmlFor="pm-address" className="pm-lbl">Pickup Drop Point / Address</label>
                       <input
+                        id="pm-address"
                         type="text"
                         name="address"
                         value={formData.address}
@@ -421,8 +426,9 @@ export default function AvatarPicker({
                     </div>
 
                     <div className="pm-field">
-                      <label className="pm-lbl">Community Bio</label>
+                      <label htmlFor="pm-bio" className="pm-lbl">Community Bio</label>
                       <input
+                        id="pm-bio"
                         type="text"
                         name="bio"
                         value={formData.bio}
@@ -474,11 +480,14 @@ export default function AvatarPicker({
                     </div>
 
                     <input
+                      id="pm-custom-avatar-file-input"
+                      name="avatarPhoto"
                       ref={fileInputRef}
                       type="file"
                       accept="image/*"
                       onChange={handleFileSelect}
                       style={{ display: 'none' }}
+                      aria-label="Upload custom avatar image"
                     />
 
                     <button
@@ -506,11 +515,14 @@ export default function AvatarPicker({
                           <strong className="pm-setting-title">{item.title}</strong>
                           <p className="pm-setting-desc">{item.desc}</p>
                         </div>
-                        <label className="pm-switch">
+                        <label htmlFor={`pm-switch-${item.key}`} className="pm-switch" aria-label={item.title}>
                           <input
+                            id={`pm-switch-${item.key}`}
+                            name={item.key}
                             type="checkbox"
                             checked={notifications[item.key]}
                             onChange={() => toggleNotification(item.key)}
+                            aria-label={item.title}
                           />
                           <span className="pm-slider" />
                         </label>

@@ -563,15 +563,18 @@ export default function ReceiverDashboard({ onNavigate }) {
             {/* Search & Category Filter Bar */}
             <div className="rd-filter-panel">
               <form className="rd-search-box" onSubmit={handleSearchSubmit}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="rd-search-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="rd-search-icon" aria-hidden="true">
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 <input
+                  id="rd-food-search-input"
+                  name="searchQuery"
                   type="text"
                   placeholder="Search available food items (e.g. Biryani, Rice, Bread)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="Search available food items"
                 />
                 <button type="submit" className="rd-search-btn">Search</button>
               </form>
@@ -917,8 +920,10 @@ export default function ReceiverDashboard({ onNavigate }) {
 
                 <form onSubmit={handleSubmitRequest}>
                   <div className="rd-modal-field">
-                    <label>Servings Needed *</label>
+                    <label htmlFor="rd-request-servings">Servings Needed *</label>
                     <input
+                      id="rd-request-servings"
+                      name="requestServings"
                       type="number"
                       min="1"
                       max={selectedFoodItem.servings || 100}
@@ -931,8 +936,10 @@ export default function ReceiverDashboard({ onNavigate }) {
                   {selectedFoodItem.fulfillment_type === 'donor_delivery' && (
                     <>
                       <div className="rd-modal-field">
-                        <label>Your Delivery Destination Address *</label>
+                        <label htmlFor="rd-delivery-address">Your Delivery Destination Address *</label>
                         <input
+                          id="rd-delivery-address"
+                          name="deliveryAddress"
                           type="text"
                           placeholder="e.g. Shelter #4, Near Community Hall, Main Road"
                           value={deliveryAddress}
@@ -942,8 +949,10 @@ export default function ReceiverDashboard({ onNavigate }) {
                       </div>
 
                       <div className="rd-modal-field">
-                        <label>Your Contact Phone Number *</label>
+                        <label htmlFor="rd-delivery-phone">Your Contact Phone Number *</label>
                         <input
+                          id="rd-delivery-phone"
+                          name="deliveryPhone"
                           type="tel"
                           placeholder="e.g. +91 9876543210"
                           value={deliveryPhone}
@@ -955,8 +964,10 @@ export default function ReceiverDashboard({ onNavigate }) {
                   )}
 
                   <div className="rd-modal-field">
-                    <label>Distribution Plan / Note for Donor (Optional)</label>
+                    <label htmlFor="rd-request-notes">Distribution Plan / Note for Donor (Optional)</label>
                     <textarea
+                      id="rd-request-notes"
+                      name="requestNotes"
                       placeholder="e.g. Will be distributed at our community shelter at 6:00 PM..."
                       rows="3"
                       value={requestNotes}

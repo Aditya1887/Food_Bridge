@@ -663,12 +663,13 @@ export default function Login({ onNavigate }) {
                     <div className="lgn-form-two-col">
                       <div className="lgn-input-group">
                         <div className="lgn-input-icon">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                             <circle cx="12" cy="7" r="4" />
                           </svg>
                         </div>
                         <input
+                          id="lgn-signup-name"
                           type="text"
                           name="name"
                           value={formData.name}
@@ -676,17 +677,20 @@ export default function Login({ onNavigate }) {
                           placeholder="Full Name"
                           required
                           className="lgn-input"
+                          aria-label="Full Name"
+                          autoComplete="name"
                         />
                       </div>
 
                       <div className="lgn-input-group">
                         <div className="lgn-input-icon">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
                             <rect x="2" y="4" width="20" height="16" rx="2" />
                             <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                           </svg>
                         </div>
                         <input
+                          id="lgn-signup-email"
                           type="email"
                           name="email"
                           value={formData.email}
@@ -694,6 +698,8 @@ export default function Login({ onNavigate }) {
                           placeholder="Email Address"
                           required
                           className="lgn-input"
+                          aria-label="Email Address"
+                          autoComplete="email"
                         />
                       </div>
                     </div>
@@ -702,28 +708,32 @@ export default function Login({ onNavigate }) {
                     <div className="lgn-form-two-col">
                       <div className="lgn-input-group">
                         <div className="lgn-input-icon">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
                             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                           </svg>
                         </div>
                         <input
+                          id="lgn-signup-phone"
                           type="tel"
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
                           placeholder="Phone Number"
                           className="lgn-input"
+                          aria-label="Phone Number"
+                          autoComplete="tel"
                         />
                       </div>
 
                       <div className="lgn-input-group">
                         <div className="lgn-input-icon">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                           </svg>
                         </div>
                         <input
+                          id="lgn-signup-password"
                           type={showPassword ? 'text' : 'password'}
                           name="password"
                           value={formData.password}
@@ -731,6 +741,8 @@ export default function Login({ onNavigate }) {
                           placeholder="Create Password"
                           required
                           className="lgn-input"
+                          aria-label="Create Password"
+                          autoComplete="new-password"
                         />
                         <button
                           type="button"
@@ -738,7 +750,7 @@ export default function Login({ onNavigate }) {
                           onClick={() => setShowPassword(!showPassword)}
                           aria-label={showPassword ? 'Hide password' : 'Show password'}
                         >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                             <circle cx="12" cy="12" r="3" />
                           </svg>
@@ -749,12 +761,13 @@ export default function Login({ onNavigate }) {
                     {/* Row 3: Confirm Password */}
                     <div className="lgn-input-group">
                       <div className="lgn-input-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
                           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                         </svg>
                       </div>
                       <input
+                        id="lgn-signup-confirm-password"
                         type={showConfirmPassword ? 'text' : 'password'}
                         name="confirmPassword"
                         value={formData.confirmPassword}
@@ -762,6 +775,8 @@ export default function Login({ onNavigate }) {
                         placeholder="Confirm Password"
                         required
                         className="lgn-input"
+                        aria-label="Confirm Password"
+                        autoComplete="new-password"
                       />
                       <button
                         type="button"
@@ -769,7 +784,7 @@ export default function Login({ onNavigate }) {
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                       >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                           <circle cx="12" cy="12" r="3" />
                         </svg>
@@ -822,12 +837,15 @@ export default function Login({ onNavigate }) {
                     </div>
 
                     {/* Agree to Terms Checkbox */}
-                    <label className="lgn-checkbox-row">
+                    <label htmlFor="lgn-signup-terms" className="lgn-checkbox-row">
                       <input
+                        id="lgn-signup-terms"
+                        name="agreeTerms"
                         type="checkbox"
                         checked={agreeTerms}
                         onChange={(e) => setAgreeTerms(e.target.checked)}
                         className="lgn-checkbox-input"
+                        aria-label="I agree to the Terms of Service and Privacy Policy"
                       />
                       <span className="lgn-checkbox-custom">
                         {agreeTerms && (
@@ -871,12 +889,13 @@ export default function Login({ onNavigate }) {
                     {/* Login Form Fields */}
                     <div className="lgn-input-group">
                       <div className="lgn-input-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
                           <rect x="2" y="4" width="20" height="16" rx="2" />
                           <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                         </svg>
                       </div>
                       <input
+                        id="lgn-login-identifier"
                         type="text"
                         name="identifier"
                         value={formData.identifier}
@@ -884,17 +903,20 @@ export default function Login({ onNavigate }) {
                         placeholder="Email or Phone Number"
                         required
                         className="lgn-input"
+                        aria-label="Email or Phone Number"
+                        autoComplete="username"
                       />
                     </div>
 
                     <div className="lgn-input-group">
                       <div className="lgn-input-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
                           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                         </svg>
                       </div>
                       <input
+                        id="lgn-login-password"
                         type={showPassword ? 'text' : 'password'}
                         name="password"
                         value={formData.password}
@@ -902,6 +924,8 @@ export default function Login({ onNavigate }) {
                         placeholder="Password"
                         required
                         className="lgn-input"
+                        aria-label="Password"
+                        autoComplete="current-password"
                       />
                       <button
                         type="button"

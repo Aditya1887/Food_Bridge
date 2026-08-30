@@ -382,12 +382,15 @@ export default function MapView({
           </div>
 
           <input
+            id="map-location-search"
+            name="locationSearchQuery"
             type="text"
             className="map-search-input"
             placeholder="Search address, neighborhood or city..."
             value={searchQuery}
             onChange={handleInputChange}
             onFocus={() => { if (searchResults.length > 0) setShowDropdown(true); }}
+            aria-label="Search address, neighborhood or city"
           />
 
           {searchQuery && (

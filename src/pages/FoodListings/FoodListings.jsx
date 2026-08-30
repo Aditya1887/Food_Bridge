@@ -791,12 +791,16 @@ export default function FoodListings({ onNavigate }) {
                   <div className="fl-accordion-body">
                     {['All Types', 'Cooked Food', 'Fruits', 'Vegetables', 'Packaged Food', 'Dry Goods', 'Beverages'].map((type) => {
                       const checked = selectedFoodTypes.includes(type);
+                      const inputId = `fl-food-type-${type.toLowerCase().replace(/\s+/g, '-')}`;
                       return (
-                        <label key={type} className="fl-checkbox-label">
+                        <label key={type} htmlFor={inputId} className="fl-checkbox-label">
                           <input
+                            id={inputId}
+                            name="foodType"
                             type="checkbox"
                             checked={checked}
                             onChange={() => handleFoodTypeChange(type)}
+                            aria-label={type}
                           />
                           <span className={`fl-custom-check ${checked ? 'checked' : ''}`}>
                             {checked && (
@@ -838,12 +842,16 @@ export default function FoodListings({ onNavigate }) {
                   <div className="fl-accordion-body">
                     {['Vegetarian', 'Vegan', 'Non-Vegetarian', 'Jain'].map((diet) => {
                       const checked = selectedDiets.includes(diet);
+                      const inputId = `fl-diet-${diet.toLowerCase().replace(/\s+/g, '-')}`;
                       return (
-                        <label key={diet} className="fl-checkbox-label">
+                        <label key={diet} htmlFor={inputId} className="fl-checkbox-label">
                           <input
+                            id={inputId}
+                            name="diet"
                             type="checkbox"
                             checked={checked}
                             onChange={() => handleDietChange(diet)}
+                            aria-label={diet}
                           />
                           <span className={`fl-custom-check ${checked ? 'checked' : ''}`}>
                             {checked && (
@@ -885,9 +893,11 @@ export default function FoodListings({ onNavigate }) {
                   <div className="fl-accordion-body">
                     {['All', 'Today', 'Within 2 Days', 'Within 5 Days', 'More than 5 Days'].map((exp) => {
                       const checked = selectedExpiry === exp;
+                      const inputId = `fl-expiry-${exp.toLowerCase().replace(/\s+/g, '-')}`;
                       return (
-                        <label key={exp} className="fl-radio-label">
+                        <label key={exp} htmlFor={inputId} className="fl-radio-label">
                           <input
+                            id={inputId}
                             type="radio"
                             name="expiryGroup"
                             checked={checked}
@@ -895,6 +905,7 @@ export default function FoodListings({ onNavigate }) {
                               setSelectedExpiry(exp);
                               setCurrentPage(1);
                             }}
+                            aria-label={exp}
                           />
                           <span className={`fl-custom-radio ${checked ? 'checked' : ''}`}>
                             {checked && <span className="fl-radio-dot" />}
@@ -926,7 +937,10 @@ export default function FoodListings({ onNavigate }) {
                 {accordionOpen.distance && (
                   <div className="fl-accordion-body">
                     <div className="fl-slider-container">
+                      <label htmlFor="fl-distance-range-slider" className="sr-only">Filter by distance in km</label>
                       <input
+                        id="fl-distance-range-slider"
+                        name="maxDistance"
                         type="range"
                         min="1"
                         max="25"
@@ -936,6 +950,7 @@ export default function FoodListings({ onNavigate }) {
                           setCurrentPage(1);
                         }}
                         className="fl-range-slider"
+                        aria-label="Filter by distance in km"
                       />
                       <div className="fl-slider-labels">
                         <span>0 km</span>
@@ -1329,8 +1344,10 @@ export default function FoodListings({ onNavigate }) {
                       {user ? (
                         <>
                           <div className="fl-servings-select">
-                            <label>Portions needed:</label>
+                            <label htmlFor="fl-claim-portions-select">Portions needed:</label>
                             <select
+                              id="fl-claim-portions-select"
+                              name="claimServings"
                               value={claimServings}
                               onChange={(e) => setClaimServings(Number(e.target.value))}
                             >
@@ -1379,8 +1396,8 @@ export default function FoodListings({ onNavigate }) {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
             >
-              <button className="fl-modal-close" onClick={() => setIsEditProfileOpen(false)}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <button className="fl-modal-close" onClick={() => setIsEditProfileOpen(false)} aria-label="Close modal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -1403,8 +1420,10 @@ export default function FoodListings({ onNavigate }) {
 
                 <form onSubmit={handleSaveProfile} className="fl-pmodal-form">
                   <div className="fl-form-group">
-                    <label>Full Name</label>
+                    <label htmlFor="fl-profile-fullname">Full Name</label>
                     <input
+                      id="fl-profile-fullname"
+                      name="fullName"
                       type="text"
                       required
                       value={profileForm.fullName}
@@ -1414,8 +1433,10 @@ export default function FoodListings({ onNavigate }) {
                   </div>
 
                   <div className="fl-form-group">
-                    <label>Phone Number</label>
+                    <label htmlFor="fl-profile-phone">Phone Number</label>
                     <input
+                      id="fl-profile-phone"
+                      name="phone"
                       type="tel"
                       value={profileForm.phone}
                       onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
@@ -1424,8 +1445,10 @@ export default function FoodListings({ onNavigate }) {
                   </div>
 
                   <div className="fl-form-group">
-                    <label>City / Region</label>
+                    <label htmlFor="fl-profile-city">City / Region</label>
                     <select
+                      id="fl-profile-city"
+                      name="city"
                       value={profileForm.city}
                       onChange={(e) => setProfileForm({ ...profileForm, city: e.target.value })}
                     >
@@ -1436,8 +1459,10 @@ export default function FoodListings({ onNavigate }) {
                   </div>
 
                   <div className="fl-form-group">
-                    <label>Organization / Shelter Name (Optional)</label>
+                    <label htmlFor="fl-profile-org">Organization / Shelter Name (Optional)</label>
                     <input
+                      id="fl-profile-org"
+                      name="organizationName"
                       type="text"
                       value={profileForm.organizationName}
                       onChange={(e) => setProfileForm({ ...profileForm, organizationName: e.target.value })}

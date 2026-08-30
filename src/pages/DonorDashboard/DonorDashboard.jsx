@@ -1755,24 +1755,30 @@ export default function DonorDashboard({ onNavigate }) {
             {/* Filter & Search Bar */}
             <div className="dd-filter-controls-bar">
               <div className="dd-search-input-wrap">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 <input
+                  id="dd-donations-search"
+                  name="donationsSearchQuery"
                   type="text"
                   placeholder="Search your food listings..."
                   value={donationsSearchQuery}
                   onChange={(e) => setDonationsSearchQuery(e.target.value)}
                   className="dd-input-search"
+                  aria-label="Search your food listings"
                 />
               </div>
 
               {/* Category Filter */}
               <select
+                id="dd-donations-category-filter"
+                name="donationsCategoryFilter"
                 value={donationsCategoryFilter}
                 onChange={(e) => setDonationsCategoryFilter(e.target.value)}
                 className="dd-select-filter"
+                aria-label="Filter food listings by category"
               >
                 <option value="all">All Categories</option>
                 <option value="cooked meals">Cooked Meals</option>
@@ -2002,7 +2008,12 @@ export default function DonorDashboard({ onNavigate }) {
                                 : '🔐 Enter 4-Digit OTP shown on Receiver’s Phone at Pickup:'}
                             </span>
                             <div className="dd-otp-field-row">
+                              <label htmlFor={`dd-otp-input-${req.id}`} className="sr-only">
+                                Enter 4-Digit OTP
+                              </label>
                               <input
+                                id={`dd-otp-input-${req.id}`}
+                                name={`otp_code_${req.id}`}
                                 type="text"
                                 maxLength="4"
                                 placeholder="••••"
@@ -2017,6 +2028,8 @@ export default function DonorDashboard({ onNavigate }) {
                                   });
                                 }}
                                 className="dd-otp-code-input"
+                                aria-label="Enter 4-Digit OTP"
+                                autoComplete="one-time-code"
                               />
                               <button
                                 type="button"
@@ -2064,8 +2077,10 @@ export default function DonorDashboard({ onNavigate }) {
 
                 <form onSubmit={handleSchedulePickup} className="dd-schedule-inner-form">
                   <div className="dd-modal-field">
-                    <label>Select Partner NGO / Organization</label>
+                    <label htmlFor="dd-schedule-tab-ngo">Select Partner NGO / Organization</label>
                     <select
+                      id="dd-schedule-tab-ngo"
+                      name="ngoName"
                       value={pickupForm.ngoName}
                       onChange={(e) => setPickupForm({ ...pickupForm, ngoName: e.target.value })}
                       className="dd-select-control"
@@ -2079,8 +2094,10 @@ export default function DonorDashboard({ onNavigate }) {
                   </div>
 
                   <div className="dd-modal-field">
-                    <label>Pickup Date</label>
+                    <label htmlFor="dd-schedule-tab-date">Pickup Date</label>
                     <input
+                      id="dd-schedule-tab-date"
+                      name="date"
                       type="date"
                       value={pickupForm.date}
                       onChange={(e) => setPickupForm({ ...pickupForm, date: e.target.value })}
@@ -2090,8 +2107,10 @@ export default function DonorDashboard({ onNavigate }) {
                   </div>
 
                   <div className="dd-modal-field">
-                    <label>Preferred Time Slot</label>
+                    <label htmlFor="dd-schedule-tab-timeslot">Preferred Time Slot</label>
                     <select
+                      id="dd-schedule-tab-timeslot"
+                      name="timeSlot"
                       value={pickupForm.timeSlot}
                       onChange={(e) => setPickupForm({ ...pickupForm, timeSlot: e.target.value })}
                       className="dd-select-control"
@@ -2166,12 +2185,18 @@ export default function DonorDashboard({ onNavigate }) {
 
             {/* Search Input */}
             <div className="dd-search-history-bar">
+              <label htmlFor="dd-history-search-input" className="sr-only">
+                Search completed donation records
+              </label>
               <input
+                id="dd-history-search-input"
+                name="historySearchQuery"
                 type="text"
                 placeholder="Search completed donation records..."
                 value={historySearchQuery}
                 onChange={(e) => setHistorySearchQuery(e.target.value)}
                 className="dd-input-search-history"
+                aria-label="Search completed donation records"
               />
             </div>
 
@@ -2336,8 +2361,10 @@ export default function DonorDashboard({ onNavigate }) {
                 <h3 className="dd-card-title">Send Message to Coordinator</h3>
                 <form onSubmit={handleSubmitSupportTicket} className="dd-ticket-form">
                   <div className="dd-modal-field">
-                    <label>Subject</label>
+                    <label htmlFor="dd-support-ticket-subject">Subject</label>
                     <input
+                      id="dd-support-ticket-subject"
+                      name="subject"
                       type="text"
                       placeholder="e.g. Question about large catering pickup"
                       value={supportForm.subject}
@@ -2348,8 +2375,10 @@ export default function DonorDashboard({ onNavigate }) {
                   </div>
 
                   <div className="dd-modal-field">
-                    <label>Your Message / Inquiry</label>
+                    <label htmlFor="dd-support-ticket-message">Your Message / Inquiry</label>
                     <textarea
+                      id="dd-support-ticket-message"
+                      name="message"
                       rows="4"
                       placeholder="Describe your question or requirement..."
                       value={supportForm.message}
@@ -2511,8 +2540,10 @@ export default function DonorDashboard({ onNavigate }) {
                       exit={{ opacity: 0, x: -20 }}
                     >
                       <div className="dd-modal-field">
-                        <label>Food Item Title *</label>
+                        <label htmlFor="dd-create-food-title">Food Item Title *</label>
                         <input
+                          id="dd-create-food-title"
+                          name="title"
                           type="text"
                           placeholder="e.g. Steamed Basmati Rice & Dal Makhani"
                           value={donationForm.title}
@@ -2523,8 +2554,10 @@ export default function DonorDashboard({ onNavigate }) {
                       </div>
 
                       <div className="dd-modal-field">
-                        <label>Category</label>
+                        <label htmlFor="dd-create-food-category">Category</label>
                         <select
+                          id="dd-create-food-category"
+                          name="category"
                           value={donationForm.category}
                           onChange={(e) => setDonationForm({ ...donationForm, category: e.target.value })}
                         >
@@ -2538,8 +2571,10 @@ export default function DonorDashboard({ onNavigate }) {
 
                       <div className="dd-modal-grid-2">
                         <div className="dd-modal-field">
-                          <label>Servings Count *</label>
+                          <label htmlFor="dd-create-food-servings">Servings Count *</label>
                           <input
+                            id="dd-create-food-servings"
+                            name="servings"
                             type="number"
                             min="1"
                             placeholder="10"
@@ -2549,8 +2584,10 @@ export default function DonorDashboard({ onNavigate }) {
                           />
                         </div>
                         <div className="dd-modal-field">
-                          <label>Approx Weight (KG) *</label>
+                          <label htmlFor="dd-create-food-weight">Approx Weight (KG) *</label>
                           <input
+                            id="dd-create-food-weight"
+                            name="weight"
                             type="number"
                             step="0.1"
                             min="0.5"
@@ -2564,8 +2601,10 @@ export default function DonorDashboard({ onNavigate }) {
 
                       <div className="dd-modal-grid-2">
                         <div className="dd-modal-field">
-                          <label>Storage Condition</label>
+                          <label htmlFor="dd-create-food-storage">Storage Condition</label>
                           <select
+                            id="dd-create-food-storage"
+                            name="storage"
                             value={donationForm.storage}
                             onChange={(e) => setDonationForm({ ...donationForm, storage: e.target.value })}
                           >
@@ -2576,8 +2615,10 @@ export default function DonorDashboard({ onNavigate }) {
                           </select>
                         </div>
                         <div className="dd-modal-field">
-                          <label>Allergens (optional)</label>
+                          <label htmlFor="dd-create-food-allergens">Allergens (optional)</label>
                           <input
+                            id="dd-create-food-allergens"
+                            name="allergens"
                             type="text"
                             placeholder="e.g. Nuts, Dairy, Gluten"
                             value={donationForm.allergens}
@@ -2620,12 +2661,14 @@ export default function DonorDashboard({ onNavigate }) {
                       exit={{ opacity: 0, x: -20 }}
                     >
                       <div className="dd-modal-field">
-                        <label>
+                        <label htmlFor="dd-create-food-location">
                           {donationForm.fulfillment_type === 'donor_delivery'
                             ? 'Your Dispatch / Starting Kitchen Location *'
                             : 'Pickup Location / Gate *'}
                         </label>
                         <input
+                          id="dd-create-food-location"
+                          name="location"
                           type="text"
                           placeholder={
                             donationForm.fulfillment_type === 'donor_delivery'
@@ -2639,8 +2682,10 @@ export default function DonorDashboard({ onNavigate }) {
                       </div>
 
                       <div className="dd-modal-field">
-                        <label>Select Preset Dish Style</label>
+                        <label htmlFor="dd-create-food-dishtype">Select Preset Dish Style</label>
                         <select
+                          id="dd-create-food-dishtype"
+                          name="dishType"
                           value={donationForm.dishType}
                           onChange={(e) => setDonationForm({ ...donationForm, dishType: e.target.value })}
                         >
@@ -2657,8 +2702,10 @@ export default function DonorDashboard({ onNavigate }) {
                       </div>
 
                       <div className="dd-modal-field">
-                        <label>Or Upload Custom Photo (optional)</label>
+                        <label htmlFor="dd-create-food-photo">Or Upload Custom Photo (optional)</label>
                         <input
+                          id="dd-create-food-photo"
+                          name="foodPhoto"
                           type="file"
                           accept="image/*"
                           onChange={(e) => setImageFile(e.target.files?.[0] || null)}
@@ -2672,8 +2719,10 @@ export default function DonorDashboard({ onNavigate }) {
                       </div>
 
                       <div className="dd-modal-field">
-                        <label>Additional Notes / Handling Instructions (optional)</label>
+                        <label htmlFor="dd-create-food-description">Additional Notes / Handling Instructions (optional)</label>
                         <textarea
+                          id="dd-create-food-description"
+                          name="description"
                           rows="2"
                           placeholder="e.g. Packed in 5 sealed containers, keep upright..."
                           value={donationForm.description}
@@ -2860,8 +2909,10 @@ export default function DonorDashboard({ onNavigate }) {
                 <h3>Edit Food Listing</h3>
                 <form onSubmit={handleSaveEditDonation}>
                   <div className="dd-modal-field">
-                    <label>Collection / Fulfillment Method</label>
+                    <label htmlFor="dd-edit-fulfillment-type">Collection / Fulfillment Method</label>
                     <select
+                      id="dd-edit-fulfillment-type"
+                      name="fulfillment_type"
                       value={editForm.fulfillment_type}
                       onChange={(e) => setEditForm({ ...editForm, fulfillment_type: e.target.value })}
                     >
@@ -2871,8 +2922,10 @@ export default function DonorDashboard({ onNavigate }) {
                   </div>
 
                   <div className="dd-modal-field">
-                    <label>Food Item Title</label>
+                    <label htmlFor="dd-edit-food-title">Food Item Title</label>
                     <input
+                      id="dd-edit-food-title"
+                      name="food_name"
                       type="text"
                       value={editForm.food_name}
                       onChange={(e) => setEditForm({ ...editForm, food_name: e.target.value })}
@@ -2881,8 +2934,10 @@ export default function DonorDashboard({ onNavigate }) {
                   </div>
 
                   <div className="dd-modal-field">
-                    <label>Category</label>
+                    <label htmlFor="dd-edit-category">Category</label>
                     <select
+                      id="dd-edit-category"
+                      name="category"
                       value={editForm.category}
                       onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
                     >
@@ -2896,8 +2951,10 @@ export default function DonorDashboard({ onNavigate }) {
 
                   <div className="dd-modal-grid-2">
                     <div className="dd-modal-field">
-                      <label>Servings</label>
+                      <label htmlFor="dd-edit-servings">Servings</label>
                       <input
+                        id="dd-edit-servings"
+                        name="servings"
                         type="number"
                         min="1"
                         value={editForm.servings}
@@ -2906,8 +2963,10 @@ export default function DonorDashboard({ onNavigate }) {
                       />
                     </div>
                     <div className="dd-modal-field">
-                      <label>Weight (kg)</label>
+                      <label htmlFor="dd-edit-weight">Weight (kg)</label>
                       <input
+                        id="dd-edit-weight"
+                        name="food_weight_kg"
                         type="number"
                         step="0.1"
                         value={editForm.food_weight_kg}
@@ -2918,12 +2977,14 @@ export default function DonorDashboard({ onNavigate }) {
                   </div>
 
                   <div className="dd-modal-field">
-                    <label>
+                    <label htmlFor="dd-edit-location">
                       {editForm.fulfillment_type === 'donor_delivery'
                         ? 'Dispatch / Base Location'
                         : 'Pickup Location'}
                     </label>
                     <input
+                      id="dd-edit-location"
+                      name="pickup_location"
                       type="text"
                       value={editForm.pickup_location}
                       onChange={(e) => setEditForm({ ...editForm, pickup_location: e.target.value })}
@@ -2932,8 +2993,10 @@ export default function DonorDashboard({ onNavigate }) {
                   </div>
 
                   <div className="dd-modal-field">
-                    <label>Change Photo (optional)</label>
+                    <label htmlFor="dd-edit-photo">Change Photo (optional)</label>
                     <input
+                      id="dd-edit-photo"
+                      name="editPhoto"
                       type="file"
                       accept="image/*"
                       onChange={(e) => setEditImageFile(e.target.files?.[0] || null)}
@@ -3154,8 +3217,10 @@ export default function DonorDashboard({ onNavigate }) {
 
                 <form onSubmit={handleSchedulePickup}>
                   <div className="dd-modal-field">
-                    <label>Assign to Partner NGO / Organization</label>
+                    <label htmlFor="dd-modal-quick-schedule-ngo">Assign to Partner NGO / Organization</label>
                     <select
+                      id="dd-modal-quick-schedule-ngo"
+                      name="ngoName"
                       value={pickupForm.ngoName}
                       onChange={(e) => setPickupForm({ ...pickupForm, ngoName: e.target.value })}
                     >
@@ -3168,8 +3233,10 @@ export default function DonorDashboard({ onNavigate }) {
                   </div>
 
                   <div className="dd-modal-field">
-                    <label>Pickup Date</label>
+                    <label htmlFor="dd-modal-quick-schedule-date">Pickup Date</label>
                     <input
+                      id="dd-modal-quick-schedule-date"
+                      name="date"
                       type="date"
                       value={pickupForm.date}
                       onChange={(e) => setPickupForm({ ...pickupForm, date: e.target.value })}
@@ -3178,8 +3245,10 @@ export default function DonorDashboard({ onNavigate }) {
                   </div>
 
                   <div className="dd-modal-field">
-                    <label>Preferred Time Slot</label>
+                    <label htmlFor="dd-modal-quick-schedule-timeslot">Preferred Time Slot</label>
                     <select
+                      id="dd-modal-quick-schedule-timeslot"
+                      name="timeSlot"
                       value={pickupForm.timeSlot}
                       onChange={(e) => setPickupForm({ ...pickupForm, timeSlot: e.target.value })}
                     >

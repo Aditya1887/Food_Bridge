@@ -163,9 +163,18 @@
   - Standardized `redirectTo: ${window.location.origin}/#login` in `Login.jsx` to ensure clean navigation back to login.
 - [x] **Configured Base URL in `vite.config.js`**:
   - Explicitly declared `base: '/'` for consistent static asset resolution on Vercel.
-- [x] **Production Build & Preview Verified**:
-  - `npm run build` succeeds in ~2.5s with 0 errors.
-  - `vite preview` verified with HTTP 200 responses on root and static assets.
+### Phase 14: Form Accessibility & Label Association Standards ✅ COMPLETED
+- [x] **Complete Form Controls Audit**:
+  - Resolved "A form field element should have an id or name attribute" and "No label associated with a form field" warnings across the entire application.
+- [x] **Donor Dashboard Form Controls (`src/pages/DonorDashboard/DonorDashboard.jsx`)**:
+  - Added unique `id`, `name`, `htmlFor`, and `aria-label` attributes to all form elements across Tab 2 (Listings search & category filter), Tab 3 (OTP verification input), Tab 4 (NGO Pickup booking form), Tab 5 (History search input), Tab 7 (Coordinator message form), Modal 1 (Create food donation 4-step wizard), Modal 3 (Edit food listing), and Modal 5 (Quick schedule).
+- [x] **Profile & Settings Studio (`src/components/AvatarPicker/AvatarPicker.jsx`)**:
+  - Connected `htmlFor` and `id` across profile fields (name, phone, organization, city, address, bio), added `id` & `aria-label` to custom photo upload, and labeled all notification preference switches.
+- [x] **Global Application Hardening**:
+  - Updated `ReceiverDashboard.jsx`, `FoodListings.jsx`, `Contact.jsx`, `Login.jsx`, and `MapView.jsx` to adhere to identical strict form accessibility standards.
+  - Added `.sr-only` accessibility helper utility to `src/index.css`.
+- [x] **Build & Runtime Validation**:
+  - `npm run build` succeeds with 0 errors, 0 warnings (2.53s).
 
 ---
 
