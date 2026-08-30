@@ -11,14 +11,12 @@ import { getAvatarUrl, getUserInitials } from '../../services/avatarService';
 import AvatarPicker from '../../components/AvatarPicker/AvatarPicker';
 
 // Subcomponents
-import AdminSidebar from './components/AdminSidebar';
 import AdminTopNav from './components/AdminTopNav';
 import AdminOverview from './components/AdminOverview';
 import AdminUsersView from './components/AdminUsersView';
 import AdminDonationsView from './components/AdminDonationsView';
 import AdminPickupsView from './components/AdminPickupsView';
 import AdminCategoriesView from './components/AdminCategoriesView';
-import AdminAnalyticsView from './components/AdminAnalyticsView';
 import AdminMessagesView from './components/AdminMessagesView';
 import AdminNotificationsView from './components/AdminNotificationsView';
 import AdminActivityView from './components/AdminActivityView';
@@ -33,27 +31,9 @@ export default function AdminDashboard({ onNavigate }) {
 
   // Navigation & Modal States
   const [activeNav, setActiveNav] = useState('overview');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    try {
-      return localStorage.getItem('foodbridge_admin_sidebar_collapsed') === 'true';
-    } catch {
-      return false;
-    }
-  });
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
-
-  const toggleSidebarCollapse = () => {
-    setSidebarCollapsed((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem('foodbridge_admin_sidebar_collapsed', String(next));
-      } catch {}
-      return next;
-    });
-  };
 
   // Global Toast
   const [toastMessage, setToastMessage] = useState('');
@@ -327,18 +307,6 @@ export default function AdminDashboard({ onNavigate }) {
           />
         );
 
-      case 'analytics':
-      case 'reports':
-        return (
-          <AdminAnalyticsView
-            key={activeNav}
-            stats={stats}
-            users={users}
-            foodItems={foodItems}
-            pickups={pickups}
-          />
-        );
-
       case 'messages':
         return (
           <AdminMessagesView
@@ -398,47 +366,29 @@ export default function AdminDashboard({ onNavigate }) {
 
   return (
     <div className={`admin-dashboard ${isDark ? 'dark-mode' : ''}`}>
-      {/* ── Left Sticky Sidebar ── */}
-      <AdminSidebar
+      {/* ── Top Horizontal Navigation Bar ── */}
+      <AdminTopNav
         activeNav={activeNav}
-        setActiveNav={setActiveNav}
-        mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
-        isCollapsed={sidebarCollapsed}
-        onToggleCollapse={toggleSidebarCollapse}
+        displayName={displayName}
+        avatarUrl={avatarUrl}
+        avatarInitials={avatarInitials}
+        isDark={isDark}
+        toggleTheme={toggleTheme}
+        onOpenSearch={() => setSearchModalOpen(true)}
+        onOpenSettings={() => setProfileModalOpen(true)}
         onGoHome={handleGoHome}
         onLogout={handleLogout}
+        onNavigate={onNavigate}
+        unreadNotifsCount={navCounts.notifications}
+        notifications={notifications}
+        onSelectNav={setActiveNav}
         counts={navCounts}
       />
 
-      {/* ── Main Container ── */}
-      <div className={`ad-main-container ${sidebarCollapsed ? 'ad-main-collapsed' : ''}`}>
-        {/* Top Header Navigation */}
-        <AdminTopNav
-          activeNav={activeNav}
-          displayName={displayName}
-          avatarUrl={avatarUrl}
-          avatarInitials={avatarInitials}
-          isDark={isDark}
-          toggleTheme={toggleTheme}
-          setMobileMenuOpen={setMobileMenuOpen}
-          isCollapsed={sidebarCollapsed}
-          onToggleCollapse={toggleSidebarCollapse}
-          onOpenSearch={() => setSearchModalOpen(true)}
-          onOpenSettings={() => setActiveNav('settings')}
-          onGoHome={handleGoHome}
-          onLogout={handleLogout}
-          onNavigate={onNavigate}
-          unreadNotifsCount={navCounts.notifications}
-          notifications={notifications}
-          onSelectNav={setActiveNav}
-        />
-
-        {/* Content Body */}
-        <main className="ad-content-body">
-          {renderCurrentView()}
-        </main>
-      </div>
+      {/* ── Main Content Container ── */}
+      <main className="ad-content-body ad-content-top-layout">
+        {renderCurrentView()}
+      </main>
 
       {/* ── Global ⌘K Search Command Palette Modal ── */}
       <AdminSearchModal

@@ -685,9 +685,9 @@ export default function AdminOverview({
         </div>
       </div>
 
-      {/* ── 4. Bottom Split Row: Recent Donations & Recent Live Activity ── */}
-      <div className="ad-bottom-split-row">
-        {/* Left: Recent Donations Table */}
+      {/* ── 4. Bottom 3-Column Split Row: Recent Donations + Recent Live Activity + Quick Actions ── */}
+      <div className="ad-bottom-split-row ad-bottom-3col-row">
+        {/* Column 1: Recent Donations Table */}
         <div className="ad-overview-section-card ad-recent-donations-card">
           <div className="ad-section-header">
             <h3 className="ad-section-title">Recent Donations</h3>
@@ -718,11 +718,11 @@ export default function AdminOverview({
                 </tr>
               </thead>
               <tbody>
-                {foodItems.slice(0, 6).map((item, idx) => {
-                  const donorName = item.donor?.organization_name || item.donor?.full_name || 'Community Donor';
+                {foodItems.slice(0, 5).map((item, idx) => {
+                  const donorName = item.donor?.organization_name || item.donor?.full_name || 'Hotel Green Leaf';
                   const dateStr = item.created_at
-                    ? new Date(item.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })
-                    : 'Today';
+                    ? new Date(item.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : 'May 26, 2024 10:30 AM';
 
                   let statusClass = 'pending';
                   let statusText = 'Pending Pickup';
@@ -746,8 +746,8 @@ export default function AdminOverview({
                           <span className="ad-cell-bold">{donorName}</span>
                         </div>
                       </td>
-                      <td className="ad-cell-truncate">{item.food_name || 'Prepared Meals'}</td>
-                      <td>{item.servings ? `${item.servings} servings` : (item.food_weight_kg ? `${item.food_weight_kg} kg` : '1 batch')}</td>
+                      <td className="ad-cell-truncate">{item.food_name || 'Veg Biryani, Dal Tadka, Raita'}</td>
+                      <td>{item.servings ? `${item.servings} servings` : (item.food_weight_kg ? `${item.food_weight_kg} kg` : '25 servings')}</td>
                       <td>
                         <span className={`ad-status-badge ${statusClass}`}>
                           {statusText}
@@ -780,7 +780,7 @@ export default function AdminOverview({
           </div>
         </div>
 
-        {/* Right: Recent Live Activity Feed */}
+        {/* Column 2: Recent Live Activity Feed */}
         <div className="ad-overview-section-card ad-recent-activity-card">
           <div className="ad-section-header">
             <h3 className="ad-section-title">Recent Activity</h3>
@@ -821,6 +821,124 @@ export default function AdminOverview({
                 No recent activity records found.
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Column 3: Quick Actions */}
+        <div className="ad-overview-section-card ad-quick-actions-card">
+          <div className="ad-section-header">
+            <h3 className="ad-section-title">Quick Actions</h3>
+          </div>
+
+          <div className="ad-quick-actions-grid">
+            <button
+              type="button"
+              className="ad-quick-action-tile"
+              onClick={() => onSelectNav('donors')}
+            >
+              <div className="ad-qa-icon" style={{ background: 'rgba(34, 197, 94, 0.12)', color: '#16a34a' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <line x1="19" y1="8" x2="19" y2="14" />
+                  <line x1="22" y1="11" x2="16" y2="11" />
+                </svg>
+              </div>
+              <div className="ad-qa-text">
+                <span className="ad-qa-title">Add Donor</span>
+                <span className="ad-qa-sub">Register a new donor</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              className="ad-quick-action-tile"
+              onClick={() => onSelectNav('receivers')}
+            >
+              <div className="ad-qa-icon" style={{ background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M17 18a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2" />
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <circle cx="12" cy="10" r="2" />
+                </svg>
+              </div>
+              <div className="ad-qa-text">
+                <span className="ad-qa-title">Add NGO</span>
+                <span className="ad-qa-sub">Register a new NGO</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              className="ad-quick-action-tile"
+              onClick={() => onSelectNav('donations')}
+            >
+              <div className="ad-qa-icon" style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#d97706' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M12 11v6m-3-3h6" />
+                </svg>
+              </div>
+              <div className="ad-qa-text">
+                <span className="ad-qa-title">Add Donation</span>
+                <span className="ad-qa-sub">Add a new donation</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              className="ad-quick-action-tile"
+              onClick={() => onSelectNav('pickups')}
+            >
+              <div className="ad-qa-icon" style={{ background: 'rgba(139, 92, 246, 0.12)', color: '#7c3aed' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <rect x="1" y="3" width="15" height="13" rx="1.5" />
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 8" />
+                  <circle cx="5.5" cy="18.5" r="2.5" />
+                  <circle cx="18.5" cy="18.5" r="2.5" />
+                </svg>
+              </div>
+              <div className="ad-qa-text">
+                <span className="ad-qa-title">Schedule Pickup</span>
+                <span className="ad-qa-sub">Schedule a pickup</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              className="ad-quick-action-tile"
+              onClick={() => onSelectNav('categories')}
+            >
+              <div className="ad-qa-icon" style={{ background: 'rgba(5, 150, 105, 0.12)', color: '#059669' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <circle cx="6" cy="6" r="3" />
+                  <circle cx="18" cy="6" r="3" />
+                  <circle cx="6" cy="18" r="3" />
+                  <circle cx="18" cy="18" r="3" />
+                </svg>
+              </div>
+              <div className="ad-qa-text">
+                <span className="ad-qa-title">Manage Categories</span>
+                <span className="ad-qa-sub">Manage food categories</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              className="ad-quick-action-tile"
+              onClick={() => onSelectNav('activity_logs')}
+            >
+              <div className="ad-qa-icon" style={{ background: 'rgba(2, 132, 199, 0.12)', color: '#0284c7' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+              </div>
+              <div className="ad-qa-text">
+                <span className="ad-qa-title">Audit Logs</span>
+                <span className="ad-qa-sub">View realtime activity</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
