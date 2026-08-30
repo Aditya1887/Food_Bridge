@@ -11,18 +11,18 @@ export default function PageTransition({
     switch (mode) {
       case 'slide':
         return {
-          initial: { opacity: 0, x: 20, filter: 'blur(4px)' },
-          animate: { opacity: 1, x: 0, filter: 'blur(0px)' },
+          initial: { opacity: 0, x: 20 },
+          animate: { opacity: 1, x: 0 },
         };
       case 'scale':
         return {
-          initial: { opacity: 0, scale: 0.96, filter: 'blur(6px)' },
-          animate: { opacity: 1, scale: 1, filter: 'blur(0px)' },
+          initial: { opacity: 0, scale: 0.96 },
+          animate: { opacity: 1, scale: 1 },
         };
       default: // 'fade'
         return {
-          initial: { opacity: 0, y: 14, filter: 'blur(4px)' },
-          animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+          initial: { opacity: 0 },
+          animate: { opacity: 1 },
         };
     }
   };

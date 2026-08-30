@@ -4,7 +4,7 @@ import { useInView } from 'framer-motion';
 export default function CountUp({
   to = 0,
   from = 0,
-  duration = 2,
+  duration = 1.2,
   delay = 0,
   className = '',
   prefix = '',
@@ -21,47 +21,62 @@ export default function CountUp({
   const targetTo = parseNum(to);
   const startFrom = parseNum(from);
 
-  const [value, setValue] = useState(startFrom);
+  const [value, setValue] = useState(targetTo > 0 ? startFrom : 0);
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.3 });
-  const hasStartedRef = useRef(false);
+  const isInView = useInView(ref, { once: true, amount: 0.2 });
+  const prevTargetRef = useRef(targetTo);
+  const frameRef = useRef(null);
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
-    if (!isInView || hasStartedRef.current) return;
-    hasStartedRef.current = true;
+    // If not in view yet, record target and wait
+    if (!isInView) {
+      prevTargetRef.current = targetTo;
+      return;
+    }
 
-    let timeoutId;
-    let frameId;
+    const startVal = value;
+    const endVal = targetTo;
 
-    timeoutId = setTimeout(() => {
+    // Clear previous animation
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (frameRef.current) cancelAnimationFrame(frameRef.current);
+
+    if (startVal === endVal) {
+      setValue(endVal);
+      return;
+    }
+
+    timeoutRef.current = setTimeout(() => {
       const startTime = performance.now();
-      const durationMs = (duration || 2) * 1000;
+      const durationMs = Math.max(300, (duration || 1.2) * 1000);
 
       const animate = (currentTime) => {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / durationMs, 1);
 
-        // Ease Out Quart
+        // Ease Out Quart: 1 - (1 - t)^4
         const ease = 1 - Math.pow(1 - progress, 4);
-        const current = startFrom + (targetTo - startFrom) * ease;
+        const current = startVal + (endVal - startVal) * ease;
 
         setValue(current);
 
         if (progress < 1) {
-          frameId = requestAnimationFrame(animate);
+          frameRef.current = requestAnimationFrame(animate);
         } else {
-          setValue(targetTo);
+          setValue(endVal);
+          prevTargetRef.current = endVal;
         }
       };
 
-      frameId = requestAnimationFrame(animate);
+      frameRef.current = requestAnimationFrame(animate);
     }, (delay || 0) * 1000);
 
     return () => {
-      clearTimeout(timeoutId);
-      if (frameId) cancelAnimationFrame(frameId);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, [isInView, startFrom, targetTo, duration, delay]);
+  }, [isInView, targetTo, duration, delay]);
 
   const formatNumber = (num) => {
     const safeNum = parseNum(num);
