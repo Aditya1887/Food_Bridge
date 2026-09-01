@@ -39,6 +39,7 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [needsRoleSelection, setNeedsRoleSelection] = useState(false);
 
   // Fetch or safely auto-populate profile from Supabase
   const fetchProfile = async (authUser) => {
@@ -58,6 +59,13 @@ export function AuthProvider({ children }) {
         .eq('id', authUser.id)
         .maybeSingle();
 
+      const metaAvatar =
+        authUser.user_metadata?.avatar_url ||
+        authUser.user_metadata?.picture ||
+        authUser.identities?.[0]?.identity_data?.avatar_url ||
+        authUser.identities?.[0]?.identity_data?.picture ||
+        '';
+
       if (data && !error) {
         if (isMasterAdmin && data.role !== 'admin') {
           try {
@@ -67,6 +75,17 @@ export function AuthProvider({ children }) {
             console.warn('Auto admin elevation notice:', e.message);
           }
         }
+
+        // Auto-sync Google OAuth avatar if missing in database profile
+        if (!data.avatar_url && metaAvatar) {
+          try {
+            await supabase.from('profiles').update({ avatar_url: metaAvatar }).eq('id', authUser.id);
+            data.avatar_url = metaAvatar;
+          } catch (e) {
+            console.warn('Auto avatar sync notice:', e.message);
+          }
+        }
+
         const effectiveRole = isMasterAdmin ? 'admin' : (data.role || authUser.user_metadata?.role || 'donor');
         setProfile({ ...data, role: effectiveRole });
         setRole(effectiveRole);
@@ -74,6 +93,8 @@ export function AuthProvider({ children }) {
       }
 
       // 2. Self-healing fallback: If profiles row does not exist yet, create it from auth metadata
+      //    For OAuth users (Google), user_metadata.role is not set — flag for role selection
+      const hasPreSelectedRole = !!authUser.user_metadata?.role;
       const defaultRole = isMasterAdmin ? 'admin' : (authUser.user_metadata?.role || 'donor');
       const defaultName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User';
       const defaultPhone = authUser.user_metadata?.phone || '';
@@ -84,7 +105,7 @@ export function AuthProvider({ children }) {
         email: authUser.email,
         phone: defaultPhone,
         role: defaultRole,
-        avatar_url: authUser.user_metadata?.avatar_url || '',
+        avatar_url: metaAvatar || '',
       };
 
       const { data: createdProfile } = await supabase
@@ -97,6 +118,12 @@ export function AuthProvider({ children }) {
       const effectiveRole = isMasterAdmin ? 'admin' : (resolved.role || defaultRole);
       setProfile({ ...resolved, role: effectiveRole });
       setRole(effectiveRole);
+
+      // New OAuth user without a pre-selected role → prompt for Donor/Receiver
+      if (!hasPreSelectedRole && !isMasterAdmin) {
+        setNeedsRoleSelection(true);
+      }
+
       return { ...resolved, role: effectiveRole };
     } catch (err) {
       console.warn('AuthContext profile fetch notice:', err.message);
@@ -292,6 +319,21 @@ export function AuthProvider({ children }) {
   const isUserAdmin = checkIsAdmin(user, profile, role);
   const effectiveRole = isUserAdmin ? 'admin' : (role || profile?.role || user?.user_metadata?.role || 'donor');
 
+  // Called after a new Google OAuth user picks their role (Donor / Receiver)
+  const selectRole = async (selectedRole) => {
+    if (!user) return;
+    try {
+      await supabase.from('profiles').update({ role: selectedRole }).eq('id', user.id);
+      setRole(selectedRole);
+      setProfile((prev) => prev ? { ...prev, role: selectedRole } : prev);
+    } catch (err) {
+      console.warn('selectRole notice:', err.message);
+      setRole(selectedRole);
+      setProfile((prev) => prev ? { ...prev, role: selectedRole } : prev);
+    }
+    setNeedsRoleSelection(false);
+  };
+
   const value = {
     user,
     session,
@@ -300,12 +342,14 @@ export function AuthProvider({ children }) {
     isAdmin: isUserAdmin,
     loading,
     isAuthenticated: !!user,
+    needsRoleSelection,
     login,
     signup,
     logout,
     refreshProfile,
     updateAvatar,
     updateUserProfile,
+    selectRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

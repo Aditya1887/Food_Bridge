@@ -95,29 +95,96 @@ export function svgToDataUri(svgString) {
 }
 
 /**
- * Get the display avatar URL for a user profile
- * Priority: custom uploaded URL / Data URI / Built-in AI Avatar > initials fallback
+ * Get the display avatar URL for a user profile or user auth object.
+ * Supports:
+ * - Built-in 3D avatars (by ID or filename)
+ * - Google OAuth profile pictures (googleusercontent.com, etc.)
+ * - Uploaded images (Supabase storage public URL, relative paths, Base64 data URIs, Blobs)
+ * - Multiple field name fallbacks (avatar_url, avatar, picture, photo_url, user_metadata, etc.)
  */
 export function getAvatarUrl(profile, user) {
-  const avatarVal = profile?.avatar_url || user?.user_metadata?.avatar_url;
+  // Extract all possible avatar fields across profile and user objects
+  let avatarVal =
+    profile?.avatar_url ||
+    profile?.avatar ||
+    profile?.photo_url ||
+    profile?.picture ||
+    profile?.image_url ||
+    profile?.profile_picture ||
+    profile?.user_metadata?.avatar_url ||
+    profile?.user_metadata?.picture ||
+    user?.avatar_url ||
+    user?.photo_url ||
+    user?.picture ||
+    user?.user_metadata?.avatar_url ||
+    user?.user_metadata?.picture ||
+    user?.identities?.[0]?.identity_data?.avatar_url ||
+    user?.identities?.[0]?.identity_data?.picture;
+
+  if (!avatarVal) return null;
+
+  if (typeof avatarVal !== 'string') {
+    if (typeof avatarVal === 'object' && avatarVal.src) {
+      avatarVal = avatarVal.src;
+    } else {
+      return null;
+    }
+  }
+
+  avatarVal = avatarVal.trim().replace(/^["']|["']$/g, '');
   if (!avatarVal) return null;
 
   // 1. Check for built-in avatar selection (stored as avatar id like 'avatar_eco_hero')
-  const builtIn = BUILT_IN_AVATARS.find((a) => a.id === avatarVal);
-  if (builtIn) {
-    return builtIn.src;
+  const builtInById = BUILT_IN_AVATARS.find(
+    (a) => a.id.toLowerCase() === avatarVal.toLowerCase()
+  );
+  if (builtInById) {
+    return builtInById.src;
   }
 
-  // 2. Check for image URLs (Supabase Storage, absolute asset paths, or base64 data URIs)
-  if (
-    avatarVal.startsWith('http') ||
-    avatarVal.startsWith('data:image/') ||
-    avatarVal.startsWith('/assets/')
-  ) {
+  // 2. Check if avatarVal matches a built-in avatar src or filename
+  const builtInBySrc = BUILT_IN_AVATARS.find(
+    (a) =>
+      a.src.toLowerCase() === avatarVal.toLowerCase() ||
+      avatarVal.toLowerCase().endsWith(a.src.toLowerCase().replace('/assets/', '')) ||
+      avatarVal.toLowerCase().includes(a.id.toLowerCase())
+  );
+  if (builtInBySrc) {
+    return builtInBySrc.src;
+  }
+
+  // 3. Absolute URLs (Google OAuth profile pictures, Supabase storage public URLs, external CDNs)
+  if (/^https?:\/\//i.test(avatarVal) || avatarVal.startsWith('//')) {
     return avatarVal;
   }
 
-  // 3. Return null — caller should show initials fallback
+  // 4. Data URIs or Blob URLs
+  if (avatarVal.startsWith('data:image/') || avatarVal.startsWith('blob:')) {
+    return avatarVal;
+  }
+
+  // 5. Absolute / relative asset paths
+  if (avatarVal.startsWith('/assets/') || avatarVal.startsWith('assets/')) {
+    return avatarVal.startsWith('/') ? avatarVal : `/${avatarVal}`;
+  }
+
+  if (avatarVal.startsWith('/')) {
+    return avatarVal;
+  }
+
+  // 6. Supabase Storage relative paths (e.g. 'avatars/uuid/filename.jpg' or 'uuid/filename.jpg')
+  if (avatarVal.includes('/') && !avatarVal.includes(' ')) {
+    try {
+      const cleanPath = avatarVal.replace(/^avatars\//, '');
+      const { data } = supabase.storage.from('avatars').getPublicUrl(cleanPath);
+      if (data?.publicUrl) {
+        return data.publicUrl;
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
   return null;
 }
 
@@ -127,16 +194,20 @@ export function getAvatarUrl(profile, user) {
 export function getUserInitials(profile, user) {
   const name =
     profile?.full_name ||
+    profile?.name ||
+    profile?.organization_name ||
+    profile?.email?.split('@')[0] ||
+    user?.full_name ||
     user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
     user?.email?.split('@')[0] ||
     'U';
 
-  return name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
 }
 
 /**

@@ -8,6 +8,7 @@ import WhoCanUseSection from './components/WhoCanUseSection/WhoCanUseSection';
 import WhyFoodBridgeSection from './components/WhyFoodBridgeSection/WhyFoodBridgeSection';
 import CtaSection from './components/CtaSection/CtaSection';
 import Footer from './components/Footer/Footer';
+import RoleSelection from './components/RoleSelection/RoleSelection';
 import { PageTransition } from './components/AnimatedUI';
 
 // Code-split / lazy-loaded pages for optimal bundle performance
@@ -80,7 +81,7 @@ function getPageFromHash() {
 
 function MainAppContent() {
   const [currentPage, setCurrentPage] = useState(getPageFromHash);
-  const { user, role, profile, isAdmin, loading } = useAuth();
+  const { user, role, profile, isAdmin, loading, needsRoleSelection } = useAuth();
 
   const handleNavigate = (page) => {
     setCurrentPage(page);
@@ -103,15 +104,19 @@ function MainAppContent() {
   useEffect(() => {
     const hash = window.location.hash || '';
     if (user && !loading && (hash.includes('access_token=') || hash.includes('token_type='))) {
-      const isUserAdmin = isAdmin || role === 'admin' || checkIsAdmin(user, profile, role);
-      const targetPage = isUserAdmin ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
-      window.location.hash = PAGE_HASHES[targetPage] || '#dashboard';
+      if (needsRoleSelection) {
+        window.location.hash = '#dashboard';
+      } else {
+        const isUserAdmin = isAdmin || role === 'admin' || checkIsAdmin(user, profile, role);
+        const targetPage = isUserAdmin ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
+        window.location.hash = PAGE_HASHES[targetPage] || '#dashboard';
+      }
     }
-  }, [user, loading, role, isAdmin, profile]);
+  }, [user, loading, role, isAdmin, profile, needsRoleSelection]);
 
   // Auto-redirect #dashboard to role-specific dashboard hash
   useEffect(() => {
-    if (currentPage === 'dashboard' && user && !loading) {
+    if (currentPage === 'dashboard' && user && !loading && !needsRoleSelection) {
       const isUserAdmin = isAdmin || role === 'admin' || checkIsAdmin(user, profile, role);
       const targetPage = isUserAdmin ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
       const targetHash = PAGE_HASHES[targetPage];
@@ -119,7 +124,7 @@ function MainAppContent() {
         window.location.hash = targetHash;
       }
     }
-  }, [currentPage, user, loading, role, isAdmin, profile]);
+  }, [currentPage, user, loading, role, isAdmin, profile, needsRoleSelection]);
 
   const renderPage = () => {
     const isAdminUser = isAdmin || role === 'admin' || checkIsAdmin(user, profile, role);
@@ -209,11 +214,14 @@ function MainAppContent() {
   };
 
   return (
-    <PageTransition pageKey={currentPage} mode="fade">
-      <Suspense fallback={<DashboardLoadingFallback />}>
-        {renderPage()}
-      </Suspense>
-    </PageTransition>
+    <>
+      {needsRoleSelection && <RoleSelection />}
+      <PageTransition pageKey={currentPage} mode="fade">
+        <Suspense fallback={<DashboardLoadingFallback />}>
+          {renderPage()}
+        </Suspense>
+      </PageTransition>
+    </>
   );
 }
 

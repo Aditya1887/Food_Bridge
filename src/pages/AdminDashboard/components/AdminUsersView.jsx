@@ -3,6 +3,74 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAvatarUrl, getUserInitials } from '../../../services/avatarService';
 
+function AdminUserAvatar({ user, size = 36, className = '' }) {
+  const [hasError, setHasError] = useState(false);
+  const avatarUrl = getAvatarUrl(user);
+  const initials = getUserInitials(user);
+
+  // Generate consistent distinct colors for initials
+  const name = user?.full_name || user?.organization_name || user?.email || 'User';
+  const colors = [
+    { bg: 'rgba(34, 197, 94, 0.16)', text: '#15803d', border: 'rgba(34, 197, 94, 0.35)' },
+    { bg: 'rgba(59, 130, 246, 0.16)', text: '#1d4ed8', border: 'rgba(59, 130, 246, 0.35)' },
+    { bg: 'rgba(249, 115, 22, 0.16)', text: '#c2410c', border: 'rgba(249, 115, 22, 0.35)' },
+    { bg: 'rgba(168, 85, 247, 0.16)', text: '#7e22ce', border: 'rgba(168, 85, 247, 0.35)' },
+    { bg: 'rgba(236, 72, 153, 0.16)', text: '#be185d', border: 'rgba(236, 72, 153, 0.35)' },
+    { bg: 'rgba(20, 184, 166, 0.16)', text: '#0f766e', border: 'rgba(20, 184, 166, 0.35)' },
+  ];
+  let charSum = 0;
+  for (let i = 0; i < name.length; i++) {
+    charSum += name.charCodeAt(i);
+  }
+  const colorScheme = colors[charSum % colors.length];
+
+  if (avatarUrl && !hasError) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={user?.full_name || 'User Profile'}
+        className={`ad-user-table-img ${className}`}
+        style={{
+          width: `${size}px`,
+          height: `${size}px`,
+          minWidth: `${size}px`,
+          minHeight: `${size}px`,
+          borderRadius: '50%',
+          objectFit: 'cover',
+        }}
+        referrerPolicy="no-referrer"
+        crossOrigin="anonymous"
+        loading="lazy"
+        onError={() => setHasError(true)}
+      />
+    );
+  }
+
+  return (
+    <span
+      className={`ad-user-table-initials ${className}`}
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        minWidth: `${size}px`,
+        minHeight: `${size}px`,
+        borderRadius: '50%',
+        backgroundColor: colorScheme.bg,
+        color: colorScheme.text,
+        border: `1px solid ${colorScheme.border}`,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 700,
+        fontSize: size > 45 ? '22px' : `${Math.max(11, Math.round(size * 0.36))}px`,
+        flexShrink: 0,
+      }}
+    >
+      {initials}
+    </span>
+  );
+}
+
 export default function AdminUsersView({
   users = [],
   onToggleVerify,
@@ -244,11 +312,7 @@ export default function AdminUsersView({
                   <tr key={u.id}>
                     <td>
                       <div className="ad-user-table-cell">
-                        {avatar ? (
-                          <img src={avatar} alt={u.full_name} className="ad-user-table-img" />
-                        ) : (
-                          <span className="ad-user-table-initials">{initials}</span>
-                        )}
+                        <AdminUserAvatar user={u} size={38} />
                         <div className="ad-user-table-info">
                           <span className="ad-cell-bold">{u.full_name || 'Community User'}</span>
                           {u.organization_name && (
@@ -361,11 +425,7 @@ export default function AdminUsersView({
 
               <div className="ad-user-modal-body">
                 <div className="ad-modal-profile-hero">
-                  {getAvatarUrl(selectedUser) ? (
-                    <img src={getAvatarUrl(selectedUser)} alt={selectedUser.full_name} className="ad-modal-avatar-img" />
-                  ) : (
-                    <div className="ad-modal-avatar-placeholder">{getUserInitials(selectedUser)}</div>
-                  )}
+                  <AdminUserAvatar user={selectedUser} size={64} className="ad-modal-avatar-img" />
                   <div>
                     <h4 className="ad-modal-user-name">{selectedUser.full_name || 'Community Member'}</h4>
                     <span className="ad-modal-role-tag">{selectedUser.role?.toUpperCase() || 'DONOR'}</span>

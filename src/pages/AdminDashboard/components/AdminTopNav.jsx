@@ -22,6 +22,7 @@ export default function AdminTopNav({
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifsDropdownOpen, setNotifsDropdownOpen] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [avatarImgError, setAvatarImgError] = useState(false);
 
   const userMenuRef = useRef(null);
   const notifsRef = useRef(null);
@@ -352,8 +353,15 @@ export default function AdminTopNav({
               }}
               aria-label="Admin User Menu"
             >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={displayName} className="ad-top-user-avatar" />
+              {avatarUrl && !avatarImgError ? (
+                <img
+                  src={avatarUrl}
+                  alt={displayName}
+                  className="ad-top-user-avatar"
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
+                  onError={() => setAvatarImgError(true)}
+                />
               ) : (
                 <span className="ad-top-user-initials">{avatarInitials}</span>
               )}
