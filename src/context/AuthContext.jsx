@@ -66,6 +66,16 @@ export function AuthProvider({ children }) {
         authUser.identities?.[0]?.identity_data?.picture ||
         '';
 
+      const isGoogleUser =
+        authUser.app_metadata?.provider === 'google' ||
+        authUser.identities?.some((id) => id.provider === 'google') ||
+        authUser.app_metadata?.providers?.includes('google');
+
+      const alreadySelectedLocally = localStorage.getItem(`fb_role_selected_${authUser.id}`) === 'true';
+      const alreadySelectedInMeta = authUser.user_metadata?.role_selected === true;
+      const hasEmailSignupRole = !!authUser.user_metadata?.role && !isGoogleUser;
+      const oauthSignupIntent = sessionStorage.getItem('fb_oauth_signup_intent') === 'true';
+
       if (data && !error) {
         if (isMasterAdmin && data.role !== 'admin') {
           try {
@@ -89,12 +99,29 @@ export function AuthProvider({ children }) {
         const effectiveRole = isMasterAdmin ? 'admin' : (data.role || authUser.user_metadata?.role || 'donor');
         setProfile({ ...data, role: effectiveRole });
         setRole(effectiveRole);
+
+        // Established users (who already set up custom profile info) skip role prompt
+        const isEstablishedProfile = !!(data.organization_name || data.phone || data.city || data.address || data.bio);
+
+        // New Google signup detection:
+        if (
+          isGoogleUser &&
+          !isMasterAdmin &&
+          !alreadySelectedLocally &&
+          !alreadySelectedInMeta &&
+          !hasEmailSignupRole &&
+          (oauthSignupIntent || !isEstablishedProfile)
+        ) {
+          setNeedsRoleSelection(true);
+          try {
+            sessionStorage.removeItem('fb_oauth_signup_intent');
+          } catch (e) {}
+        }
+
         return { ...data, role: effectiveRole };
       }
 
       // 2. Self-healing fallback: If profiles row does not exist yet, create it from auth metadata
-      //    For OAuth users (Google), user_metadata.role is not set — flag for role selection
-      const hasPreSelectedRole = !!authUser.user_metadata?.role;
       const defaultRole = isMasterAdmin ? 'admin' : (authUser.user_metadata?.role || 'donor');
       const defaultName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User';
       const defaultPhone = authUser.user_metadata?.phone || '';
@@ -119,9 +146,18 @@ export function AuthProvider({ children }) {
       setProfile({ ...resolved, role: effectiveRole });
       setRole(effectiveRole);
 
-      // New OAuth user without a pre-selected role → prompt for Donor/Receiver
-      if (!hasPreSelectedRole && !isMasterAdmin) {
+      // New Google OAuth user without a pre-selected role → prompt for Donor/Receiver
+      if (
+        isGoogleUser &&
+        !isMasterAdmin &&
+        !alreadySelectedLocally &&
+        !alreadySelectedInMeta &&
+        !hasEmailSignupRole
+      ) {
         setNeedsRoleSelection(true);
+        try {
+          sessionStorage.removeItem('fb_oauth_signup_intent');
+        } catch (e) {}
       }
 
       return { ...resolved, role: effectiveRole };
@@ -322,15 +358,32 @@ export function AuthProvider({ children }) {
   // Called after a new Google OAuth user picks their role (Donor / Receiver)
   const selectRole = async (selectedRole) => {
     if (!user) return;
+
+    // 1. Immediately record in localStorage so it never prompts again in this browser
+    try {
+      localStorage.setItem(`fb_role_selected_${user.id}`, 'true');
+    } catch (e) {}
+
+    // 2. Persist in Supabase auth user metadata (syncs across devices permanently)
+    try {
+      await supabase.auth.updateUser({
+        data: { role_selected: true, role: selectedRole },
+      });
+    } catch (metaErr) {
+      console.warn('updateUser metadata notice:', metaErr.message);
+    }
+
+    // 3. Update public.profiles database table
     try {
       await supabase.from('profiles').update({ role: selectedRole }).eq('id', user.id);
       setRole(selectedRole);
-      setProfile((prev) => prev ? { ...prev, role: selectedRole } : prev);
+      setProfile((prev) => (prev ? { ...prev, role: selectedRole } : prev));
     } catch (err) {
-      console.warn('selectRole notice:', err.message);
+      console.warn('selectRole DB notice:', err.message);
       setRole(selectedRole);
-      setProfile((prev) => prev ? { ...prev, role: selectedRole } : prev);
+      setProfile((prev) => (prev ? { ...prev, role: selectedRole } : prev));
     }
+
     setNeedsRoleSelection(false);
   };
 

@@ -2,19 +2,25 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../components/ThemeContext';
+import { getAvatarUrl, getUserInitials } from '../../services/avatarService';
 import './RoleSelection.css';
 
 export default function RoleSelection() {
-  const { user, selectRole } = useAuth();
+  const { user, profile, selectRole } = useAuth();
   const { isDark } = useTheme();
   const [selected, setSelected] = useState(null); // 'donor' | 'receiver'
   const [saving, setSaving] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const displayName =
+    profile?.full_name ||
     user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
     user?.email?.split('@')[0] ||
     'there';
+
+  const avatarUrl = getAvatarUrl(profile, user);
+  const initials = getUserInitials(profile, user);
 
   const handleContinue = async () => {
     if (!selected || saving) return;
@@ -33,15 +39,18 @@ export default function RoleSelection() {
         {/* Welcome Header */}
         <div className="rs-header">
           <div className="rs-avatar-wrap">
-            {user?.user_metadata?.avatar_url ? (
+            {avatarUrl && !imgError ? (
               <img
-                src={user.user_metadata.avatar_url}
+                src={avatarUrl}
                 alt="Profile"
                 className="rs-avatar-img"
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
+                onError={() => setImgError(true)}
               />
             ) : (
               <div className="rs-avatar-fallback">
-                {displayName.slice(0, 1).toUpperCase()}
+                {initials || displayName.slice(0, 1).toUpperCase()}
               </div>
             )}
           </div>

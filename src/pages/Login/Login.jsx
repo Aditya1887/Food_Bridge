@@ -278,8 +278,13 @@ export default function Login({ onNavigate }) {
   };
 
   /* ── Social Login ── */
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = async (fromSignUp = false) => {
     try {
+      if (fromSignUp || isSignUp) {
+        sessionStorage.setItem('fb_oauth_signup_intent', 'true');
+      } else {
+        sessionStorage.removeItem('fb_oauth_signup_intent');
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: window.location.origin },
@@ -473,7 +478,7 @@ export default function Login({ onNavigate }) {
                 <button
                   type="button"
                   className="lgn-icon-circle"
-                  onClick={handleGoogleLogin}
+                  onClick={() => handleGoogleLogin(true)}
                   title="Sign up with Google"
                 >
                   <svg viewBox="0 0 24 24" className="lgn-icon-svg">
@@ -719,7 +724,7 @@ export default function Login({ onNavigate }) {
                 <button
                   type="button"
                   className="lgn-icon-circle"
-                  onClick={handleGoogleLogin}
+                  onClick={() => handleGoogleLogin(false)}
                   title="Sign in with Google"
                 >
                   <svg viewBox="0 0 24 24" className="lgn-icon-svg">
