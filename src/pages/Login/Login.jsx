@@ -282,7 +282,7 @@ export default function Login({ onNavigate }) {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin + '/#dashboard' },
+        options: { redirectTo: window.location.origin },
       });
       if (error) throw error;
     } catch (err) {
@@ -807,7 +807,7 @@ export default function Login({ onNavigate }) {
               <button
                 type="button"
                 className="lgn-forgot-link"
-                onClick={handleForgotPassword}
+                onClick={() => handleNav('forgot-password')}
               >
                 Forgot Your Password?
               </button>

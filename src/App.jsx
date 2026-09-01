@@ -16,6 +16,7 @@ const AboutUs = lazy(() => import('./pages/AboutUs/AboutUs'));
 const Impact = lazy(() => import('./pages/Impact/Impact'));
 const Contact = lazy(() => import('./pages/Contact/Contact'));
 const Login = lazy(() => import('./pages/Login/Login'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword/ForgotPassword'));
 const DonorDashboard = lazy(() => import('./pages/DonorDashboard/DonorDashboard'));
 const ReceiverDashboard = lazy(() => import('./pages/ReceiverDashboard/ReceiverDashboard'));
 const FoodListings = lazy(() => import('./pages/FoodListings/FoodListings'));
@@ -28,6 +29,8 @@ const PAGE_HASHES = {
   'impact': '#impact',
   'contact': '#contact',
   'login': '#login',
+  'forgot-password': '#forgot-password',
+  'reset-password': '#reset-password',
   'food-listings': '#food-listings',
   'find-food': '#food-listings',
   'donor-dashboard': '#donor-dashboard',
@@ -41,6 +44,26 @@ const PAGE_HASHES = {
 
 function getPageFromHash() {
   const hash = (window.location.hash || '').toLowerCase().replace(/\/$/, '');
+
+  // If hash contains OAuth tokens from Supabase redirect (Google login callback),
+  // treat as dashboard-pending — Supabase client will parse the tokens automatically
+  if (hash.includes('access_token=') || hash.includes('token_type=')) {
+    return 'dashboard';
+  }
+
+  // If hash contains error or recovery tokens from Supabase email redirect
+  if (
+    hash.includes('error=access_denied') ||
+    hash.includes('otp_expired') ||
+    hash.includes('type=recovery') ||
+    hash.includes('reset-password') ||
+    hash.includes('forgot-password') ||
+    hash.includes('forgotpassword') ||
+    hash.includes('resetpassword')
+  ) {
+    return 'forgot-password';
+  }
+
   if (hash === '#how-it-works' || hash === '#howitworks') return 'how-it-works';
   if (hash === '#about-us' || hash === '#about') return 'about-us';
   if (hash === '#impact') return 'impact';
@@ -75,6 +98,17 @@ function MainAppContent() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
+  // After OAuth callback: once Supabase has parsed the tokens and user is set,
+  // clean the raw token hash and replace with a proper dashboard route
+  useEffect(() => {
+    const hash = window.location.hash || '';
+    if (user && !loading && (hash.includes('access_token=') || hash.includes('token_type='))) {
+      const isUserAdmin = isAdmin || role === 'admin' || checkIsAdmin(user, profile, role);
+      const targetPage = isUserAdmin ? 'admin-dashboard' : role === 'receiver' ? 'receiver-dashboard' : 'donor-dashboard';
+      window.location.hash = PAGE_HASHES[targetPage] || '#dashboard';
+    }
+  }, [user, loading, role, isAdmin, profile]);
+
   // Auto-redirect #dashboard to role-specific dashboard hash
   useEffect(() => {
     if (currentPage === 'dashboard' && user && !loading) {
@@ -107,6 +141,9 @@ function MainAppContent() {
         return <FoodListings onNavigate={handleNavigate} />;
       case 'login':
         return <Login onNavigate={handleNavigate} />;
+      case 'forgot-password':
+      case 'reset-password':
+        return <ForgotPassword onNavigate={handleNavigate} />;
 
       case 'donor-dashboard':
         if (loading) {
