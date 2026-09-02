@@ -9,17 +9,9 @@ import {
   getAvatarUrl,
   getUserInitials,
 } from '../../../services/avatarService';
+import { INDIAN_CITY_NAMES } from '../../../services/citySearch';
 
-const CITIES = [
-  'Mumbai, Maharashtra',
-  'Delhi NCR, India',
-  'Bengaluru, Karnataka',
-  'Pune, Maharashtra',
-  'Hyderabad, Telangana',
-  'Kolkata, West Bengal',
-  'Chennai, Tamil Nadu',
-  'Ahmedabad, Gujarat',
-];
+
 
 export default function AdminSettingsView({
   onShowToast,
@@ -35,7 +27,7 @@ export default function AdminSettingsView({
     full_name: '',
     phone: '',
     organization_name: '',
-    city: 'Mumbai, Maharashtra',
+    city: '',
     address: '',
     bio: '',
   });
@@ -79,7 +71,7 @@ export default function AdminSettingsView({
         full_name: profile?.full_name || user?.user_metadata?.full_name || '',
         phone: profile?.phone || '',
         organization_name: profile?.organization_name || '',
-        city: profile?.city || 'Mumbai, Maharashtra',
+        city: profile?.city || '',
         address: profile?.address || '',
         bio: profile?.bio || '',
       });
@@ -316,18 +308,22 @@ export default function AdminSettingsView({
               </div>
 
               <div className="ad-modal-info-item">
-                <label className="ad-info-label" htmlFor="city">City / Operation Base</label>
-                <select
+                <label className="ad-info-label" htmlFor="city">City / Operation Base (India)</label>
+                <input
                   id="city"
-                  className="ad-category-select"
+                  type="text"
+                  list="admin-indian-cities-list"
+                  className="ad-table-search-input"
                   style={{ width: '100%', marginTop: '6px' }}
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                >
-                  {CITIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                  placeholder="e.g. Mumbai, Maharashtra or New Delhi"
+                />
+                <datalist id="admin-indian-cities-list">
+                  {INDIAN_CITY_NAMES.map((c) => (
+                    <option key={c} value={c} />
                   ))}
-                </select>
+                </datalist>
               </div>
 
               <div className="ad-modal-info-item" style={{ gridColumn: 'span 2' }}>

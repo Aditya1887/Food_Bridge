@@ -8,16 +8,10 @@ import {
   getUserInitials,
 } from '../../services/avatarService';
 import { profileService } from '../../services/profileService';
+import { INDIAN_CITY_NAMES } from '../../services/citySearch';
 import './AvatarPicker.css';
 
-const CITIES = [
-  'Mumbai, Maharashtra',
-  'Delhi NCR, India',
-  'Bengaluru, Karnataka',
-  'Pune, Maharashtra',
-  'Hyderabad, Telangana',
-  'Kolkata, West Bengal',
-];
+
 
 /**
  * AvatarPicker / ProfileSettingsModal — Clean, non-scrollable Profile & Settings Center connected to Supabase.
@@ -41,7 +35,7 @@ export default function AvatarPicker({
     full_name: '',
     phone: '',
     organization_name: '',
-    city: 'Mumbai, Maharashtra',
+    city: '',
     address: '',
     bio: '',
   });
@@ -95,7 +89,7 @@ export default function AvatarPicker({
             full_name: resolved.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || '',
             phone: resolved.phone || user?.user_metadata?.phone || '',
             organization_name: resolved.organization_name || '',
-            city: resolved.city || 'Mumbai, Maharashtra',
+            city: resolved.city || '',
             address: resolved.address || '',
             bio: resolved.bio || 'Helping build a zero-hunger, zero-waste community with FoodBridge.',
           });
@@ -400,19 +394,23 @@ export default function AvatarPicker({
                         />
                       </div>
                       <div className="pm-field">
-                        <label htmlFor="pm-city" className="pm-lbl">City / Region</label>
-                        <select
+                        <label htmlFor="pm-city" className="pm-lbl">City / Region (India)</label>
+                        <input
                           id="pm-city"
+                          type="text"
                           name="city"
+                          list="pm-indian-cities-list"
                           value={formData.city}
                           onChange={handleInputChange}
-                          className="pm-ctrl pm-sel"
+                          placeholder="e.g. Mumbai, Delhi, Jaipur, Pune"
+                          className="pm-ctrl"
                           autoComplete="address-level2"
-                        >
-                          {CITIES.map((c) => (
-                            <option key={c} value={c}>{c}</option>
+                        />
+                        <datalist id="pm-indian-cities-list">
+                          {INDIAN_CITY_NAMES.map((name) => (
+                            <option key={name} value={name} />
                           ))}
-                        </select>
+                        </datalist>
                       </div>
                     </div>
 

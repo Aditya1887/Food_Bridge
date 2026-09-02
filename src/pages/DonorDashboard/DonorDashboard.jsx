@@ -9,6 +9,7 @@ import { notificationService } from '../../services/notificationService';
 import { getAvatarUrl, getUserInitials } from '../../services/avatarService';
 import AvatarPicker from '../../components/AvatarPicker/AvatarPicker';
 import { CountUp, SpotlightCard, ShinyText } from '../../components/AnimatedUI';
+import { geocodeCity } from '../../services/citySearch';
 import './DonorDashboard.css';
 
 const PRESET_DISH_IMAGES = {
@@ -687,25 +688,19 @@ export default function DonorDashboard({ onNavigate }) {
     }
 
     // Coordinate determination for map display
-    const cityCoords = {
-      mumbai: { lat: 19.076, lng: 72.8777 },
-      delhi: { lat: 28.6139, lng: 77.209 },
-      bengaluru: { lat: 12.9716, lng: 77.5946 },
-      pune: { lat: 18.5204, lng: 73.8567 },
-      hyderabad: { lat: 17.385, lng: 78.4867 },
-      kolkata: { lat: 22.5726, lng: 88.3639 },
-    };
-
     let itemLat = profile?.latitude;
     let itemLng = profile?.longitude;
     if (!itemLat || !itemLng) {
-      const userCity = (profile?.city || '').toLowerCase();
-      const matchedCity = Object.keys(cityCoords).find((c) =>
-        userCity.includes(c)
-      );
-      if (matchedCity) {
-        itemLat = cityCoords[matchedCity].lat + (Math.random() - 0.5) * 0.02;
-        itemLng = cityCoords[matchedCity].lng + (Math.random() - 0.5) * 0.02;
+      const userCity = profile?.city || '';
+      if (userCity) {
+        try {
+          const resolved = await geocodeCity(userCity);
+          itemLat = resolved.lat + (Math.random() - 0.5) * 0.02;
+          itemLng = resolved.lng + (Math.random() - 0.5) * 0.02;
+        } catch (e) {
+          itemLat = 19.076 + (Math.random() - 0.5) * 0.02;
+          itemLng = 72.8777 + (Math.random() - 0.5) * 0.02;
+        }
       } else {
         itemLat = 19.076 + (Math.random() - 0.5) * 0.02;
         itemLng = 72.8777 + (Math.random() - 0.5) * 0.02;

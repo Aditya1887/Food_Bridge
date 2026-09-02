@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../components/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
@@ -11,15 +11,14 @@ import MapView from '../../components/MapView/MapView';
 import Footer from '../../components/Footer/Footer';
 import './FoodListings.css';
 
-// ─── CITY LOCATIONS ───
-const CITIES = [
-  { id: 'mumbai', name: 'Mumbai, Maharashtra', lat: 19.0760, lng: 72.8777 },
-  { id: 'delhi', name: 'Delhi NCR, India', lat: 28.6139, lng: 77.2090 },
-  { id: 'bengaluru', name: 'Bengaluru, Karnataka', lat: 12.9716, lng: 77.5946 },
-  { id: 'pune', name: 'Pune, Maharashtra', lat: 18.5204, lng: 73.8567 },
-  { id: 'hyderabad', name: 'Hyderabad, Telangana', lat: 17.3850, lng: 78.4867 },
-  { id: 'kolkata', name: 'Kolkata, West Bengal', lat: 22.5726, lng: 88.3639 },
-];
+import {
+  searchCities,
+  geocodeCity,
+  DEFAULT_CITY,
+  POPULAR_INDIAN_CITIES,
+  INDIAN_CITY_NAMES,
+} from '../../services/citySearch';
+
 
 export default function FoodListings({ onNavigate }) {
   const { isDark, toggleTheme } = useTheme();
@@ -27,11 +26,20 @@ export default function FoodListings({ onNavigate }) {
   const isUserAdmin = isAdmin || role === 'admin';
 
   // ─── STATE MANAGEMENT ───
-  const [selectedCity, setSelectedCity] = useState(CITIES[0]);
+  const [selectedCity, setSelectedCity] = useState(DEFAULT_CITY);
   const [isCityOpen, setIsCityOpen] = useState(false);
+  const [cityQuery, setCityQuery] = useState('');
+  const [citySuggestions, setCitySuggestions] = useState(POPULAR_INDIAN_CITIES);
+  const [citySearching, setCitySearching] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [hoveredNav, setHoveredNav] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const locationRef = useRef(null);
+  const notifRef = useRef(null);
+  const mobileMenuRef = useRef(null);
 
   // Profile Edit Form State
   const [profileForm, setProfileForm] = useState({
@@ -163,11 +171,31 @@ export default function FoodListings({ onNavigate }) {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setActiveModalItem(null);
-        setCityDropdownOpen(false);
+        setIsCityOpen(false);
+        setIsNotifOpen(false);
+        setIsMobileMenuOpen(false);
+        setIsEditProfileOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (locationRef.current && !locationRef.current.contains(e.target)) {
+        setIsCityOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setIsNotifOpen(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // Sync profile form when profile loads
@@ -176,12 +204,13 @@ export default function FoodListings({ onNavigate }) {
       setProfileForm({
         fullName: profile?.full_name || user?.user_metadata?.full_name || 'User',
         phone: profile?.phone || user?.user_metadata?.phone || '',
-        city: profile?.city || 'Mumbai, Maharashtra',
+        city: profile?.city || '',
         organizationName: profile?.organization_name || '',
       });
       if (profile?.city) {
-        const found = CITIES.find((c) => c.name.toLowerCase().includes(profile.city.toLowerCase()));
-        if (found) setSelectedCity(found);
+        geocodeCity(profile.city).then((resolved) => {
+          if (resolved) setSelectedCity(resolved);
+        });
       }
     }
   }, [profile, user]);
@@ -248,6 +277,8 @@ export default function FoodListings({ onNavigate }) {
   const handleCitySelect = async (c) => {
     setSelectedCity(c);
     setIsCityOpen(false);
+    setCityQuery('');
+    setCitySuggestions(POPULAR_INDIAN_CITIES);
     if (user?.id) {
       try {
         await profileService.updateProfile(user.id, { city: c.name });
@@ -256,6 +287,22 @@ export default function FoodListings({ onNavigate }) {
       }
     }
   };
+
+  // Debounced Indian city search
+  useEffect(() => {
+    if (!cityQuery || cityQuery.trim().length === 0) {
+      setCitySuggestions(POPULAR_INDIAN_CITIES);
+      setCitySearching(false);
+      return;
+    }
+    setCitySearching(true);
+    const timer = setTimeout(async () => {
+      const results = await searchCities(cityQuery);
+      setCitySuggestions(results);
+      setCitySearching(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [cityQuery]);
 
   // Handle Profile Update
   const handleSaveProfile = async (e) => {
@@ -463,13 +510,11 @@ export default function FoodListings({ onNavigate }) {
       <header className="fl-navbar">
         <div className="fl-nav-inner">
           {/* Brand Logo */}
-          <a
-            href="#"
+          <button
+            type="button"
             className="fl-brand"
-            onClick={(e) => {
-              e.preventDefault();
-              if (onNavigate) onNavigate('home');
-            }}
+            onClick={() => onNavigate && onNavigate('home')}
+            aria-label="FoodBridge Home"
           >
             <div className="fl-logo-icon">
               <svg viewBox="0 0 48 48" fill="none" className="fl-logo-svg">
@@ -487,39 +532,69 @@ export default function FoodListings({ onNavigate }) {
               <span className="fl-brand-title">FoodBridge</span>
               <span className="fl-brand-tagline">Share Food. Share Hope.</span>
             </div>
-          </a>
+          </button>
 
-          {/* Nav Center Links */}
-          <nav className="fl-nav-links">
-            <button className="fl-nav-item" onClick={() => onNavigate && onNavigate('home')}>
-              Home
-            </button>
-            <button className="fl-nav-item fl-nav-active" onClick={() => onNavigate && onNavigate('food-listings')}>
-              Food Listings
-              <motion.span layoutId="flActiveBar" className="fl-active-underline" />
-            </button>
-            <button className="fl-nav-item" onClick={() => onNavigate && onNavigate('about-us')}>
-              About Us
-            </button>
-            <button className="fl-nav-item" onClick={() => onNavigate && onNavigate('how-it-works')}>
-              How It Works
-            </button>
-            <button className="fl-nav-item" onClick={() => onNavigate && onNavigate('impact')}>
-              Impact
-            </button>
-            <button className="fl-nav-item" onClick={() => onNavigate && onNavigate('contact')}>
-              Contact
-            </button>
+          {/* Nav Center Links (Desktop Frosted Glass Pill) */}
+          <nav className="fl-nav-links" onMouseLeave={() => setHoveredNav(null)}>
+            {[
+              { label: 'Home', route: 'home' },
+              { label: 'Donate', route: 'home' },
+              { label: 'Find Food', route: 'food-listings' },
+              { label: 'Impact', route: 'impact' },
+              { label: 'How It Works', route: 'how-it-works' },
+              { label: 'About Us', route: 'about-us' },
+              { label: 'Contact', route: 'contact' },
+            ].map(({ label, route }) => {
+              const isActive = route === 'food-listings' || label === 'Find Food';
+              return (
+                <motion.button
+                  key={label}
+                  type="button"
+                  className={`fl-nav-link ${isActive ? 'fl-nav-active' : ''}`}
+                  onClick={() => onNavigate && onNavigate(route)}
+                  onMouseEnter={() => setHoveredNav(label)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+                >
+                  {hoveredNav === label && (
+                    <motion.span
+                      className="fl-nav-hover-pill"
+                      layoutId="flNavHoverPill"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+                    />
+                  )}
+                  <span className="fl-nav-label-text">{label}</span>
+                  {isActive && (
+                    <motion.span
+                      className="fl-nav-active-dot"
+                      layoutId="flNavActiveDot"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </motion.button>
+              );
+            })}
           </nav>
 
-          {/* Nav Right Controls: Location, Notif, User */}
+          {/* Nav Right Controls: Location, Notif, User, Theme, Mobile Hamburger */}
           <div className="fl-nav-right">
-            {/* Location Selector */}
-            <div className="fl-location-wrapper">
+            {/* Location Selector (Indian City) */}
+            <div className="fl-location-wrapper" ref={locationRef}>
               <button
+                type="button"
                 className="fl-location-btn"
-                onClick={() => setIsCityOpen(!isCityOpen)}
+                onClick={() => {
+                  setIsCityOpen(!isCityOpen);
+                  setIsNotifOpen(false);
+                  setCityQuery('');
+                  setCitySuggestions(POPULAR_INDIAN_CITIES);
+                }}
                 aria-label="Select City"
+                title="Select City in India"
               >
                 <svg className="fl-loc-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -540,30 +615,57 @@ export default function FoodListings({ onNavigate }) {
                     exit={{ opacity: 0, y: 8, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
                   >
-                    <div className="fl-dropdown-header">Select City</div>
-                    {CITIES.map((c) => (
-                      <button
-                        key={c.id}
-                        className={`fl-dropdown-item ${c.id === selectedCity.id ? 'active' : ''}`}
-                        onClick={() => handleCitySelect(c)}
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                          <circle cx="12" cy="10" r="3" />
-                        </svg>
-                        {c.name}
-                      </button>
-                    ))}
+                    <div className="fl-dropdown-header">Select Indian City</div>
+                    <div className="fl-dropdown-search-wrap">
+                      <input
+                        type="text"
+                        className="fl-city-search-input"
+                        placeholder="Search Indian city or town..."
+                        value={cityQuery}
+                        onChange={(e) => setCityQuery(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                    {citySearching && (
+                      <div className="fl-dropdown-status">
+                        Searching Indian cities...
+                      </div>
+                    )}
+                    {!citySearching && citySuggestions.length === 0 && cityQuery.trim().length >= 2 && (
+                      <div className="fl-dropdown-status">
+                        No Indian city found. Try another town/city.
+                      </div>
+                    )}
+                    <div className="fl-dropdown-list">
+                      {citySuggestions.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          className={`fl-dropdown-item ${c.id === selectedCity.id ? 'active' : ''}`}
+                          onClick={() => handleCitySelect(c)}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                          </svg>
+                          <span className="fl-dropdown-item-name">{c.name}</span>
+                        </button>
+                      ))}
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
             {/* Notification Bell */}
-            <div className="fl-notif-wrapper">
+            <div className="fl-notif-wrapper" ref={notifRef}>
               <button
+                type="button"
                 className="fl-notif-btn"
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                onClick={() => {
+                  setIsNotifOpen(!isNotifOpen);
+                  setIsCityOpen(false);
+                }}
                 aria-label="Notifications"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -585,6 +687,7 @@ export default function FoodListings({ onNavigate }) {
                     <div className="fl-notif-header">
                       <span>Notifications ({notifications.length})</span>
                       <button
+                        type="button"
                         className="fl-notif-clear"
                         onClick={() => setNotifications([])}
                       >
@@ -615,6 +718,7 @@ export default function FoodListings({ onNavigate }) {
             {user ? (
               <div className="fl-user-wrapper">
                 <button
+                  type="button"
                   className="fl-btn-dashboard-stylish"
                   onClick={() => {
                     const target = isUserAdmin ? 'admin-dashboard' : role === 'donor' ? 'donor-dashboard' : 'receiver-dashboard';
@@ -624,7 +728,13 @@ export default function FoodListings({ onNavigate }) {
                 >
                   <div className="btn-dashboard-icon-wrap">
                     {userAvatarUrl ? (
-                      <img src={userAvatarUrl} alt="Dashboard" className="btn-dashboard-avatar-img" />
+                      <img
+                        src={userAvatarUrl}
+                        alt="Dashboard"
+                        className="btn-dashboard-avatar-img"
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                      />
                     ) : (
                       <svg className="btn-dashboard-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="3" y="3" width="7" height="7" rx="1.5" />
@@ -645,6 +755,7 @@ export default function FoodListings({ onNavigate }) {
               </div>
             ) : (
               <button
+                type="button"
                 className="fl-btn-login"
                 onClick={() => {
                   if (onNavigate) onNavigate('login');
@@ -654,29 +765,162 @@ export default function FoodListings({ onNavigate }) {
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
-                Login / Sign Up
+                <span>Login / Sign Up</span>
               </button>
             )}
 
             {/* Theme Toggle */}
             <button
+              type="button"
               className="fl-theme-btn"
               onClick={toggleTheme}
               aria-label="Toggle Theme"
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
-              {isDark ? (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M18.36 5.64l1.41-1.41" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-              )}
+              <AnimatePresence mode="wait" initial={false}>
+                {isDark ? (
+                  <motion.svg
+                    key="sun"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    initial={{ rotate: 90, opacity: 0, scale: 0.6 }}
+                    animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                    exit={{ rotate: -90, opacity: 0, scale: 0.6 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M18.36 5.64l1.41-1.41" />
+                  </motion.svg>
+                ) : (
+                  <motion.svg
+                    key="moon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    initial={{ rotate: -90, opacity: 0, scale: 0.6 }}
+                    animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                    exit={{ rotate: 90, opacity: 0, scale: 0.6 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                  </motion.svg>
+                )}
+              </AnimatePresence>
+            </button>
+
+            {/* Mobile Hamburger Toggle Button (<= 960px) */}
+            <button
+              type="button"
+              className={`fl-hamburger-btn ${isMobileMenuOpen ? 'active' : ''}`}
+              onClick={() => {
+                setIsMobileMenuOpen(!isMobileMenuOpen);
+                setIsCityOpen(false);
+                setIsNotifOpen(false);
+              }}
+              aria-label="Toggle navigation menu"
+              aria-expanded={isMobileMenuOpen}
+            >
+              <span className="fl-hamburger-bar" />
+              <span className="fl-hamburger-bar" />
+              <span className="fl-hamburger-bar" />
             </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              ref={mobileMenuRef}
+              className="fl-mobile-menu"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+            >
+              <div className="fl-mobile-menu-inner">
+                {/* Mobile Quick City Display */}
+                <div className="fl-mobile-city-row">
+                  <span className="fl-mobile-city-label">Selected City:</span>
+                  <button
+                    type="button"
+                    className="fl-mobile-city-btn"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsCityOpen(true);
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    <span>{selectedCity.name}</span>
+                    <span className="fl-mobile-change-tag">Change</span>
+                  </button>
+                </div>
+
+                {/* Mobile Links */}
+                <div className="fl-mobile-nav-links">
+                  {[
+                    { label: 'Home', route: 'home' },
+                    { label: 'Donate Food', route: 'home' },
+                    { label: 'Find Food (Listings)', route: 'food-listings', active: true },
+                    { label: 'Impact & Metrics', route: 'impact' },
+                    { label: 'How It Works', route: 'how-it-works' },
+                    { label: 'About Us', route: 'about-us' },
+                    { label: 'Contact Us', route: 'contact' },
+                  ].map(({ label, route, active }) => (
+                    <button
+                      key={label}
+                      type="button"
+                      className={`fl-mobile-nav-item ${active ? 'active' : ''}`}
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        if (onNavigate) onNavigate(route);
+                      }}
+                    >
+                      <span>{label}</span>
+                      {active && <span className="fl-mobile-active-pill">Active</span>}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Mobile Action Footer */}
+                <div className="fl-mobile-action-footer">
+                  {user ? (
+                    <button
+                      type="button"
+                      className="fl-mobile-dashboard-btn"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        const target = isUserAdmin ? 'admin-dashboard' : role === 'donor' ? 'donor-dashboard' : 'receiver-dashboard';
+                        if (onNavigate) onNavigate(target);
+                      }}
+                    >
+                      {isUserAdmin ? 'Open Admin Panel' : 'Go to My Dashboard'}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="fl-mobile-dashboard-btn"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        if (onNavigate) onNavigate('login');
+                      }}
+                    >
+                      Login / Sign Up
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* ═══════════════════════════════════════════════════════
@@ -1448,18 +1692,22 @@ export default function FoodListings({ onNavigate }) {
                   </div>
 
                   <div className="fl-form-group">
-                    <label htmlFor="fl-profile-city">City / Region</label>
-                    <select
+                    <label htmlFor="fl-profile-city">City / Region (India)</label>
+                    <input
                       id="fl-profile-city"
                       name="city"
+                      type="text"
+                      list="fl-profile-indian-cities"
                       value={profileForm.city}
                       onChange={(e) => setProfileForm({ ...profileForm, city: e.target.value })}
+                      placeholder="e.g. Mumbai, Bengaluru, Pune"
                       autoComplete="address-level2"
-                    >
-                      {CITIES.map((c) => (
-                        <option key={c.id} value={c.name}>{c.name}</option>
+                    />
+                    <datalist id="fl-profile-indian-cities">
+                      {INDIAN_CITY_NAMES.map((name) => (
+                        <option key={name} value={name} />
                       ))}
-                    </select>
+                    </datalist>
                   </div>
 
                   <div className="fl-form-group">
